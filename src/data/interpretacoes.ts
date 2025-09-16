@@ -133,6 +133,34 @@ export const interpretacoes: Record<string, Record<number, InterpretacaoNumerolo
   // Adicionar mais categorias conforme necessário
 };
 
+// Função para extrair interpretação específica dos dados do Supabase
+export function extrairInterpretacaoDoConteudo(conteudo: any, numero: number): InterpretacaoNumerologica | null {
+  if (!conteudo || typeof conteudo !== 'object') return null;
+  
+  // Procurar pelo número específico no conteúdo
+  const numeroStr = numero.toString();
+  const numeroData = conteudo[numeroStr] || conteudo[`numero_${numeroStr}`] || conteudo[`n${numeroStr}`];
+  
+  if (!numeroData) return null;
+  
+  // Extrair informações do formato do Material Complementar
+  const titulo = numeroData.titulo || numeroData.name || `Número ${numero}`;
+  const descricao = numeroData.descricao || numeroData.description || numeroData.texto || "";
+  
+  // Extrair características, aspectos positivos e desafios
+  const caracteristicas = numeroData.caracteristicas || numeroData.traits || [];
+  const aspectosPositivos = numeroData.aspectos_positivos || numeroData.positivos || numeroData.positive || [];
+  const desafios = numeroData.desafios || numeroData.challenges || numeroData.negative || [];
+  
+  return {
+    titulo,
+    descricao,
+    caracteristicas: Array.isArray(caracteristicas) ? caracteristicas : [caracteristicas].filter(Boolean),
+    aspectosPositivos: Array.isArray(aspectosPositivos) ? aspectosPositivos : [aspectosPositivos].filter(Boolean),
+    desafios: Array.isArray(desafios) ? desafios : [desafios].filter(Boolean)
+  };
+}
+
 export function obterInterpretacao(categoria: string, numero: number): InterpretacaoNumerologica | null {
   return interpretacoes[categoria]?.[numero] || null;
 }

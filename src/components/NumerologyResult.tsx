@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapaNumerologico } from '@/utils/numerology';
-import { obterInterpretacao } from '@/data/interpretacoes';
+import { useInterpretacao } from '@/hooks/useInterpretacao';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun } from 'lucide-react';
 
 interface NumerologyResultProps {
@@ -25,17 +26,23 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       : "text-2xl font-bold text-primary";
   };
 
-  const getNumerologyCard = (
-    title: string,
-    number: number,
-    description: string,
-    icon: React.ReactNode,
-    category: string
-  ) => {
-    const interpretacao = obterInterpretacao(category, number);
+  const NumerologyCard = ({ 
+    title, 
+    number, 
+    description, 
+    icon, 
+    category 
+  }: {
+    title: string;
+    number: number;
+    description: string;
+    icon: React.ReactNode;
+    category: string;
+  }) => {
+    const { interpretacao, isLoading } = useInterpretacao(category, number);
     
     return (
-      <Card key={title} className="group hover:scale-105 transition-all duration-300">
+      <Card className="group hover:scale-105 transition-all duration-300">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -53,44 +60,74 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </CardHeader>
         
-        {interpretacao && (
-          <CardContent className="pt-0">
-            <Accordion type="single" collapsible>
-              <AccordionItem value="interpretation" className="border-none">
-                <AccordionTrigger className="text-sm hover:no-underline py-2">
-                  Ver interpretação
-                </AccordionTrigger>
-                <AccordionContent className="space-y-3 text-sm">
-                  <p className="text-muted-foreground">{interpretacao.descricao}</p>
-                  
-                  <div>
-                    <h5 className="font-medium text-green-400 mb-1">Aspectos Positivos:</h5>
-                    <ul className="text-xs space-y-1 text-muted-foreground">
-                      {interpretacao.aspectosPositivos.map((aspecto, idx) => (
-                        <li key={idx} className="flex items-center">
-                          <span className="w-1 h-1 bg-green-400 rounded-full mr-2"></span>
-                          {aspecto}
-                        </li>
-                      ))}
-                    </ul>
+        <CardContent className="pt-0">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="interpretation" className="border-none">
+              <AccordionTrigger className="text-sm hover:no-underline py-2">
+                Ver interpretação
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3 text-sm">
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
                   </div>
-                  
-                  <div>
-                    <h5 className="font-medium text-yellow-400 mb-1">Desafios:</h5>
-                    <ul className="text-xs space-y-1 text-muted-foreground">
-                      {interpretacao.desafios.map((desafio, idx) => (
-                        <li key={idx} className="flex items-center">
-                          <span className="w-1 h-1 bg-yellow-400 rounded-full mr-2"></span>
-                          {desafio}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        )}
+                ) : interpretacao ? (
+                  <>
+                    <p className="text-muted-foreground">{interpretacao.descricao}</p>
+                    
+                    {interpretacao.caracteristicas.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-blue-400 mb-1">Características:</h5>
+                        <ul className="text-xs space-y-1 text-muted-foreground">
+                          {interpretacao.caracteristicas.map((caracteristica, idx) => (
+                            <li key={idx} className="flex items-center">
+                              <span className="w-1 h-1 bg-blue-400 rounded-full mr-2"></span>
+                              {caracteristica}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {interpretacao.aspectosPositivos.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-green-400 mb-1">Aspectos Positivos:</h5>
+                        <ul className="text-xs space-y-1 text-muted-foreground">
+                          {interpretacao.aspectosPositivos.map((aspecto, idx) => (
+                            <li key={idx} className="flex items-center">
+                              <span className="w-1 h-1 bg-green-400 rounded-full mr-2"></span>
+                              {aspecto}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {interpretacao.desafios.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-yellow-400 mb-1">Desafios:</h5>
+                        <ul className="text-xs space-y-1 text-muted-foreground">
+                          {interpretacao.desafios.map((desafio, idx) => (
+                            <li key={idx} className="flex items-center">
+                              <span className="w-1 h-1 bg-yellow-400 rounded-full mr-2"></span>
+                              {desafio}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    Interpretação não disponível para este número.
+                  </p>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
       </Card>
     );
   };
@@ -204,9 +241,16 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
             Núcleos Principais
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coreNumbers.map(num => 
-              getNumerologyCard(num.title, num.number, num.description, num.icon, num.category)
-            )}
+            {coreNumbers.map(num => (
+              <NumerologyCard 
+                key={num.title}
+                title={num.title}
+                number={num.number}
+                description={num.description}
+                icon={num.icon}
+                category={num.category}
+              />
+            ))}
           </div>
         </div>
 
@@ -217,9 +261,16 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
             Ciclos Pessoais
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {personalNumbers.map(num => 
-              getNumerologyCard(num.title, num.number, num.description, num.icon, num.category)
-            )}
+            {personalNumbers.map(num => (
+              <NumerologyCard 
+                key={num.title}
+                title={num.title}
+                number={num.number}
+                description={num.description}
+                icon={num.icon}
+                category={num.category}
+              />
+            ))}
           </div>
         </div>
 
