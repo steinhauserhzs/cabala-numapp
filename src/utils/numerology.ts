@@ -160,12 +160,14 @@ export function reduceToDigitAllowZero(n: number): number {
 export function calcDesafio1(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
-  // Don't reduce before calculating difference
-  const diff = Math.abs(dia - mes);
+  // Reduce components to a single digit (allow 0) before difference
+  const diaR = reduceToDigitAllowZero(dia);
+  const mesR = reduceToDigitAllowZero(mes);
+  const diff = Math.abs(diaR - mesR);
   const result = reduceToDigitAllowZero(diff);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcDesafio1] dia=${dia} mes=${mes} diff=${diff} result=${result}`);
+    console.debug(`[calcDesafio1] dia=${dia}(${diaR}) mes=${mes}(${mesR}) diff=${diff} result=${result}`);
   }
   
   return result;
@@ -174,12 +176,14 @@ export function calcDesafio1(dob: Date): number {
 export function calcDesafio2(dob: Date): number {
   const dia = dob.getDate();
   const ano = dob.getFullYear();
-  // Calculate difference between day and year directly
-  const diff = Math.abs(dia - reduceKeepMasters(ano));
+  // Reduce year to a single digit (no masters) before difference
+  const anoR = reduceToDigitAllowZero(ano);
+  const diaR = reduceToDigitAllowZero(dia);
+  const diff = Math.abs(diaR - anoR);
   const result = reduceToDigitAllowZero(diff);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcDesafio2] dia=${dia} ano=${ano}(${reduceKeepMasters(ano)}) diff=${diff} result=${result}`);
+    console.debug(`[calcDesafio2] dia=${dia}(${diaR}) ano=${ano}(${anoR}) diff=${diff} result=${result}`);
   }
   
   return result;
@@ -218,8 +222,12 @@ export function calcMomento3(dob: Date): number {
 }
 
 export function calcMomento4(dob: Date): number {
-  // Quarto momento: primeiro momento
-  return calcMomento1(dob);
+  // Quarto momento: mês + ano reduzidos separadamente
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
+  const mesReduced = reduceKeepMasters(mes);
+  const anoReduced = reduceKeepMasters(ano);
+  return reduceKeepMasters(mesReduced + anoReduced);
 }
 
 export function calcAnoPersonal(data: Date, anoAtual: number): number {
@@ -326,17 +334,8 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   // Check for all possible karmic debt combinations
   const allIntermediateSums = [motivacaoSum, impressaoSum, expressaoSum, destinoSum];
   
-  // Also check individual name letter sums that could form karmic debts
-  const cleanedName = clean(nome);
-  for (let i = 0; i < cleanedName.length; i++) {
-    for (let j = i + 1; j <= cleanedName.length; j++) {
-      const substring = cleanedName.slice(i, j);
-      const substringSum = [...substring].map(letterValue).reduce((a, b) => a + b, 0);
-      if ([13, 14, 16, 19].includes(substringSum)) {
-        allIntermediateSums.push(substringSum);
-      }
-    }
-  }
+// Removed substring scanning to avoid false positives; consider only core sums
+
   
   if (typeof process !== 'undefined' && (process as any).env?.NODE_ENV !== 'production') {
     console.debug('[numerology] debug', {

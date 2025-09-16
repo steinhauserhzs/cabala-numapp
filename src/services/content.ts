@@ -96,22 +96,60 @@ export async function getInterpretacao(topico: string, numero: number | string):
   const cacheKey = topico;
   
   if (!contentCache.has(cacheKey)) {
-    const rawContent = await fetchConteudo(topico);
-    if (!rawContent) return null;
-    
-    const pattern = headingPatterns[topico];
-    if (!pattern) return rawContent; // Return full content if no pattern
-    
-    const blocks = splitByHeading(rawContent, pattern);
-    // Debug: log parsed keys once per topic
-    if (process.env.NODE_ENV !== 'production') {
-      console.debug(`[parse] ${topico} -> blocos:`, Object.keys(blocks));
+    // Fetch raw row to support both string and JSON content structures
+    const { data, error } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .eq('topico', topico)
+      .maybeSingle();
+
+    if (error || !data?.conteudo) {
+      console.error(`Erro ao buscar conteúdo p/ ${topico}`, error);
+      contentCache.set(cacheKey, {});
+    } else {
+      const raw = data.conteudo as any;
+      let blocks: Blocks = {};
+
+      if (typeof raw === 'string') {
+        const pattern = headingPatterns[topico];
+        if (pattern) {
+          blocks = splitByHeading(raw, pattern);
+        } else {
+          // When we don't have a pattern, store the whole content
+          blocks['__all__'] = raw;
+        }
+      } else if (typeof raw === 'object') {
+        // Flatten JSON into blocks: direct key -> value
+        for (const [key, value] of Object.entries(raw)) {
+          if (value == null) continue;
+          blocks[String(key)] = String(value);
+        }
+        // Also support nested { conteudo: string }
+        if (!Object.keys(blocks).length && (raw as any).conteudo) {
+          blocks['__all__'] = String((raw as any).conteudo);
+        }
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug(`[parse] ${topico} -> blocos:`, Object.keys(blocks));
+      }
+      contentCache.set(cacheKey, blocks);
     }
-    contentCache.set(cacheKey, blocks);
   }
   
-  const blocks = contentCache.get(cacheKey);
-  return blocks?.[String(numero)] || null;
+  const blocks = contentCache.get(cacheKey) || {};
+  const key = String(numero);
+
+  if (blocks[key]) return blocks[key];
+
+  // Case-insensitive lookup for string keys (e.g., nomes de anjos)
+  const ci = Object.entries(blocks).find(([k]) => k.toLowerCase() === key.toLowerCase());
+  if (ci) return ci[1];
+
+  // Fallback to full content when available
+  if (blocks['__all__']) return blocks['__all__'];
+
+  return null;
 }
 
 export async function getInterpretacaoMomento(

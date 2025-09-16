@@ -43,11 +43,11 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
             </AccordionTrigger>
             <AccordionContent>
               {isLoading ? (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-foreground">
                   Carregando conteúdo...
                 </div>
               ) : conteudo ? (
-                <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                   {conteudo}
                 </div>
               ) : (

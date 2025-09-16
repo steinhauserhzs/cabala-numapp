@@ -31,8 +31,8 @@ const AngelInterpretationContent = ({ angelName }: { angelName: string }) => {
   }
   
   return (
-    <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-      {interpretacao || "Carregando interpretação..."}
+    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+      {interpretacao || "Interpretação não disponível."}
     </div>
   );
 };
@@ -122,12 +122,12 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
                     <Skeleton className="h-4 w-1/2" />
                   </div>
                 ) : interpretacao ? (
-                  <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                     {interpretacao}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Carregando interpretação...
+                  <div className="text-sm text-foreground">
+                    Interpretação não disponível.
                   </div>
                 )}
               </AccordionContent>
@@ -236,28 +236,28 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos.primeiro,
       description: "Primeiro momento decisivo",
-      categoria: "momento_decisivo",
+      categoria: "primeiro_momento",
       icon: <Clock size={20} />
     },
     {
       title: "2º Momento Decisivo", 
       value: mapa.momentosDecisivos.segundo,
       description: "Segundo momento decisivo",
-      categoria: "momento_decisivo",
+      categoria: "segundo_momento",
       icon: <Clock size={20} />
     },
     {
       title: "3º Momento Decisivo",
       value: mapa.momentosDecisivos.terceiro,
       description: "Terceiro momento decisivo", 
-      categoria: "momento_decisivo",
+      categoria: "terceiro_momento",
       icon: <Clock size={20} />
     },
     {
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos.quarto,
       description: "Quarto momento decisivo",
-      categoria: "momento_decisivo", 
+      categoria: "quarto_momento", 
       icon: <Clock size={20} />
     }
   ];
