@@ -32,24 +32,22 @@ const MapaPessoal = () => {
   if (showResult && numerologyMap && userBirthDate) {
     return (
       <div>
-        <div className="fixed top-4 left-4 z-50">
+        <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
           <Link to={user ? "/dashboard" : "/"}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
             </Button>
           </Link>
-        </div>
-        
-        {user && (
-          <div className="fixed top-4 right-4 z-50">
+          
+          {user && (
             <Link to="/dashboard">
-              <Button variant="outline">
-                Ir para Dashboard
+              <Button variant="outline" size="sm">
+                Dashboard
               </Button>
             </Link>
-          </div>
-        )}
+          )}
+        </div>
         
         <NumerologyResult 
           mapa={numerologyMap}
@@ -63,34 +61,28 @@ const MapaPessoal = () => {
 
   return (
     <div>
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
         <Link to={user ? "/dashboard" : "/"}>
           <Button variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
         </Link>
-      </div>
-      
-      {user && (
-        <div className="fixed top-4 right-4 z-50">
+        
+        {user ? (
           <Link to="/dashboard">
-            <Button variant="outline">
-              Ir para Dashboard
+            <Button variant="outline" size="sm">
+              Dashboard
             </Button>
           </Link>
-        </div>
-      )}
-      
-      {!user && (
-        <div className="fixed top-4 right-4 z-50">
+        ) : (
           <Link to="/auth">
-            <Button variant="outline">
+            <Button variant="outline" size="sm">
               Entrar / Cadastrar
             </Button>
           </Link>
-        </div>
-      )}
+        )}
+      </div>
       
       <NumerologyForm onSubmit={handleFormSubmit} />
     </div>
