@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getInterpretacao } from '@/services/content';
 
-export const useInterpretacao = (categoria: string, numero: number): {
+export const useInterpretacao = (categoria: string, numero: number | string): {
   interpretacao: string | null;
   isLoading: boolean;
   error: Error | null;

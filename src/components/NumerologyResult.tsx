@@ -17,6 +17,26 @@ interface NumerologyResultProps {
   onBack: () => void;
 }
 
+const AngelInterpretationContent = ({ angelName }: { angelName: string }) => {
+  const { interpretacao, isLoading } = useInterpretacao('anjo_guarda', angelName);
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    );
+  }
+  
+  return (
+    <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+      {interpretacao || "Carregando interpretação..."}
+    </div>
+  );
+};
+
 export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyResultProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { toast } = useToast();
@@ -216,28 +236,28 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos.primeiro,
       description: "Primeiro momento decisivo",
-      categoria: "primeiro_momento",
+      categoria: "momento_decisivo",
       icon: <Clock size={20} />
     },
     {
       title: "2º Momento Decisivo", 
       value: mapa.momentosDecisivos.segundo,
       description: "Segundo momento decisivo",
-      categoria: "segundo_momento",
+      categoria: "momento_decisivo",
       icon: <Clock size={20} />
     },
     {
       title: "3º Momento Decisivo",
       value: mapa.momentosDecisivos.terceiro,
       description: "Terceiro momento decisivo", 
-      categoria: "terceiro_momento",
+      categoria: "momento_decisivo",
       icon: <Clock size={20} />
     },
     {
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos.quarto,
       description: "Quarto momento decisivo",
-      categoria: "quarto_momento", 
+      categoria: "momento_decisivo", 
       icon: <Clock size={20} />
     }
   ];
@@ -263,6 +283,30 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       description: "Energia do dia atual", 
       categoria: "dia_pessoal",
       icon: <Sun size={20} />
+    }
+  ];
+
+  const lifecycleNumbers = [
+    {
+      title: "1º Ciclo de Vida",
+      value: mapa.ciclosVida.primeiro,
+      description: "Primeiro ciclo de vida",
+      categoria: "ciclos_vida",
+      icon: <Calendar size={20} />
+    },
+    {
+      title: "2º Ciclo de Vida", 
+      value: mapa.ciclosVida.segundo,
+      description: "Segundo ciclo de vida",
+      categoria: "ciclos_vida",
+      icon: <Calendar size={20} />
+    },
+    {
+      title: "3º Ciclo de Vida",
+      value: mapa.ciclosVida.terceiro,
+      description: "Terceiro ciclo de vida", 
+      categoria: "ciclos_vida",
+      icon: <Calendar size={20} />
     }
   ];
 
@@ -383,6 +427,56 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </div>
 
+        {/* Ciclos de Vida */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+            Ciclos de Vida
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {lifecycleNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Anjo da Guarda */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Anjo da Guarda</h2>
+          <div className="max-w-md mx-auto">
+            <Card className="group hover:scale-105 transition-all duration-300 h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                      <Star size={20} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Anjo da Guarda</CardTitle>
+                      <CardDescription className="text-sm">Seu protetor celestial</CardDescription>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-secondary">
+                    {mapa.anjoGuarda}
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="interpretation" className="border-none">
+                    <AccordionTrigger className="text-sm hover:no-underline py-2">
+                      Ver interpretação
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-3 text-sm">
+                      <AngelInterpretationContent angelName={mapa.anjoGuarda} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Resposta Subconsciente */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Resposta Subconsciente</h2>
@@ -403,9 +497,9 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <TopicCard
               icon={<Star className="h-5 w-5 text-yellow-500" />}
-              title="Seu Anjo"
-              description="Seu anjo protetor e suas características"
-              topico="seu_anjo"
+              title="Pedras Preciosas"
+              description="Pedras que potencializam sua energia"
+              topico="pedras_preciosas"
             />
             <TopicCard
               icon={<Palette className="h-5 w-5 text-blue-500" />}

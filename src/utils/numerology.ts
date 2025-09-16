@@ -240,6 +240,35 @@ export function calcDiaPersonal(mesPersonal: number, diaAtual: number): number {
   return reduceKeepMasters(soma);
 }
 
+export function calcAnjoGuarda(dob: Date): string {
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1; // JavaScript months are 0-indexed
+  
+  // Calculate day of year (1-365/366)
+  const start = new Date(dob.getFullYear(), 0, 0);
+  const diff = dob.getTime() - start.getTime();
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  // Each angel governs 5 days, starting from March 21 (day 80 in regular years)
+  // March 21 = day 80, so we adjust: if dayOfYear < 80, add 365
+  const adjustedDay = dayOfYear < 80 ? dayOfYear + 365 : dayOfYear;
+  const angelIndex = Math.floor((adjustedDay - 80) / 5);
+  
+  const angels = [
+    "Vehuiah", "Jeliel", "Sitael", "Elemiah", "Mahasiah", "Lelahel", "Achaiah", "Cahetel",
+    "Haziel", "Aladiah", "Lauviah", "Hahaiah", "Iezalel", "Mebahel", "Hariel", "Hekamiah",
+    "Lauviah", "Caliel", "Leuviah", "Pahaliah", "Nelchael", "Yeiayel", "Melahel", "Hahiuiah",
+    "Nith-Haiah", "Haaiah", "Yeratel", "Seheiah", "Reiyel", "Omael", "Lecabel", "Vasariah",
+    "Iehuiah", "Lehahiah", "Chavakiah", "Menadel", "Aniel", "Haamiah", "Rehael", "Ieiazel",
+    "Hahahel", "Mikael", "Veualiah", "Yelahiah", "Sealiah", "Ariel", "Asaliah", "Mihael",
+    "Vehuel", "Daniel", "Hahasiah", "Imamiah", "Nanael", "Nithael", "Mebahiah", "Poyel",
+    "Nemamiah", "Ieialel", "Harahel", "Mitzrael", "Umabel", "Iah-Hel", "Anauel", "Mehiel",
+    "Damabiah", "Manakel", "Eyael", "Habuhiah", "Rochel", "Jabamiah", "Haiaiel", "Mumiah"
+  ];
+  
+  return angels[angelIndex % 72];
+}
+
 // Legacy compatibility functions (deprecated - use new calc* functions)
 export const removerAcentos = clean;
 export const letraParaNumero = letterValue;
@@ -266,6 +295,8 @@ export interface MapaNumerologico {
   licoesCarmicas: number[];
   dividasCarmicas: number[];
   tendenciasOcultas: number[];
+  anjoGuarda: string;
+  ciclosVida: { primeiro: number; segundo: number; terceiro: number };
   desafios: { primeiro: number; segundo: number; principal: number };
   momentosDecisivos: { primeiro: number; segundo: number; terceiro: number; quarto: number };
   anoPersonal: number;
@@ -328,6 +359,12 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     licoesCarmicas: calcLicoesCarmicas(nome),
     dividasCarmicas: detectarDividasCarmicas(allIntermediateSums),
     tendenciasOcultas: calcTendenciasOcultas(nome),
+    anjoGuarda: calcAnjoGuarda(dataNascimento),
+    ciclosVida: {
+      primeiro: reduceKeepMasters(calcMomento1(dataNascimento)),
+      segundo: reduceKeepMasters(calcExpressao(nome)),
+      terceiro: reduceKeepMasters(calcMomento1(dataNascimento) + calcExpressao(nome))
+    },
     desafios: {
       primeiro: desafio1,
       segundo: desafio2,
