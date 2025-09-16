@@ -1,82 +1,93 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export async function fetchConteudo(topico: string): Promise<string> {
-  const topic = topico.trim();
-
-  const candidates = [
-    { op: 'eq' as const, value: topic },
-    { op: 'ilike' as const, value: topic },
-    { op: 'ilike' as const, value: `%${topic}%` },
-    { op: 'ilike' as const, value: topic.toLowerCase() },
-    { op: 'ilike' as const, value: `%${topic.toLowerCase()}%` },
-  ];
-
-  let row: { conteudo: any } | null = null;
-
-  for (const c of candidates) {
-    let query: any = supabase
-      .from('conteudos_numerologia')
-      .select('conteudo')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    query = c.op === 'eq' ? query.eq('topico', c.value) : query.ilike('topico', c.value);
-
-    const { data, error } = await query.maybeSingle();
-
-    if (error) {
-      console.warn(`[fetchConteudo] tentativa falhou (${c.op}:${c.value})`, error.message);
-      continue;
-    }
-
-    if (data?.conteudo) {
-      row = data as any;
-      break;
-    }
-  }
-
-  if (!row?.conteudo) {
-    console.warn(`Nenhum conteúdo encontrado para tópico: ${topico}`);
-    return '';
-  }
-
-  // Handle both string and object content formats
-  let content = '';
-  if (typeof row.conteudo === 'string') {
-    content = row.conteudo;
-  } else if (row.conteudo && typeof row.conteudo === 'object') {
-    // Format JSON object content properly
-    const obj = row.conteudo as any;
-    if (obj.titulo && obj.descricao) {
-      content = `# ${obj.titulo}\n\n${obj.descricao}`;
-      if (obj.caracteristicas && Array.isArray(obj.caracteristicas)) {
-        content += `\n\n## Características:\n${obj.caracteristicas.map((c: string) => `- ${c}`).join('\n')}`;
-      }
-      if (obj.conselhos && Array.isArray(obj.conselhos)) {
-        content += `\n\n## Conselhos:\n${obj.conselhos.map((c: string) => `- ${c}`).join('\n')}`;
-      }
-    } else if (obj.conteudo) {
-      content = String(obj.conteudo);
-    } else {
-      // Fallback: join all string values
-      content = Object.values(obj).filter(v => typeof v === 'string').join('\n\n');
-    }
-  }
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[fetchConteudo] ${topico} -> ${content.length} chars`);
-  }
-  
-  return content;
-}
+// Cache for improved performance
+const contentCache = new Map<string, string>();
 
 type Blocks = Record<string, string>;
 
-export function splitByHeading(
-  raw: string,
-  heading: RegExp,
-  captureGroup = 1
-): Blocks {
+export async function fetchConteudo(topico: string): Promise<string> {
+  // Check cache first
+  if (contentCache.has(topico)) {
+    return contentCache.get(topico)!;
+  }
+
+  console.debug(`[fetchConteudo] Buscando tópico: "${topico}"`);
+
+  try {
+    // Try exact match first
+    const { data: exactMatch, error: exactError } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .eq('topico', topico)
+      .maybeSingle();
+
+    if (exactError) {
+      console.error('[fetchConteudo] Erro na busca exata:', exactError);
+    }
+
+    if (exactMatch?.conteudo) {
+      const content = typeof exactMatch.conteudo === 'string' 
+        ? exactMatch.conteudo 
+        : JSON.stringify(exactMatch.conteudo, null, 2);
+      
+      contentCache.set(topico, content);
+      console.debug(`[fetchConteudo] Encontrado exato para "${topico}":`, content.substring(0, 100) + '...');
+      return content;
+    }
+
+    // Try case-insensitive match
+    const { data: caseInsensitive, error: caseError } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .ilike('topico', topico)
+      .maybeSingle();
+
+    if (caseError) {
+      console.error('[fetchConteudo] Erro na busca case-insensitive:', caseError);
+    }
+
+    if (caseInsensitive?.conteudo) {
+      const content = typeof caseInsensitive.conteudo === 'string' 
+        ? caseInsensitive.conteudo 
+        : JSON.stringify(caseInsensitive.conteudo, null, 2);
+      
+      contentCache.set(topico, content);
+      console.debug(`[fetchConteudo] Encontrado case-insensitive para "${topico}":`, content.substring(0, 100) + '...');
+      return content;
+    }
+
+    // Try partial match
+    const { data: partialMatch, error: partialError } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .ilike('topico', `%${topico}%`)
+      .maybeSingle();
+
+    if (partialError) {
+      console.error('[fetchConteudo] Erro na busca parcial:', partialError);
+    }
+
+    if (partialMatch?.conteudo) {
+      const content = typeof partialMatch.conteudo === 'string' 
+        ? partialMatch.conteudo 
+        : JSON.stringify(partialMatch.conteudo, null, 2);
+      
+      contentCache.set(topico, content);
+      console.debug(`[fetchConteudo] Encontrado parcial para "${topico}":`, content.substring(0, 100) + '...');
+      return content;
+    }
+
+    console.warn(`[fetchConteudo] Tópico "${topico}" não encontrado`);
+    return '';
+  } catch (error) {
+    console.error('[fetchConteudo] Erro:', error);
+    return '';
+  }
+}
+
+function splitByHeading(raw: string, heading: RegExp, captureGroup = 1): Blocks {
+  if (!raw) return {};
+  
   const blocks: Blocks = {};
   const lines = raw.split('\n');
   let currentKey = '';
@@ -86,19 +97,19 @@ export function splitByHeading(
     const match = line.match(heading);
     
     if (match && match[captureGroup]) {
-      // Save previous block if exists
+      // Save previous block
       if (currentKey && currentContent.length > 0) {
         blocks[currentKey] = currentContent.join('\n').trim();
       }
       
       // Start new block
-      currentKey = match[captureGroup];
-      currentContent = [line]; // Include the heading line
+      currentKey = match[captureGroup].trim();
+      currentContent = [];
     } else if (currentKey) {
       currentContent.push(line);
     }
   }
-
+  
   // Save last block
   if (currentKey && currentContent.length > 0) {
     blocks[currentKey] = currentContent.join('\n').trim();
@@ -107,170 +118,140 @@ export function splitByHeading(
   return blocks;
 }
 
-const headingPatterns: Record<string, RegExp> = {
-  motivacao: /^(?:#+\s*)?(?:Motiva[cç][aã]o)\s+(11|22|[1-9]):?\s*$/im,
-  impressao: /^(?:#+\s*)?(?:Impress[aã]o)\s+(11|22|[1-9]):?\s*$/im,
-  expressao: /^(?:#+\s*)?(?:Express[aã]o)\s+(11|22|[1-9]):?\s*$/im,
-  destino: /^(?:#+\s*)?(?:Destino)\s+(11|22|[1-9]):?\s*$/im,
-  missao: /^(?:#+\s*)?(?:Miss[aã]o)\s+(11|22|[1-9]):?\s*$/im,
-  numero_psiquico: /^(?:#+\s*)?(?:N[uú]mero\s+Ps[ií]quico)\s+(11|22|[1-9]):?\s*$/im,
-  resposta_subconsciente: /^(?:#+\s*)?(?:Resposta\s+Subconsciente)\s+([2-9]):?\s*$/im,
-  ano_pessoal: /^(?:#+\s*)?(?:Ano\s+Pessoal)\s+([1-9]):?\s*$/im,
-  mes_pessoal: /^(?:#+\s*)?(?:M[eê]s\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
-  dia_pessoal: /^(?:#+\s*)?(?:Dia\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
-  desafios: /^(?:#+\s*)?(?:Desafios?)\s+([0-9]):?\s*$/im,
-  // Unified moments pattern - use single topic "momentos_decisivos" for all 4 moments
-  momentos_decisivos: /^(?:#+\s*)?(?:(?:Primeiro|Segundo|Terceiro|Quarto)\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
-  // Keep individual patterns for backward compatibility
-  primeiro_momento: /^(?:#+\s*)?(?:Primeiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
-  segundo_momento: /^(?:#+\s*)?(?:Segundo\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
-  terceiro_momento: /^(?:#+\s*)?(?:Terceiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
-  quarto_momento: /^(?:#+\s*)?(?:Quarto\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
-  arcanos: /^(?:#+\s*)?(?:Arcanos?)\s+([0-9]{1,2}):?\s*$/im,
-};
-
-// Cache for parsed content
-const contentCache = new Map<string, Blocks>();
-
 export async function getInterpretacao(topico: string, numero: number | string): Promise<string | null> {
-  const cacheKey = topico;
-  
-  if (!contentCache.has(cacheKey)) {
-    // Robust fetch: try multiple matching strategies and pick the latest row
-    const topic = topico.trim();
-    const candidates = [
-      { op: 'eq' as const, value: topic },
-      { op: 'ilike' as const, value: topic },
-      { op: 'ilike' as const, value: `%${topic}%` },
-      { op: 'ilike' as const, value: topic.toLowerCase() },
-      { op: 'ilike' as const, value: `%${topic.toLowerCase()}%` },
-    ];
+  const numeroStr = String(numero);
+  console.debug(`[getInterpretacao] Buscando ${topico} número ${numeroStr}`);
 
-    let row: { conteudo: any } | null = null;
-
-    for (const c of candidates) {
-      let query: any = supabase
-        .from('conteudos_numerologia')
-        .select('conteudo')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      query = c.op === 'eq' ? query.eq('topico', c.value) : query.ilike('topico', c.value);
-
-      const { data, error } = await query.maybeSingle();
-      if (error) {
-        console.warn(`[getInterpretacao] tentativa falhou (${c.op}:${c.value})`, error.message);
-        continue;
+  try {
+    const raw = await fetchConteudo(topico);
+    if (!raw) {
+      console.warn(`[getInterpretacao] Conteúdo não encontrado para ${topico}`);
+      
+      // Try aliases before giving up
+      const aliases = topicAliases[topico] || [];
+      for (const alias of aliases) {
+        const aliasContent = await fetchConteudo(alias);
+        if (aliasContent) {
+          return await getInterpretacao(alias, numero);
+        }
       }
-      if (data?.conteudo) {
-        row = data as any;
-        break;
+      
+      // Try reverse lookup in aliases
+      for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
+        if (aliasArray.includes(topico)) {
+          const mainContent = await fetchConteudo(mainTopic);
+          if (mainContent) {
+            return await getInterpretacao(mainTopic, numero);
+          }
+        }
       }
+      
+      return null;
     }
 
-    if (!row?.conteudo) {
-      console.warn(`Nenhum conteúdo encontrado para tópico: ${topico}`);
-      contentCache.set(cacheKey, {});
-    } else {
-      const raw = row.conteudo as any;
-      let blocks: Blocks = {};
-
-      if (typeof raw === 'string') {
-        const pattern = headingPatterns[topico];
-        if (pattern) {
-          blocks = splitByHeading(raw, pattern);
-        } else {
-          // When we don't have a pattern, store the whole content
-          blocks['__all__'] = raw;
-        }
-      } else if (typeof raw === 'object') {
-        // Handle complex JSON structures from Supabase
-        const processJsonValue = (value: any): string => {
-          if (typeof value === 'string') return value;
-          if (typeof value === 'object' && value !== null) {
-            // If it's an object with properties, build a formatted string
-            const parts: string[] = [];
-            if (value.titulo) parts.push(`**${value.titulo}**`);
-            if (value.descricao) parts.push(value.descricao);
-            if (value.caracteristicas && Array.isArray(value.caracteristicas)) {
-              parts.push(`\n**Características:** ${value.caracteristicas.join(', ')}`);
-            }
-            if (value.aspectos_positivos && Array.isArray(value.aspectos_positivos)) {
-              parts.push(`\n**Aspectos Positivos:** ${value.aspectos_positivos.join(', ')}`);
-            }
-            if (value.desafios && Array.isArray(value.desafios)) {
-              parts.push(`\n**Desafios:** ${value.desafios.join(', ')}`);
-            }
-            return parts.length > 0 ? parts.join('\n\n') : JSON.stringify(value);
+    // If content is JSON object format, handle it
+    if (raw.startsWith('{') || raw.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(raw);
+        
+        // Check if it's a direct object with the number as key
+        if (parsed[numeroStr]) {
+          const item = parsed[numeroStr];
+          if (typeof item === 'object' && item.titulo && item.descricao) {
+            return `**${item.titulo}**\n\n${item.descricao}${item.caracteristicas ? '\n\n**Características:**\n' + item.caracteristicas.join(', ') : ''}${item.positivos ? '\n\n**Aspectos Positivos:**\n' + item.positivos.join(', ') : ''}${item.desafios ? '\n\n**Desafios:**\n' + item.desafios.join(', ') : ''}`;
           }
-          return String(value);
-        };
-
-        // Flatten JSON into blocks: direct key -> formatted value
-        for (const [key, value] of Object.entries(raw)) {
-          if (value == null) continue;
-          blocks[String(key)] = processJsonValue(value);
+          return String(item);
         }
         
-        // Also support nested { conteudo: string }
-        if (!Object.keys(blocks).length && (raw as any).conteudo) {
-          blocks['__all__'] = processJsonValue((raw as any).conteudo);
+        // Check if it's an array and find by number
+        if (Array.isArray(parsed)) {
+          const found = parsed.find(item => item.numero === numero || item.numero === numeroStr);
+          if (found) {
+            if (typeof found === 'object' && found.titulo && found.descricao) {
+              return `**${found.titulo}**\n\n${found.descricao}${found.caracteristicas ? '\n\n**Características:**\n' + found.caracteristicas.join(', ') : ''}${found.positivos ? '\n\n**Aspectos Positivos:**\n' + found.positivos.join(', ') : ''}${found.desafios ? '\n\n**Desafios:**\n' + found.desafios.join(', ') : ''}`;
+            }
+            return String(found);
+          }
+        }
+      } catch (parseError) {
+        console.warn(`[getInterpretacao] Erro ao parsear JSON para ${topico}:`, parseError);
+      }
+    }
+
+    // Parse text content based on common patterns
+    const topicName = topico.charAt(0).toUpperCase() + topico.slice(1).replace(/_/g, ' ');
+    
+    // Create pattern to match "Topic Number" format
+    const sectionPattern = new RegExp(
+      `(^|\\n)\\s*${topicName}\\s+${numeroStr}\\s*\\n([\\s\\S]*?)(?=\\n\\s*${topicName}\\s+\\d+|$)`,
+      'im'
+    );
+    
+    let match = raw.match(sectionPattern);
+    if (match && match[2]) {
+      const content = match[2].trim();
+      if (content.length > 10) {
+        console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 1)`);
+        return content;
+      }
+    }
+    
+    // Alternative pattern: just "Number" at line start
+    const numberPattern = new RegExp(
+      `(^|\\n)\\s*${numeroStr}\\s*\\n([\\s\\S]*?)(?=\\n\\s*\\d+\\s*\\n|$)`,
+      'm'
+    );
+    
+    match = raw.match(numberPattern);
+    if (match && match[2]) {
+      const content = match[2].trim();
+      if (content.length > 10) {
+        console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 2)`);
+        return content;
+      }
+    }
+    
+    // Pattern for numbered sections with description
+    const descPattern = new RegExp(
+      `(^|\\n)\\s*${numeroStr}\\s*[-.]?\\s*([^\\n]+)\\n([\\s\\S]*?)(?=\\n\\s*\\d+\\s*[-.]?|$)`,
+      'm'
+    );
+    
+    match = raw.match(descPattern);
+    if (match && match[3]) {
+      const title = match[2].trim();
+      const content = match[3].trim();
+      if (content.length > 10) {
+        console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 3)`);
+        return title ? `**${title}**\n\n${content}` : content;
+      }
+    }
+
+    console.warn(`[getInterpretacao] Interpretação específica não encontrada para ${topico} ${numeroStr}`);
+    
+    // Try aliases
+    for (const alias of topicAliases[topico] || []) {
+      const result = await getInterpretacao(alias, numero);
+      if (result && !result.includes('em preparação')) {
+        return result;
+      }
+    }
+
+    // Try reverse aliases
+    for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
+      if (aliasArray.includes(topico)) {
+        const aliasResult = await getInterpretacao(mainTopic, numero);
+        if (aliasResult && !aliasResult.includes('em preparação')) {
+          return aliasResult;
         }
       }
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug(`[parse] ${topico} -> blocos:`, Object.keys(blocks));
-      }
-      contentCache.set(cacheKey, blocks);
     }
+
+    return null;
+  } catch (error) {
+    console.error(`[getInterpretacao] Erro:`, error);
+    return null;
   }
-  
-  const blocks = contentCache.get(cacheKey) || {};
-  const key = String(numero);
-
-  if (blocks[key]) return blocks[key];
-
-  // Case-insensitive lookup for string keys (e.g., nomes de anjos)
-  const ci = Object.entries(blocks).find(([k]) => k.toLowerCase() === key.toLowerCase());
-  if (ci) return ci[1];
-
-  // Fallback to full content when available
-  if (blocks['__all__']) {
-    // For full content, get first paragraph as fallback
-    const paragraphs = blocks['__all__'].split('\n\n').filter(p => p.trim().length > 0);
-    return paragraphs[0] || blocks['__all__'];
-  }
-
-  // Try aliases for fallback
-  const aliases = topicAliases[topico] || [];
-  for (const alias of aliases) {
-    const aliasResult = await getInterpretacao(alias, numero);
-    if (aliasResult && !aliasResult.includes('em preparação')) {
-      return aliasResult;
-    }
-  }
-
-  // Try reverse aliases
-  for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
-    if (aliasArray.includes(topico)) {
-      const aliasResult = await getInterpretacao(mainTopic, numero);
-      if (aliasResult && !aliasResult.includes('em preparação')) {
-        return aliasResult;
-      }
-    }
-  }
-
-  // Get first paragraph of base topic as final fallback
-  const baseContent = await fetchConteudo(topico);
-  if (baseContent) {
-    const paragraphs = baseContent.split('\n\n').filter(p => p.trim().length > 0);
-    if (paragraphs.length > 0) {
-      return paragraphs[0];
-    }
-  }
-
-  // Last resort: generic message but never null
-  return `Esta interpretação numerológica está sendo desenvolvida. Consulte um especialista para análise personalizada.`;
 }
 
 export async function getInterpretacaoMomento(
