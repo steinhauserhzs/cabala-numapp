@@ -19,15 +19,17 @@ export function clean(text: string): string {
 }
 
 export function letterValue(ch: string): number {
+  // Pythagorean mapping (Portuguese friendly) and Ç treated as C (3)
   const mapa: Record<string, number> = {
-    A: 1, I: 1, J: 1, Q: 1, Y: 1,
-    B: 2, K: 2, R: 2,
-    C: 3, G: 3, L: 3, S: 3,
-    D: 4, M: 4, T: 4,
-    E: 5, H: 5, N: 5,
-    U: 6, V: 6, W: 6, X: 6, Ç: 6,
-    O: 7, Z: 7,
-    F: 8, P: 8
+    A: 1, J: 1, S: 1,
+    B: 2, K: 2, T: 2,
+    C: 3, L: 3, U: 3, Ç: 3,
+    D: 4, M: 4, V: 4,
+    E: 5, N: 5, W: 5,
+    F: 6, O: 6, X: 6,
+    G: 7, P: 7, Y: 7,
+    H: 8, Q: 8, Z: 8,
+    I: 9, R: 9,
   };
   return mapa[ch.toUpperCase()] || 0;
 }
@@ -77,12 +79,10 @@ export function calcDestino(dob: Date): number {
   const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
   
-  // Reduce each component first, then sum them
-  const diaReduced = reduceKeepMasters(dia);
-  const mesReduced = reduceKeepMasters(mes);
-  const anoReduced = reduceKeepMasters(ano);
+  // Sum all digits of the full birth date (preserve master numbers only at the end)
+  const digits = `${dia}${mes}${ano}`.replace(/[^0-9]/g, '');
+  const soma = digits.split("").reduce((acc, d) => acc + Number(d), 0);
   
-  const soma = diaReduced + mesReduced + anoReduced;
   return reduceKeepMasters(soma);
 }
 
@@ -360,9 +360,9 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     tendenciasOcultas: calcTendenciasOcultas(nome),
     anjoGuarda: calcAnjoGuarda(dataNascimento),
     ciclosVida: {
-      primeiro: reduceKeepMasters(calcMomento1(dataNascimento)),
-      segundo: reduceKeepMasters(calcExpressao(nome)),
-      terceiro: reduceKeepMasters(calcMomento1(dataNascimento) + calcExpressao(nome))
+      primeiro: reduceKeepMasters(dataNascimento.getMonth() + 1),
+      segundo: reduceKeepMasters(dataNascimento.getDate()),
+      terceiro: reduceKeepMasters(dataNascimento.getFullYear()),
     },
     desafios: {
       primeiro: desafio1,

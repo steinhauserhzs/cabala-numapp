@@ -14,6 +14,11 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
   const [birthDate, setBirthDate] = useState('');
   const [errors, setErrors] = useState<{ name?: string; birthDate?: string }>({});
 
+  const parseLocalDate = (isoDate: string) => {
+    const [y, m, d] = isoDate.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  };
+
   const validateForm = () => {
     const newErrors: { name?: string; birthDate?: string } = {};
     
@@ -26,7 +31,7 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
     if (!birthDate) {
       newErrors.birthDate = 'Data de nascimento é obrigatória';
     } else {
-      const date = new Date(birthDate);
+      const date = parseLocalDate(birthDate);
       const today = new Date();
       if (date > today) {
         newErrors.birthDate = 'Data não pode ser no futuro';
@@ -44,7 +49,7 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
     e.preventDefault();
     
     if (validateForm()) {
-      const date = new Date(birthDate);
+      const date = parseLocalDate(birthDate);
       onSubmit(name.trim(), date);
     }
   };

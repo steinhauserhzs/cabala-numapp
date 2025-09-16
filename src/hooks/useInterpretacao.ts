@@ -15,8 +15,10 @@ export const useInterpretacao = (categoria: string, numero: number | string): {
     gcTime: 10 * 60 * 1000,
   });
 
+  const fallback = `Interpretação não encontrada para ${categoria} ${numero}.`;
+
   return {
-    interpretacao: data || null,
+    interpretacao: data && String(data).trim().length ? data : fallback,
     isLoading,
     error: error as Error | null,
   };

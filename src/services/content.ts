@@ -1,29 +1,52 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export async function fetchConteudo(topico: string): Promise<string> {
-  const { data, error } = await supabase
-    .from('conteudos_numerologia')
-    .select('conteudo')
-    .eq('topico', topico)
-    .maybeSingle();
+  const topic = topico.trim();
 
-  if (error) {
-    console.error(`Erro ao buscar conteúdo para ${topico}:`, error);
-    return '';
+  const candidates = [
+    { op: 'eq' as const, value: topic },
+    { op: 'ilike' as const, value: topic },
+    { op: 'ilike' as const, value: `%${topic}%` },
+    { op: 'ilike' as const, value: topic.toLowerCase() },
+    { op: 'ilike' as const, value: `%${topic.toLowerCase()}%` },
+  ];
+
+  let row: { conteudo: any } | null = null;
+
+  for (const c of candidates) {
+    let query: any = supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    query = c.op === 'eq' ? query.eq('topico', c.value) : query.ilike('topico', c.value);
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+      console.warn(`[fetchConteudo] tentativa falhou (${c.op}:${c.value})`, error.message);
+      continue;
+    }
+
+    if (data?.conteudo) {
+      row = data as any;
+      break;
+    }
   }
 
-  if (!data?.conteudo) {
+  if (!row?.conteudo) {
     console.warn(`Nenhum conteúdo encontrado para tópico: ${topico}`);
     return '';
   }
 
   // Handle both string and object content formats
   let content = '';
-  if (typeof data.conteudo === 'string') {
-    content = data.conteudo;
-  } else if (data.conteudo && typeof data.conteudo === 'object') {
+  if (typeof row.conteudo === 'string') {
+    content = row.conteudo;
+  } else if (row.conteudo && typeof row.conteudo === 'object') {
     // Try to get content from nested object
-    content = (data.conteudo as any)?.conteudo || '';
+    content = (row.conteudo as any)?.conteudo || '';
   }
   
   if (process.env.NODE_ENV !== 'production') {
@@ -96,18 +119,43 @@ export async function getInterpretacao(topico: string, numero: number | string):
   const cacheKey = topico;
   
   if (!contentCache.has(cacheKey)) {
-    // Fetch raw row to support both string and JSON content structures
-    const { data, error } = await supabase
-      .from('conteudos_numerologia')
-      .select('conteudo')
-      .eq('topico', topico)
-      .maybeSingle();
+    // Robust fetch: try multiple matching strategies and pick the latest row
+    const topic = topico.trim();
+    const candidates = [
+      { op: 'eq' as const, value: topic },
+      { op: 'ilike' as const, value: topic },
+      { op: 'ilike' as const, value: `%${topic}%` },
+      { op: 'ilike' as const, value: topic.toLowerCase() },
+      { op: 'ilike' as const, value: `%${topic.toLowerCase()}%` },
+    ];
 
-    if (error || !data?.conteudo) {
-      console.error(`Erro ao buscar conteúdo p/ ${topico}`, error);
+    let row: { conteudo: any } | null = null;
+
+    for (const c of candidates) {
+      let query: any = supabase
+        .from('conteudos_numerologia')
+        .select('conteudo')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      query = c.op === 'eq' ? query.eq('topico', c.value) : query.ilike('topico', c.value);
+
+      const { data, error } = await query.maybeSingle();
+      if (error) {
+        console.warn(`[getInterpretacao] tentativa falhou (${c.op}:${c.value})`, error.message);
+        continue;
+      }
+      if (data?.conteudo) {
+        row = data as any;
+        break;
+      }
+    }
+
+    if (!row?.conteudo) {
+      console.warn(`Nenhum conteúdo encontrado para tópico: ${topico}`);
       contentCache.set(cacheKey, {});
     } else {
-      const raw = data.conteudo as any;
+      const raw = row.conteudo as any;
       let blocks: Blocks = {};
 
       if (typeof raw === 'string') {

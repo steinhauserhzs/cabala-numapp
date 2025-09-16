@@ -51,8 +51,8 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
                   {conteudo}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">
-                  Conteúdo não disponível para este tópico.
+                <div className="text-sm text-foreground leading-relaxed">
+                  Conteúdo indisponível no momento. Em breve adicionaremos este tópico.
                 </div>
               )}
             </AccordionContent>
