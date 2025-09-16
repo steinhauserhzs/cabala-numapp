@@ -19,19 +19,26 @@ export function clean(text: string): string {
 }
 
 export function letterValue(ch: string): number {
-  // Pythagorean mapping (Portuguese friendly) and Ç treated as C (3)
+  // Cabalistic mapping (1-8, no group 9) with Y as vowel
   const mapa: Record<string, number> = {
-    A: 1, J: 1, S: 1,
-    B: 2, K: 2, T: 2,
-    C: 3, L: 3, U: 3, Ç: 3,
-    D: 4, M: 4, V: 4,
-    E: 5, N: 5, W: 5,
-    F: 6, O: 6, X: 6,
-    G: 7, P: 7, Y: 7,
-    H: 8, Q: 8, Z: 8,
-    I: 9, R: 9,
+    A: 1, I: 1, J: 1, Q: 1, Y: 1,  // Group 1
+    B: 2, K: 2, R: 2,               // Group 2  
+    C: 3, G: 3, L: 3, S: 3,         // Group 3
+    D: 4, M: 4, T: 4,               // Group 4
+    E: 5, H: 5, N: 5,               // Group 5
+    U: 6, V: 6, W: 6, X: 6, Ç: 6,  // Group 6
+    O: 7, Z: 7,                     // Group 7
+    F: 8, P: 8,                     // Group 8
+    // No group 9 in Cabalistic
   };
-  return mapa[ch.toUpperCase()] || 0;
+  
+  const result = mapa[ch.toUpperCase()] || 0;
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[letterValue] "${ch}" -> ${result}`);
+  }
+  
+  return result;
 }
 
 export function reduceKeepMasters(n: number): number {
@@ -90,12 +97,15 @@ export function calcMissao(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
   
-  // Reduce each component first, then sum them  
-  const diaReduced = reduceKeepMasters(dia);
-  const mesReduced = reduceKeepMasters(mes);
+  // Missão = reduce(dia + mês) - sum first, then reduce (preserving masters)
+  const soma = dia + mes;
+  const result = reduceKeepMasters(soma);
   
-  const soma = diaReduced + mesReduced;
-  return reduceKeepMasters(soma);
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMissao] dia=${dia} mes=${mes} soma=${soma} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcNumeroPsiquico(dob: Date): number {
@@ -123,9 +133,16 @@ export function calcRespostaSubconsciente(nome: string): number {
 
 export function calcLicoesCarmicas(nome: string): number[] {
   const values = mapNameToValues(nome);
-  const presentNumbers = new Set(values.filter(v => v > 0 && v <= 9));
-  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  return allNumbers.filter(num => !presentNumbers.has(num));
+  const presentNumbers = new Set(values.filter(v => v > 0 && v <= 8)); // Cabalistic: only 1-8
+  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8]; // No group 9 in Cabalistic
+  
+  const result = allNumbers.filter(num => !presentNumbers.has(num));
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcLicoesCarmicas] presente: [${Array.from(presentNumbers).sort().join(',')}], ausentes: [${result.join(',')}]`);
+  }
+  
+  return result;
 }
 
 export function calcTendenciasOcultas(nome: string): number[] {
@@ -133,15 +150,21 @@ export function calcTendenciasOcultas(nome: string): number[] {
   const counter: Record<number, number> = {};
   
   values.forEach(v => {
-    if (v > 0 && v <= 9) {
+    if (v > 0 && v <= 8) { // Cabalistic: only 1-8
       counter[v] = (counter[v] || 0) + 1;
     }
   });
   
-  // Return numbers that appear 4 or more times
-  return Object.entries(counter)
-    .filter(([_, count]) => count >= 4)
+  // Return numbers that appear 3 or more times (common threshold)
+  const result = Object.entries(counter)
+    .filter(([_, count]) => count >= 3)
     .map(([num, _]) => parseInt(num));
+    
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcTendenciasOcultas] contador:`, counter, `result: [${result.join(',')}]`);
+  }
+  
+  return result;
 }
 
 export function detectarDividasCarmicas(valores: number[]): number[] {
@@ -201,33 +224,60 @@ export function calcDesafioPrincipal(d1: number, d2: number): number {
 }
 
 export function calcMomento1(dob: Date): number {
-  // Primeiro momento: Missão (dia + mês reduzidos)
-  return calcMissao(dob);
+  // 1º Momento Decisivo: reduce(dia + mês)
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  const soma = dia + mes;
+  const result = reduceKeepMasters(soma);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMomento1] dia=${dia} mes=${mes} soma=${soma} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcMomento2(dob: Date): number {
-  // Segundo momento: dia + ano reduzidos separadamente
-  const dia = dob.getDate();
+  // 2º Momento Decisivo: reduce(mês + ano)
+  const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
-  const diaReduced = reduceKeepMasters(dia);
-  const anoReduced = reduceKeepMasters(ano);
-  return reduceKeepMasters(diaReduced + anoReduced);
+  const soma = mes + ano;
+  const result = reduceKeepMasters(soma);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMomento2] mes=${mes} ano=${ano} soma=${soma} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcMomento3(dob: Date): number {
-  // Terceiro momento: primeiro + segundo momentos
-  const momento1 = calcMomento1(dob);
-  const momento2 = calcMomento2(dob);
-  return reduceKeepMasters(momento1 + momento2);
+  // 3º Momento Decisivo: reduce(dia + ano)
+  const dia = dob.getDate();
+  const ano = dob.getFullYear();
+  const soma = dia + ano;
+  const result = reduceKeepMasters(soma);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMomento3] dia=${dia} ano=${ano} soma=${soma} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcMomento4(dob: Date): number {
-  // Quarto momento: mês + ano reduzidos separadamente
+  // 4º Momento Decisivo: reduce(dia + mês + ano)
+  const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
-  const mesReduced = reduceKeepMasters(mes);
-  const anoReduced = reduceKeepMasters(ano);
-  return reduceKeepMasters(mesReduced + anoReduced);
+  const soma = dia + mes + ano;
+  const result = reduceKeepMasters(soma);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMomento4] dia=${dia} mes=${mes} ano=${ano} soma=${soma} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcAnoPersonal(data: Date, anoAtual: number): number {
@@ -249,8 +299,11 @@ export function calcDiaPersonal(mesPersonal: number, diaAtual: number): number {
 }
 
 export function calcAnjoGuarda(dob: Date): string {
+  // Legacy function kept for compatibility - but should use calcAnjoGuardaFromSupabase for accuracy
+  console.warn('[calcAnjoGuarda] Using legacy angel calculation. Consider using calcAnjoGuardaFromSupabase for Supabase content.');
+  
   const dia = dob.getDate();
-  const mes = dob.getMonth() + 1; // JavaScript months are 0-indexed
+  const mes = dob.getMonth() + 1;
   
   // Calculate day of year (1-365/366)
   const start = new Date(dob.getFullYear(), 0, 0);
@@ -258,7 +311,6 @@ export function calcAnjoGuarda(dob: Date): string {
   const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
   
   // Each angel governs 5 days, starting from March 21 (day 80 in regular years)
-  // March 21 = day 80, so we adjust: if dayOfYear < 80, add 365
   const adjustedDay = dayOfYear < 80 ? dayOfYear + 365 : dayOfYear;
   const angelIndex = Math.floor((adjustedDay - 80) / 5);
   
@@ -358,11 +410,11 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     licoesCarmicas: calcLicoesCarmicas(nome),
     dividasCarmicas: detectarDividasCarmicas(allIntermediateSums),
     tendenciasOcultas: calcTendenciasOcultas(nome),
-    anjoGuarda: calcAnjoGuarda(dataNascimento),
+    anjoGuarda: calcAnjoGuarda(dataNascimento), // Use legacy for now - can be enhanced later
     ciclosVida: {
-      primeiro: reduceKeepMasters(dataNascimento.getMonth() + 1),
-      segundo: reduceKeepMasters(dataNascimento.getDate()),
-      terceiro: reduceKeepMasters(dataNascimento.getFullYear()),
+      primeiro: reduceKeepMasters(dataNascimento.getDate()),      // 1º Ciclo: dia
+      segundo: reduceKeepMasters(dataNascimento.getMonth() + 1),  // 2º Ciclo: mês  
+      terceiro: reduceKeepMasters(dataNascimento.getFullYear()),  // 3º Ciclo: ano
     },
     desafios: {
       primeiro: desafio1,

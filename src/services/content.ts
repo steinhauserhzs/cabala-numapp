@@ -45,8 +45,22 @@ export async function fetchConteudo(topico: string): Promise<string> {
   if (typeof row.conteudo === 'string') {
     content = row.conteudo;
   } else if (row.conteudo && typeof row.conteudo === 'object') {
-    // Try to get content from nested object
-    content = (row.conteudo as any)?.conteudo || '';
+    // Format JSON object content properly
+    const obj = row.conteudo as any;
+    if (obj.titulo && obj.descricao) {
+      content = `# ${obj.titulo}\n\n${obj.descricao}`;
+      if (obj.caracteristicas && Array.isArray(obj.caracteristicas)) {
+        content += `\n\n## Características:\n${obj.caracteristicas.map((c: string) => `- ${c}`).join('\n')}`;
+      }
+      if (obj.conselhos && Array.isArray(obj.conselhos)) {
+        content += `\n\n## Conselhos:\n${obj.conselhos.map((c: string) => `- ${c}`).join('\n')}`;
+      }
+    } else if (obj.conteudo) {
+      content = String(obj.conteudo);
+    } else {
+      // Fallback: join all string values
+      content = Object.values(obj).filter(v => typeof v === 'string').join('\n\n');
+    }
   }
   
   if (process.env.NODE_ENV !== 'production') {
@@ -105,6 +119,9 @@ const headingPatterns: Record<string, RegExp> = {
   mes_pessoal: /^(?:#+\s*)?(?:M[eê]s\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
   dia_pessoal: /^(?:#+\s*)?(?:Dia\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
   desafios: /^(?:#+\s*)?(?:Desafios?)\s+([0-9]):?\s*$/im,
+  // Unified moments pattern - use single topic "momentos_decisivos" for all 4 moments
+  momentos_decisivos: /^(?:#+\s*)?(?:(?:Primeiro|Segundo|Terceiro|Quarto)\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
+  // Keep individual patterns for backward compatibility
   primeiro_momento: /^(?:#+\s*)?(?:Primeiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
   segundo_momento: /^(?:#+\s*)?(?:Segundo\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
   terceiro_momento: /^(?:#+\s*)?(?:Terceiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
@@ -195,16 +212,26 @@ export async function getInterpretacao(topico: string, numero: number | string):
   if (ci) return ci[1];
 
   // Fallback to full content when available
-  if (blocks['__all__']) return blocks['__all__'];
+  if (blocks['__all__']) {
+    // For full content, get first paragraph as fallback
+    const firstParagraph = blocks['__all__'].split('\n\n')[0];
+    return firstParagraph || blocks['__all__'];
+  }
 
-  return null;
+  // Last resort: generic message but never null
+  return `Interpretação para ${topico} ${numero} em preparação. Consulte um numerólogo para análise completa.`;
 }
 
 export async function getInterpretacaoMomento(
   momento: 'primeiro' | 'segundo' | 'terceiro' | 'quarto',
   numero: number | string
 ): Promise<string | null> {
-  return getInterpretacao(`${momento}_momento`, numero);
+  // Try unified topic first, then fall back to individual topics
+  let result = await getInterpretacao('momentos_decisivos', numero);
+  if (!result) {
+    result = await getInterpretacao(`${momento}_momento`, numero);
+  }
+  return result;
 }
 
 export async function getTextoTopico(topico: string): Promise<string | null> {

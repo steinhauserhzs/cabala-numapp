@@ -9,6 +9,7 @@ import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain
 import { TopicCard } from './TopicCard';
 import { generatePDF } from '@/utils/pdf';
 import { useToast } from '@/hooks/use-toast';
+import { GuardianAngelCard } from './GuardianAngelCard';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -443,37 +444,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Anjo da Guarda</h2>
           <div className="max-w-md mx-auto">
-            <Card className="group hover:scale-105 transition-all duration-300 h-full">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                      <Star size={20} />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Anjo da Guarda</CardTitle>
-                      <CardDescription className="text-sm">Seu protetor celestial</CardDescription>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-secondary">
-                    {mapa.anjoGuarda}
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="interpretation" className="border-none">
-                    <AccordionTrigger className="text-sm hover:no-underline py-2">
-                      Ver interpretação
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-3 text-sm">
-                      <AngelInterpretationContent angelName={mapa.anjoGuarda} />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
+            <GuardianAngelCard angelName={mapa.anjoGuarda} birthDate={birthDate} />
           </div>
         </div>
 
