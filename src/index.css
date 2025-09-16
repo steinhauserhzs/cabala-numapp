@@ -59,6 +59,15 @@ All colors MUST be HSL.
     /* Animations */
     --transition-mystical: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
+    /* Z-index system */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
@@ -124,5 +133,20 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from {
+      text-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary)), 0 0 15px hsl(var(--primary));
+    }
+    to {
+      text-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
+    }
   }
 }

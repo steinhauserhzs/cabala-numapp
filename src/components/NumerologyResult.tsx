@@ -5,9 +5,9 @@ import { MapaNumerologico } from '@/utils/numerology';
 import { useInterpretacao } from '@/hooks/useInterpretacao';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain, Palette, Users, Triangle } from 'lucide-react';
+import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain, Palette, Users, Triangle, Loader2 } from 'lucide-react';
 import { TopicCard } from './TopicCard';
-import { generateNumerologyPDF } from '@/utils/pdfGenerator';
+import { generatePDF } from '@/utils/pdf';
 import { useToast } from '@/hooks/use-toast';
 
 interface NumerologyResultProps {
@@ -20,7 +20,7 @@ interface NumerologyResultProps {
 export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyResultProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { toast } = useToast();
-
+  
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR');
   };
@@ -28,15 +28,18 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   const handleGeneratePDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      await generateNumerologyPDF(name, birthDate);
-      toast({
-        title: "PDF gerado com sucesso!",
-        description: "Seu mapa numerológico foi baixado.",
+      await generatePDF(name, birthDate, (progress) => {
+        if (progress === 100) {
+          toast({
+            title: "PDF Gerado!",
+            description: "Seu mapa numerológico foi baixado com sucesso.",
+          });
+        }
       });
     } catch (error) {
       toast({
         title: "Erro ao gerar PDF",
-        description: "Não foi possível gerar o PDF. Tente novamente.",
+        description: "Ocorreu um erro ao gerar o PDF. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -67,7 +70,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     const { interpretacao, isLoading } = useInterpretacao(categoria, value);
     
     return (
-      <Card className="group hover:scale-105 transition-all duration-300">
+      <Card className="group hover:scale-105 transition-all duration-300 h-full">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -104,7 +107,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">
-                    Não há interpretação específica para este número neste tópico.
+                    Carregando interpretação...
                   </div>
                 )}
               </AccordionContent>
@@ -183,8 +186,6 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       icon: <Zap size={20} />
     }
   ];
-
-  // Ciclos de vida removed from interface - using desafios instead
 
   const challengeNumbers = [
     {
@@ -267,9 +268,9 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
 
   return (
     <div className="min-h-screen bg-gradient-mystical">
-      <div className="numerology-content container mx-auto px-4 py-20">
-        {/* Header with improved spacing */}
-        <div className="flex items-center justify-between mb-8 pt-4">
+      <div className="container mx-auto px-4 pt-20 pb-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
           <Button 
             variant="outline" 
             onClick={onBack}
@@ -281,21 +282,25 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           
           <Button 
             variant="secondary" 
-            className="flex items-center space-x-2"
             onClick={handleGeneratePDF}
             disabled={isGeneratingPDF}
+            className="flex items-center space-x-2"
           >
-            <Download size={16} />
+            {isGeneratingPDF ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
             <span>{isGeneratingPDF ? 'Gerando...' : 'Exportar PDF'}</span>
           </Button>
         </div>
 
-        {/* Title with improved contrast */}
+        {/* Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-cosmic bg-clip-text text-transparent">
             Mapa Numerológico Cabalístico
           </h1>
-          <div className="text-2xl font-semibold text-foreground mb-2">
+          <div className="text-2xl font-semibold mb-2 text-foreground">
             {name}
           </div>
           <div className="text-lg text-muted-foreground">
@@ -303,13 +308,13 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </div>
 
-        {/* Core Numbers with improved responsive grid */}
+        {/* Core Numbers */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center">
+          <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center">
             <Sparkles className="mr-2 h-6 w-6 text-primary" />
             Núcleos Principais
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {coreNumbers.map(item => (
               <NumerologyCard key={item.title} {...item} />
             ))}
@@ -321,55 +326,57 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           <h2 className="text-2xl font-bold text-center mb-6 text-primary">
             Aspectos Cármicos
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {karmaNumbers.map((item) => (
-              <div key={item.title} className="bg-card border rounded-lg p-6 text-center hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  {item.icon}
-                  <h3 className="text-lg font-semibold">{item.title}</h3>
-                </div>
-                <div className="text-2xl font-bold mb-2 text-primary">
-                  {item.values.length > 0 ? item.values.join(', ') : 'Nenhum'}
-                </div>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </div>
+              <Card key={item.title} className="text-center hover:shadow-lg transition-shadow h-full">
+                <CardHeader>
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <div className="p-2 rounded-full bg-primary/10 text-primary">
+                      {item.icon}
+                    </div>
+                    <CardTitle className="text-lg">{item.title}</CardTitle>
+                  </div>
+                  <div className="text-2xl font-bold mb-2 text-primary">
+                    {item.values.length > 0 ? item.values.join(', ') : 'Nenhum'}
+                  </div>
+                  <CardDescription className="text-sm">{item.description}</CardDescription>
+                </CardHeader>
+              </Card>
             ))}
           </div>
         </div>
 
-        {/* Removed Cycle Numbers section - not in current interface */}
-
-        {/* Challenge Numbers with improved responsive grid */}
+        {/* Challenge Numbers */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-8 text-primary">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
             Desafios de Vida
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {challengeNumbers.map(item => (
               <NumerologyCard key={item.title} {...item} />
             ))}
           </div>
         </div>
 
-        {/* Decision Numbers with improved responsive grid */}
+        {/* Decision Numbers */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-8 text-primary">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
             Momentos Decisivos
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {decisionNumbers.map(item => (
               <NumerologyCard key={item.title} {...item} />
             ))}
           </div>
         </div>
 
-        {/* Personal Numbers with improved responsive grid */}
+        {/* Personal Numbers */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center">
+          <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center">
             <Calendar className="mr-2 h-6 w-6 text-secondary" />
             Ciclos Pessoais Atuais
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {personalNumbers.map(item => (
               <NumerologyCard key={item.title} {...item} />
             ))}
@@ -390,10 +397,10 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </div>
 
-        {/* Tópicos Adicionais with improved responsive grid */}
+        {/* Tópicos Adicionais */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-8 text-center">Informações Complementares</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <h2 className="text-2xl font-bold mb-6 text-center">Informações Complementares</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <TopicCard
               icon={<Star className="h-5 w-5 text-yellow-500" />}
               title="Seu Anjo"

@@ -32,21 +32,25 @@ const MapaPessoal = () => {
   if (showResult && numerologyMap && userBirthDate) {
     return (
       <div>
-        <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
-          <Link to={user ? "/dashboard" : "/"}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          
-          {user && (
-            <Link to="/dashboard">
-              <Button variant="outline" size="sm">
-                Dashboard
-              </Button>
-            </Link>
-          )}
+        <div className="fixed top-4 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center py-2">
+              <Link to={user ? "/dashboard" : "/"}>
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Button>
+              </Link>
+              
+              {user && (
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
         
         <NumerologyResult 
@@ -61,27 +65,33 @@ const MapaPessoal = () => {
 
   return (
     <div>
-      <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
-        <Link to={user ? "/dashboard" : "/"}>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        </Link>
-        
-        {user ? (
-          <Link to="/dashboard">
-            <Button variant="outline" size="sm">
-              Dashboard
-            </Button>
-          </Link>
-        ) : (
-          <Link to="/auth">
-            <Button variant="outline" size="sm">
-              Entrar / Cadastrar
-            </Button>
-          </Link>
-        )}
+      <div className="fixed top-4 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center py-2">
+            <Link to={user ? "/dashboard" : "/"}>
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+            </Link>
+            
+            {user && (
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">
+                  Dashboard
+                </Button>
+              </Link>
+            )}
+            
+            {!user && (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  Entrar / Cadastrar
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
       
       <NumerologyForm onSubmit={handleFormSubmit} />
