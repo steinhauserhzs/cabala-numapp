@@ -237,12 +237,40 @@ export async function getInterpretacao(topico: string, numero: number | string):
   // Fallback to full content when available
   if (blocks['__all__']) {
     // For full content, get first paragraph as fallback
-    const firstParagraph = blocks['__all__'].split('\n\n')[0];
-    return firstParagraph || blocks['__all__'];
+    const paragraphs = blocks['__all__'].split('\n\n').filter(p => p.trim().length > 0);
+    return paragraphs[0] || blocks['__all__'];
+  }
+
+  // Try aliases for fallback
+  const aliases = topicAliases[topico] || [];
+  for (const alias of aliases) {
+    const aliasResult = await getInterpretacao(alias, numero);
+    if (aliasResult && !aliasResult.includes('em preparação')) {
+      return aliasResult;
+    }
+  }
+
+  // Try reverse aliases
+  for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
+    if (aliasArray.includes(topico)) {
+      const aliasResult = await getInterpretacao(mainTopic, numero);
+      if (aliasResult && !aliasResult.includes('em preparação')) {
+        return aliasResult;
+      }
+    }
+  }
+
+  // Get first paragraph of base topic as final fallback
+  const baseContent = await fetchConteudo(topico);
+  if (baseContent) {
+    const paragraphs = baseContent.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length > 0) {
+      return paragraphs[0];
+    }
   }
 
   // Last resort: generic message but never null
-  return `Interpretação para ${topico} ${numero} em preparação. Consulte um numerólogo para análise completa.`;
+  return `Esta interpretação numerológica está sendo desenvolvida. Consulte um especialista para análise personalizada.`;
 }
 
 export async function getInterpretacaoMomento(

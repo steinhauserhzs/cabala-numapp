@@ -1,5 +1,47 @@
 // Utilities for numerological calculations according to Kabbalah
 
+interface DiacriticInfo {
+  letter: string;
+  bonus: number;
+}
+
+export function extractDiacriticBonuses(text: string): DiacriticInfo[] {
+  const bonuses: DiacriticInfo[] = [];
+  const bonusMap: Record<string, number> = {
+    '~': 3,   // til
+    '´': 2,   // agudo/apóstrofo
+    '^': 7,   // circunflexo
+    '¨': 2,   // trema (multiplicador)
+    '`': 2,   // grave/crase (multiplicador)
+  };
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const normalized = char.normalize('NFD');
+    
+    if (normalized.length > 1) {
+      const baseLetter = normalized[0].toUpperCase();
+      const diacritic = normalized[1];
+      
+      if (bonusMap[diacritic]) {
+        const isMultiplier = diacritic === '¨' || diacritic === '`';
+        const bonusValue = isMultiplier ? bonusMap[diacritic] : bonusMap[diacritic];
+        
+        bonuses.push({
+          letter: baseLetter,
+          bonus: isMultiplier ? -bonusValue : bonusValue // Negative for multipliers
+        });
+        
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug(`[diacritic] "${char}" -> ${baseLetter} + ${isMultiplier ? `×${bonusValue}` : `+${bonusValue}`}`);
+        }
+      }
+    }
+  }
+  
+  return bonuses;
+}
+
 export function clean(text: string): string {
   // Preserve Ç by temporarily replacing it
   const withPlaceholder = text.replace(/[çÇ]/g, '§');
@@ -58,12 +100,63 @@ export function mapNameToValues(nome: string): number[] {
 }
 
 export function calcMotivacao(nome: string): number {
-  const cleanName = clean(nome);
-  const vowelSum = [...cleanName]
-    .filter(isVowel)
-    .map(letterValue)
-    .reduce((a, b) => a + b, 0);
-  return reduceKeepMasters(vowelSum);
+  const diacriticBonuses = extractDiacriticBonuses(nome);
+  const words = nome.trim().split(/\s+/);
+  const wordResults: number[] = [];
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMotivacao] processando palavras: [${words.join(', ')}]`);
+  }
+  
+  for (const word of words) {
+    const cleanWord = clean(word);
+    let wordSum = 0;
+    
+    // Calculate vowels for this word with bonuses
+    for (let i = 0; i < cleanWord.length; i++) {
+      const char = cleanWord[i];
+      if (isVowel(char)) {
+        let value = letterValue(char);
+        
+        // Apply diacritic bonus if present in original word
+        const originalWordIndex = nome.toLowerCase().indexOf(word.toLowerCase());
+        if (originalWordIndex >= 0) {
+          const charIndexInOriginal = originalWordIndex + word.indexOf(char.toLowerCase());
+          const bonus = diacriticBonuses.find(b => 
+            b.letter === char && 
+            Math.abs(charIndexInOriginal - nome.indexOf(char.toLowerCase())) < word.length
+          );
+          
+          if (bonus) {
+            if (bonus.bonus < 0) {
+              value *= Math.abs(bonus.bonus); // Multiplier
+            } else {
+              value += bonus.bonus; // Addition
+            }
+          }
+        }
+        
+        wordSum += value;
+      }
+    }
+    
+    const wordReduced = reduceKeepMasters(wordSum);
+    wordResults.push(wordReduced);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[calcMotivacao] palavra "${word}": soma=${wordSum} → reduzido=${wordReduced}`);
+    }
+  }
+  
+  // Sum word results without reducing final result (preserve 11/22)
+  const finalSum = wordResults.reduce((a, b) => a + b, 0);
+  const result = [11, 22].includes(finalSum) ? finalSum : reduceKeepMasters(finalSum);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMotivacao] resultados por palavra: [${wordResults.join(', ')}], soma final: ${finalSum} → ${result}`);
+  }
+  
+  return result;
 }
 
 export function calcImpressao(nome: string): number {
@@ -77,7 +170,31 @@ export function calcImpressao(nome: string): number {
 
 export function calcExpressao(nome: string): number {
   const values = mapNameToValues(nome);
-  const sum = values.reduce((a, b) => a + b, 0);
+  const diacriticBonuses = extractDiacriticBonuses(nome);
+  let sum = values.reduce((a, b) => a + b, 0);
+  
+  // Apply diacritic bonuses
+  const cleanName = clean(nome);
+  for (let i = 0; i < cleanName.length; i++) {
+    const char = cleanName[i];
+    const bonus = diacriticBonuses.find(b => b.letter === char);
+    
+    if (bonus) {
+      if (bonus.bonus < 0) {
+        // Multiplier: subtract original value and add multiplied value
+        const originalValue = letterValue(char);
+        sum = sum - originalValue + (originalValue * Math.abs(bonus.bonus));
+      } else {
+        // Addition
+        sum += bonus.bonus;
+      }
+    }
+  }
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcExpressao] soma base: ${values.reduce((a, b) => a + b, 0)}, com bônus: ${sum}`);
+  }
+  
   return reduceKeepMasters(sum);
 }
 
@@ -94,17 +211,14 @@ export function calcDestino(dob: Date): number {
 }
 
 export function calcMissao(dob: Date): number {
-  const dia = dob.getDate();
-  const mes = dob.getMonth() + 1;
-  
-  // Based on "Seu Numerólogo" method: reduce dia and mes separately, then sum
-  const diaReduzido = reduceKeepMasters(dia);
-  const mesReduzido = reduceKeepMasters(mes);
-  const soma = diaReduzido + mesReduzido;
+  // Novo método: Missão = reduzir(Destino + Número Psíquico)
+  const destino = calcDestino(dob);
+  const numeroPsiquico = calcNumeroPsiquico(dob);
+  const soma = destino + numeroPsiquico;
   const result = reduceKeepMasters(soma);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMissao] dia=${dia}→${diaReduzido} mes=${mes}→${mesReduzido} soma=${soma} result=${result}`);
+    console.debug(`[calcMissao] destino=${destino} + numeroPsiquico=${numeroPsiquico} = ${soma} → ${result}`);
   }
   
   return result;
@@ -169,13 +283,27 @@ export function calcTendenciasOcultas(nome: string): number[] {
   return result;
 }
 
-export function detectarDividasCarmicas(valores: number[]): number[] {
-  // Detect Karmic Debts: 13, 14, 16, 19 during ANY intermediate reduction step
-  const dividasCarmicas: number[] = [];
+export function detectarDividasCarmicas(nome: string): number[] {
+  // Detect Karmic Debts: 13, 14, 16, 19 using word-by-word analysis with Pythagorean table
+  const pythagoreanMap: Record<string, number> = {
+    A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
+    J: 1, K: 2, L: 3, M: 4, N: 5, O: 6, P: 7, Q: 8, R: 9,
+    S: 1, T: 2, U: 3, V: 4, W: 5, X: 6, Y: 7, Z: 8, Ç: 3
+  };
   
-  // Process each value and check all reduction steps
-  for (const valor of valores) {
-    const reductionSteps = getAllReductionSteps(valor);
+  const dividasCarmicas: number[] = [];
+  const words = nome.trim().split(/\s+/);
+  
+  for (const word of words) {
+    const cleanWord = clean(word);
+    let wordSum = 0;
+    
+    for (const char of cleanWord) {
+      wordSum += pythagoreanMap[char] || 0;
+    }
+    
+    // Check reduction steps for this word
+    const reductionSteps = getAllReductionSteps(wordSum);
     for (const step of reductionSteps) {
       if ([13, 14, 16, 19].includes(step)) {
         if (!dividasCarmicas.includes(step)) {
@@ -183,10 +311,14 @@ export function detectarDividasCarmicas(valores: number[]): number[] {
         }
       }
     }
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[detectarDividasCarmicas] palavra "${word}": soma=${wordSum}, etapas=[${reductionSteps.join(',')}]`);
+    }
   }
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[detectarDividasCarmicas] valores: [${valores.join(',')}], dívidas: [${dividasCarmicas.join(',')}]`);
+    console.debug(`[detectarDividasCarmicas] dívidas encontradas: [${dividasCarmicas.join(',')}]`);
   }
   
   return dividasCarmicas.sort();
@@ -274,43 +406,42 @@ export function calcMomento1(dob: Date): number {
 }
 
 export function calcMomento2(dob: Date): number {
-  // 2º Momento Decisivo: reduce(mês + ano)
-  const mes = dob.getMonth() + 1;
-  const ano = dob.getFullYear();
-  const soma = mes + ano;
-  const result = reduceKeepMasters(soma);
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMomento2] mes=${mes} ano=${ano} soma=${soma} result=${result}`);
-  }
-  
-  return result;
-}
-
-export function calcMomento3(dob: Date): number {
-  // 3º Momento Decisivo: reduce(dia + ano)
+  // 2º Momento Decisivo: reduce(dia + ano)
   const dia = dob.getDate();
   const ano = dob.getFullYear();
   const soma = dia + ano;
   const result = reduceKeepMasters(soma);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMomento3] dia=${dia} ano=${ano} soma=${soma} result=${result}`);
+    console.debug(`[calcMomento2] dia=${dia} ano=${ano} soma=${soma} result=${result}`);
+  }
+  
+  return result;
+}
+
+export function calcMomento3(dob: Date): number {
+  // 3º Momento Decisivo: reduce(1º + 2º)
+  const primeiro = calcMomento1(dob);
+  const segundo = calcMomento2(dob);
+  const soma = primeiro + segundo;
+  const result = reduceKeepMasters(soma);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcMomento3] primeiro=${primeiro} segundo=${segundo} soma=${soma} result=${result}`);
   }
   
   return result;
 }
 
 export function calcMomento4(dob: Date): number {
-  // 4º Momento Decisivo: reduce(dia + mês + ano)
-  const dia = dob.getDate();
+  // 4º Momento Decisivo: reduce(mês + ano)
   const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
-  const soma = dia + mes + ano;
+  const soma = mes + ano;
   const result = reduceKeepMasters(soma);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMomento4] dia=${dia} mes=${mes} ano=${ano} soma=${soma} result=${result}`);
+    console.debug(`[calcMomento4] mes=${mes} ano=${ano} soma=${soma} result=${result}`);
   }
   
   return result;
@@ -412,30 +543,18 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const desafio1 = calcDesafio1(dataNascimento);
   const desafio2 = calcDesafio2(dataNascimento);
   
-  // Calculate intermediate values for karmic debts - include all original values
-  const valores = mapNameToValues(nome);
-  const motivacaoSum = [...clean(nome)].filter(isVowel).map(letterValue).reduce((a, b) => a + b, 0);
-  const impressaoSum = [...clean(nome)].filter(ch => !isVowel(ch)).map(letterValue).reduce((a, b) => a + b, 0);
-  const expressaoSum = valores.reduce((a, b) => a + b, 0);
-  const destinoSum = dataNascimento.getDate() + (dataNascimento.getMonth() + 1) + dataNascimento.getFullYear();
-  const missaoSum = dataNascimento.getDate() + (dataNascimento.getMonth() + 1);
-  
-  // Include all values that could produce karmic debts during reduction
-  const allIntermediateSums = [
-    motivacaoSum, impressaoSum, expressaoSum, destinoSum, missaoSum,
-    ...valores // Include individual letter values too
-  ];
-  
-// Removed substring scanning to avoid false positives; consider only core sums
-
+  // Use new word-based karmic debt detection
+  const dividasCarmicas = detectarDividasCarmicas(nome);
   
   if (typeof process !== 'undefined' && (process as any).env?.NODE_ENV !== 'production') {
     console.debug('[numerology] debug', {
       nomeLimpo: clean(nome),
-      motivacao: { sum: motivacaoSum, reduced: reduceKeepMasters(motivacaoSum) },
-      impressao: { sum: impressaoSum, reduced: reduceKeepMasters(impressaoSum) },
-      expressao: { sum: expressaoSum, reduced: reduceKeepMasters(expressaoSum) },
-      destino: { sum: destinoSum, reduced: reduceKeepMasters(destinoSum) },
+      motivacao: calcMotivacao(nome),
+      impressao: calcImpressao(nome),
+      expressao: calcExpressao(nome),
+      destino: calcDestino(dataNascimento),
+      missao: calcMissao(dataNascimento),
+      dividasCarmicas
     });
   }
   
@@ -448,13 +567,13 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     numeroPsiquico: calcNumeroPsiquico(dataNascimento),
     respostaSubconsciente: calcRespostaSubconsciente(nome),
     licoesCarmicas: calcLicoesCarmicas(nome),
-    dividasCarmicas: detectarDividasCarmicas(allIntermediateSums),
+    dividasCarmicas,
     tendenciasOcultas: calcTendenciasOcultas(nome),
-    anjoGuarda: calcAnjoGuarda(dataNascimento), // Use legacy for now - can be enhanced later
+    anjoGuarda: 'Calculando...', // Will be updated by GuardianAngelCard component
     ciclosVida: {
-      primeiro: reduceKeepMasters(dataNascimento.getDate()),      // 1º Ciclo: dia
-      segundo: reduceKeepMasters(dataNascimento.getMonth() + 1),  // 2º Ciclo: mês  
-      terceiro: reduceKeepMasters(dataNascimento.getFullYear()),  // 3º Ciclo: ano
+      primeiro: reduceKeepMasters(dataNascimento.getMonth() + 1),  // 1º Ciclo: mês
+      segundo: reduceKeepMasters(dataNascimento.getDate()),        // 2º Ciclo: dia
+      terceiro: reduceKeepMasters(dataNascimento.getFullYear()),   // 3º Ciclo: ano
     },
     desafios: {
       primeiro: desafio1,

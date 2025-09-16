@@ -51,30 +51,41 @@ async function parseAngelsFromSupabase(): Promise<Angel[]> {
 }
 
 export async function calcAnjoGuardaFromSupabase(dob: Date): Promise<string> {
-  const angels = await parseAngelsFromSupabase();
-  
-  if (angels.length === 0) {
-    console.warn('[calcAnjoGuardaFromSupabase] No angels found, using fallback');
-    return 'Lauviah'; // Fallback
+  const content = await getTextoTopico('anjo_guarda');
+  if (!content) {
+    console.warn('[calcAnjoGuardaFromSupabase] No angel content found');
+    return 'Anjo Desconhecido';
   }
   
   const mes = dob.getMonth() + 1; // 1-based month
   const dia = dob.getDate();
   
-  // Find angel whose date range contains the birth date
-  for (const angel of angels) {
-    const isInRange = isDateInRange(mes, dia, angel.inicioMes, angel.inicioDia, angel.fimMes, angel.fimDia);
+  // Parse angels from content with improved regex
+  const lines = content.split('\n');
+  for (const line of lines) {
+    // Enhanced pattern to match various formats
+    const match = line.match(/(\w+)\s*\((\d{1,2})\/(\d{1,2})\s*a\s*(\d{1,2})\/(\d{1,2})\)/i);
     
-    if (isInRange) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug(`[calcAnjoGuardaFromSupabase] ${dia}/${mes} -> ${angel.nome}`);
+    if (match) {
+      const [, nome, inicioDiaStr, inicioMesStr, fimDiaStr, fimMesStr] = match;
+      const inicioMes = parseInt(inicioMesStr);
+      const inicioDia = parseInt(inicioDiaStr);
+      const fimMes = parseInt(fimMesStr);
+      const fimDia = parseInt(fimDiaStr);
+      
+      const isInRange = isDateInRange(mes, dia, inicioMes, inicioDia, fimMes, fimDia);
+      
+      if (isInRange) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug(`[calcAnjoGuardaFromSupabase] ${dia}/${mes} -> ${nome.trim()}`);
+        }
+        return nome.trim();
       }
-      return angel.nome;
     }
   }
   
   console.warn(`[calcAnjoGuardaFromSupabase] No angel found for ${dia}/${mes}`);
-  return angels[0]?.nome || 'Anjo Desconhecido';
+  return 'Anjo Desconhecido';
 }
 
 function isDateInRange(

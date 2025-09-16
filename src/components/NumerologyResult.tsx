@@ -10,6 +10,7 @@ import { TopicCard } from './TopicCard';
 import { generatePDF } from '@/utils/pdf';
 import { useToast } from '@/hooks/use-toast';
 import { GuardianAngelCard } from './GuardianAngelCard';
+import { validateNumerologyCalculations } from '@/utils/numerologyValidator';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -41,6 +42,17 @@ const AngelInterpretationContent = ({ angelName }: { angelName: string }) => {
 export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyResultProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { toast } = useToast();
+  
+  // Run validation on mount for debugging
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      validateNumerologyCalculations().then(result => {
+        if (!result.passed) {
+          console.warn('Validation failed:', result.errors);
+        }
+      });
+    }
+  }, []);
   
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR');

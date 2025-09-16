@@ -15,11 +15,8 @@ export const useInterpretacao = (categoria: string, numero: number | string): {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Strong fallback - never return null or empty
-  const fallback = `Interpretação para ${categoria} ${numero} em desenvolvimento. Esta análise numerológica está sendo preparada especialmente para você.`;
-
   return {
-    interpretacao: data && String(data).trim().length > 0 ? data : fallback,
+    interpretacao: data && String(data).trim().length > 0 ? data : null,
     isLoading,
     error: error as Error | null,
   };
