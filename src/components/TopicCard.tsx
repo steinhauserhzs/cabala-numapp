@@ -9,12 +9,19 @@ interface TopicCardProps {
   title: string;
   description: string;
   topico: string;
+  fallbackTopico?: string;
 }
 
-export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, topico }) => {
+export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, topico, fallbackTopico }) => {
   const { data: conteudo, isLoading } = useQuery({
-    queryKey: ['topico', topico],
-    queryFn: () => getTextoTopico(topico),
+    queryKey: ['topico', topico, fallbackTopico],
+    queryFn: async () => {
+      let content = await getTextoTopico(topico);
+      if (!content && fallbackTopico) {
+        content = await getTextoTopico(fallbackTopico);
+      }
+      return content;
+    },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

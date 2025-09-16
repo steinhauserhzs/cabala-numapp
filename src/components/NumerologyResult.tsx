@@ -401,6 +401,12 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
               description="Aspectos profundos de sua jornada"
               topico="triangulo_invertido"
             />
+            <TopicCard
+              icon={<Zap className="h-5 w-5 text-purple-500" />}
+              title="Arcanos"
+              description="Significados dos arcanos em sua vida"
+              topico="arcanos"
+            />
           </div>
         </div>
 

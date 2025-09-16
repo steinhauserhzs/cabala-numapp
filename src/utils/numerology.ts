@@ -1,11 +1,21 @@
 // Utilities for numerological calculations according to Kabbalah
 
 export function clean(text: string): string {
-  return text
-    .toUpperCase()
+  // Preserve Ç by temporarily replacing it
+  const withPlaceholder = text.replace(/[çÇ]/g, '§');
+  
+  const normalized = withPlaceholder
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^A-ZÇ]/g, '');
+    .toUpperCase()
+    .replace(/[^A-Z§]/g, '')
+    .replace(/§/g, 'Ç'); // Restore Ç
+    
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[clean] "${text}" -> "${normalized}"`);
+  }
+  
+  return normalized;
 }
 
 export function letterValue(ch: string): number {
@@ -128,20 +138,54 @@ export function detectarDividasCarmicas(valores: number[]): number[] {
   return valores.filter(v => [13, 14, 16, 19].includes(v));
 }
 
+// Helper for challenges that allows 0 and doesn't preserve masters
+export function reduceToDigitAllowZero(n: number): number {
+  while (n >= 10) {
+    const digits = n.toString().split('').map(Number);
+    n = digits.reduce((sum, digit) => sum + digit, 0);
+  }
+  return n;
+}
+
 export function calcDesafio1(dob: Date): number {
-  const dia = reduceKeepMasters(dob.getDate());
-  const mes = reduceKeepMasters(dob.getMonth() + 1);
-  return Math.min(9, Math.abs(dia - mes));
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  const reducedDia = reduceKeepMasters(dia);
+  const reducedMes = reduceKeepMasters(mes);
+  const diff = Math.abs(reducedDia - reducedMes);
+  const result = reduceToDigitAllowZero(diff);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcDesafio1] dia=${dia}(${reducedDia}) mes=${mes}(${reducedMes}) diff=${diff} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcDesafio2(dob: Date): number {
-  const mes = reduceKeepMasters(dob.getMonth() + 1);
-  const ano = reduceKeepMasters(dob.getFullYear());
-  return Math.min(9, Math.abs(mes - ano));
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
+  const reducedMes = reduceKeepMasters(mes);
+  const reducedAno = reduceKeepMasters(ano);
+  const diff = Math.abs(reducedMes - reducedAno);
+  const result = reduceToDigitAllowZero(diff);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcDesafio2] mes=${mes}(${reducedMes}) ano=${ano}(${reducedAno}) diff=${diff} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcDesafioPrincipal(d1: number, d2: number): number {
-  return Math.min(9, Math.abs(d1 - d2));
+  const diff = Math.abs(d1 - d2);
+  const result = reduceToDigitAllowZero(diff);
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcDesafioPrincipal] d1=${d1} d2=${d2} diff=${diff} result=${result}`);
+  }
+  
+  return result;
 }
 
 export function calcMomento1(dob: Date): number {

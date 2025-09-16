@@ -71,22 +71,22 @@ export function splitByHeading(
 }
 
 const headingPatterns: Record<string, RegExp> = {
-  motivacao: /^(?:Motiva[cç][aã]o)\s+(11|22|[1-9])\b/im,
-  impressao: /^(?:Impress[aã]o)\s+([1-9])\b/im,
-  expressao: /^(?:Express[aã]o)\s+(11|22|[1-9])\b/im,
-  destino: /^(?:Destino)\s+(11|22|[1-9])\b/im,
-  missao: /^(?:Miss[aã]o)\s+(11|22|[1-9])\b/im,
-  numero_psiquico: /^(?:N[uú]mero\s+Ps[ií]quico)\s+([1-9])\b/im,
-  resposta_subconsciente: /^(?:Resposta\s+Subconsciente)\s+([2-9])\b/im,
-  ano_pessoal: /^(?:Ano\s+Pessoal)\s+([1-9])\b/im,
-  mes_pessoal: /^(?:M[eê]s\s+Pessoal)\s+(11|22|[1-9])\b/im,
-  dia_pessoal: /^(?:Dia\s+Pessoal)\s+(11|22|[1-9])\b/im,
-  desafios: /^(?:Desafio)\s+([0-9])\b/im,
-  primeiro_momento: /^(?:Primeiro\s+Momento\s+Decisivo)\s+(11|22|[1-9])\b/im,
-  segundo_momento: /^(?:Segundo\s+Momento\s+Decisivo)\s+(11|22|[1-9])\b/im,
-  terceiro_momento: /^(?:Terceiro\s+Momento\s+Decisivo)\s+(11|22|[1-9])\b/im,
-  quarto_momento: /^(?:Quarto\s+Momento\s+Decisivo)\s+(11|22|[1-9])\b/im,
-  arcanos: /^(?:Arcano)\s+([0-9]{1,2})\b/im,
+  motivacao: /^(?:#+\s*)?(?:Motiva[cç][aã]o)\s+(11|22|[1-9]):?\s*$/im,
+  impressao: /^(?:#+\s*)?(?:Impress[aã]o)\s+(11|22|[1-9]):?\s*$/im,
+  expressao: /^(?:#+\s*)?(?:Express[aã]o)\s+(11|22|[1-9]):?\s*$/im,
+  destino: /^(?:#+\s*)?(?:Destino)\s+(11|22|[1-9]):?\s*$/im,
+  missao: /^(?:#+\s*)?(?:Miss[aã]o)\s+(11|22|[1-9]):?\s*$/im,
+  numero_psiquico: /^(?:#+\s*)?(?:N[uú]mero\s+Ps[ií]quico)\s+(11|22|[1-9]):?\s*$/im,
+  resposta_subconsciente: /^(?:#+\s*)?(?:Resposta\s+Subconsciente)\s+([2-9]):?\s*$/im,
+  ano_pessoal: /^(?:#+\s*)?(?:Ano\s+Pessoal)\s+([1-9]):?\s*$/im,
+  mes_pessoal: /^(?:#+\s*)?(?:M[eê]s\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
+  dia_pessoal: /^(?:#+\s*)?(?:Dia\s+Pessoal)\s+(11|22|[1-9]):?\s*$/im,
+  desafios: /^(?:#+\s*)?(?:Desafios?)\s+([0-9]):?\s*$/im,
+  primeiro_momento: /^(?:#+\s*)?(?:Primeiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
+  segundo_momento: /^(?:#+\s*)?(?:Segundo\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
+  terceiro_momento: /^(?:#+\s*)?(?:Terceiro\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
+  quarto_momento: /^(?:#+\s*)?(?:Quarto\s+Momento\s+Decisivo)\s+(11|22|[1-9]):?\s*$/im,
+  arcanos: /^(?:#+\s*)?(?:Arcanos?)\s+([0-9]{1,2}):?\s*$/im,
 };
 
 // Cache for parsed content
