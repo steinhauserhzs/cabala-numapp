@@ -184,14 +184,37 @@ export async function getInterpretacao(topico: string, numero: number | string):
           blocks['__all__'] = raw;
         }
       } else if (typeof raw === 'object') {
-        // Flatten JSON into blocks: direct key -> value
+        // Handle complex JSON structures from Supabase
+        const processJsonValue = (value: any): string => {
+          if (typeof value === 'string') return value;
+          if (typeof value === 'object' && value !== null) {
+            // If it's an object with properties, build a formatted string
+            const parts: string[] = [];
+            if (value.titulo) parts.push(`**${value.titulo}**`);
+            if (value.descricao) parts.push(value.descricao);
+            if (value.caracteristicas && Array.isArray(value.caracteristicas)) {
+              parts.push(`\n**Características:** ${value.caracteristicas.join(', ')}`);
+            }
+            if (value.aspectos_positivos && Array.isArray(value.aspectos_positivos)) {
+              parts.push(`\n**Aspectos Positivos:** ${value.aspectos_positivos.join(', ')}`);
+            }
+            if (value.desafios && Array.isArray(value.desafios)) {
+              parts.push(`\n**Desafios:** ${value.desafios.join(', ')}`);
+            }
+            return parts.length > 0 ? parts.join('\n\n') : JSON.stringify(value);
+          }
+          return String(value);
+        };
+
+        // Flatten JSON into blocks: direct key -> formatted value
         for (const [key, value] of Object.entries(raw)) {
           if (value == null) continue;
-          blocks[String(key)] = String(value);
+          blocks[String(key)] = processJsonValue(value);
         }
+        
         // Also support nested { conteudo: string }
         if (!Object.keys(blocks).length && (raw as any).conteudo) {
-          blocks['__all__'] = String((raw as any).conteudo);
+          blocks['__all__'] = processJsonValue((raw as any).conteudo);
         }
       }
 
@@ -226,14 +249,50 @@ export async function getInterpretacaoMomento(
   momento: 'primeiro' | 'segundo' | 'terceiro' | 'quarto',
   numero: number | string
 ): Promise<string | null> {
-  // Try unified topic first, then fall back to individual topics
+  // Try unified topic first, then fall back to individual topics, then aliases
   let result = await getInterpretacao('momentos_decisivos', numero);
+  if (!result) {
+    result = await getInterpretacao('momento_decisivo', numero);
+  }
   if (!result) {
     result = await getInterpretacao(`${momento}_momento`, numero);
   }
   return result;
 }
 
+// Topic aliases for compatibility
+const topicAliases: Record<string, string[]> = {
+  'anjo_guarda': ['seu_anjo'],
+  'momento_decisivo': ['momentos_decisivos'],
+  'cores_do_dia': ['cores_pessoais'],
+  'dias_beneficos': ['dias_favoraveis'],
+  'triangulo_da_vida': ['triangulo_invertido'],
+  'arcano': ['arcanos'],
+  'sintese_final': ['conclusao']
+};
+
 export async function getTextoTopico(topico: string): Promise<string | null> {
-  return fetchConteudo(topico);
+  // First try the exact topic
+  let result = await fetchConteudo(topico);
+  
+  if (!result) {
+    // Try aliases
+    const aliases = topicAliases[topico] || [];
+    for (const alias of aliases) {
+      result = await fetchConteudo(alias);
+      if (result) break;
+    }
+    
+    // Try reverse lookup
+    if (!result) {
+      for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
+        if (aliasArray.includes(topico)) {
+          result = await fetchConteudo(mainTopic);
+          if (result) break;
+        }
+      }
+    }
+  }
+  
+  return result;
 }

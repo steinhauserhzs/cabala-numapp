@@ -97,12 +97,14 @@ export function calcMissao(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
   
-  // Missão = reduce(dia + mês) - sum first, then reduce (preserving masters)
-  const soma = dia + mes;
+  // Based on "Seu Numerólogo" method: reduce dia and mes separately, then sum
+  const diaReduzido = reduceKeepMasters(dia);
+  const mesReduzido = reduceKeepMasters(mes);
+  const soma = diaReduzido + mesReduzido;
   const result = reduceKeepMasters(soma);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMissao] dia=${dia} mes=${mes} soma=${soma} result=${result}`);
+    console.debug(`[calcMissao] dia=${dia}→${diaReduzido} mes=${mes}→${mesReduzido} soma=${soma} result=${result}`);
   }
   
   return result;
@@ -133,8 +135,8 @@ export function calcRespostaSubconsciente(nome: string): number {
 
 export function calcLicoesCarmicas(nome: string): number[] {
   const values = mapNameToValues(nome);
-  const presentNumbers = new Set(values.filter(v => v > 0 && v <= 8)); // Cabalistic: only 1-8
-  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8]; // No group 9 in Cabalistic
+  const presentNumbers = new Set(values.filter(v => v >= 1 && v <= 9)); // Check 1-9 range for missing numbers
+  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // Full range 1-9
   
   const result = allNumbers.filter(num => !presentNumbers.has(num));
   
@@ -168,7 +170,41 @@ export function calcTendenciasOcultas(nome: string): number[] {
 }
 
 export function detectarDividasCarmicas(valores: number[]): number[] {
-  return valores.filter(v => [13, 14, 16, 19].includes(v));
+  // Detect Karmic Debts: 13, 14, 16, 19 during ANY intermediate reduction step
+  const dividasCarmicas: number[] = [];
+  
+  // Process each value and check all reduction steps
+  for (const valor of valores) {
+    const reductionSteps = getAllReductionSteps(valor);
+    for (const step of reductionSteps) {
+      if ([13, 14, 16, 19].includes(step)) {
+        if (!dividasCarmicas.includes(step)) {
+          dividasCarmicas.push(step);
+        }
+      }
+    }
+  }
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[detectarDividasCarmicas] valores: [${valores.join(',')}], dívidas: [${dividasCarmicas.join(',')}]`);
+  }
+  
+  return dividasCarmicas.sort();
+}
+
+// Helper function to get all reduction steps for a number
+function getAllReductionSteps(n: number): number[] {
+  const steps: number[] = [];
+  let current = n;
+  
+  while (current > 9 && current !== 11 && current !== 22) {
+    steps.push(current);
+    const digits = current.toString().split('').map(Number);
+    current = digits.reduce((sum, digit) => sum + digit, 0);
+  }
+  
+  steps.push(current);
+  return steps;
 }
 
 // Helper for challenges that allows 0 and doesn't preserve masters
@@ -376,15 +412,19 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const desafio1 = calcDesafio1(dataNascimento);
   const desafio2 = calcDesafio2(dataNascimento);
   
-  // Calculate intermediate values for karmic debts - check all intermediate sums
+  // Calculate intermediate values for karmic debts - include all original values
   const valores = mapNameToValues(nome);
   const motivacaoSum = [...clean(nome)].filter(isVowel).map(letterValue).reduce((a, b) => a + b, 0);
   const impressaoSum = [...clean(nome)].filter(ch => !isVowel(ch)).map(letterValue).reduce((a, b) => a + b, 0);
   const expressaoSum = valores.reduce((a, b) => a + b, 0);
   const destinoSum = dataNascimento.getDate() + (dataNascimento.getMonth() + 1) + dataNascimento.getFullYear();
+  const missaoSum = dataNascimento.getDate() + (dataNascimento.getMonth() + 1);
   
-  // Check for all possible karmic debt combinations
-  const allIntermediateSums = [motivacaoSum, impressaoSum, expressaoSum, destinoSum];
+  // Include all values that could produce karmic debts during reduction
+  const allIntermediateSums = [
+    motivacaoSum, impressaoSum, expressaoSum, destinoSum, missaoSum,
+    ...valores // Include individual letter values too
+  ];
   
 // Removed substring scanning to avoid false positives; consider only core sums
 

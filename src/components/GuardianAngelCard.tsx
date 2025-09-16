@@ -63,7 +63,11 @@ export function GuardianAngelCard({ angelName, birthDate }: GuardianAngelCardPro
   const { data: angelContent, isLoading } = useQuery({
     queryKey: ['angel-content', birthDate.toISOString()],
     queryFn: async () => {
-      const content = await getTextoTopico('seu_anjo');
+      // Try both topic names for compatibility
+      let content = await getTextoTopico('anjo_guarda');
+      if (!content) {
+        content = await getTextoTopico('seu_anjo');
+      }
       return parseAngelFromContent(content || '', birthDate);
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
