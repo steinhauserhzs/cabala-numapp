@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { 
-  User, 
+  Sparkles, 
   Heart, 
   Building, 
   Baby, 
@@ -20,7 +20,7 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
 
   const calculatorOptions = [
-    { title: 'Mapa Pessoal', description: 'Análise numerológica completa', icon: User, path: '/mapa-pessoal', color: 'bg-gradient-to-br from-primary to-primary/70' },
+    { title: 'Mapa Pessoal', description: 'Análise numerológica completa', icon: Sparkles, path: '/mapa-pessoal', color: 'bg-gradient-to-br from-primary to-primary/70' },
     { title: 'Harmonia Conjugal', description: 'Compatibilidade entre parceiros', icon: Heart, path: '/harmonia-conjugal', color: 'bg-gradient-to-br from-pink-500 to-pink-600' },
     { title: 'Mapa Empresarial', description: 'Numerologia para negócios', icon: Building, path: '/mapa-empresarial', color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
     { title: 'Mapa Infantil', description: 'Análise para crianças', icon: Baby, path: '/mapa-infantil', color: 'bg-gradient-to-br from-green-500 to-green-600' },

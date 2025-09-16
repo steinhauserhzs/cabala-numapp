@@ -5,8 +5,9 @@ import { NumerologyResult } from '@/components/NumerologyResult';
 import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { ArrowLeft } from 'lucide-react';
 
-const Index = () => {
+const MapaPessoal = () => {
   const { user } = useAuth();
   const [showResult, setShowResult] = useState(false);
   const [numerologyMap, setNumerologyMap] = useState<MapaNumerologico | null>(null);
@@ -31,6 +32,15 @@ const Index = () => {
   if (showResult && numerologyMap && userBirthDate) {
     return (
       <div>
+        <div className="fixed top-4 left-4 z-50">
+          <Link to="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+          </Link>
+        </div>
+        
         {user && (
           <div className="fixed top-4 right-4 z-50">
             <Link to="/dashboard">
@@ -40,6 +50,7 @@ const Index = () => {
             </Link>
           </div>
         )}
+        
         <NumerologyResult 
           mapa={numerologyMap}
           name={userName}
@@ -52,6 +63,15 @@ const Index = () => {
 
   return (
     <div>
+      <div className="fixed top-4 left-4 z-50">
+        <Link to="/">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </Link>
+      </div>
+      
       {user && (
         <div className="fixed top-4 right-4 z-50">
           <Link to="/dashboard">
@@ -61,6 +81,7 @@ const Index = () => {
           </Link>
         </div>
       )}
+      
       {!user && (
         <div className="fixed top-4 right-4 z-50">
           <Link to="/auth">
@@ -70,9 +91,10 @@ const Index = () => {
           </Link>
         </div>
       )}
+      
       <NumerologyForm onSubmit={handleFormSubmit} />
     </div>
   );
 };
 
-export default Index;
+export default MapaPessoal;
