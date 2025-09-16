@@ -48,9 +48,10 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     if (process.env.NODE_ENV !== 'production') {
       validateNumerologyCalculations().then(result => {
         if (result.passed) {
-          console.log('✅ Todos os testes de validação passaram!');
+          console.log('✅ Validação passou! Todos os cálculos corretos.');
         } else {
-          console.warn('🔥 Validation failed:', result.errors);
+          console.warn('❌ Falhas na validação:');
+          result.errors.forEach(error => console.warn(' -', error));
         }
       });
     }

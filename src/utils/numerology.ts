@@ -139,50 +139,37 @@ export function mapNameToValues(nome: string): number[] {
 export function calcMotivacao(nome: string): number {
   if (!nome) return 0;
   
-  const diacriticBonuses = extractDiacriticBonuses(nome);
   const words = nome.trim().split(/\s+/);
   const wordResults: number[] = [];
   
   if (process.env.NODE_ENV !== 'production') {
     console.debug(`[calcMotivacao] processando palavras: [${words.join(', ')}]`);
-    console.debug(`[calcMotivacao] bônus diacríticos:`, diacriticBonuses);
   }
   
-  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-    const word = words[wordIndex];
+  for (const word of words) {
     if (!word) continue;
     
-    const cleanWord = clean(word);
     let wordSum = 0;
     
-    // Find position of this word in original text for correct diacritic mapping
-    let wordStartIndex = 0;
-    for (let i = 0; i < wordIndex; i++) {
-      if (words[i]) {
-        wordStartIndex = nome.indexOf(words[i], wordStartIndex) + words[i].length;
-      }
-    }
-    wordStartIndex = nome.indexOf(word, wordStartIndex);
-    
-    // Calculate vowels scanning original word, applying diacritic bonuses per letter
-    for (let k = 0; k < word.length; k++) {
-      const orig = word[k];
-      if (!orig) continue;
-      const nfd = orig.normalize('NFD');
+    // Process each original character in the word
+    for (const char of word) {
+      if (!char) continue;
+      
+      const nfd = char.normalize('NFD');
       const base = nfd[0]?.toUpperCase();
+      
       if (!base || !/[A-ZÇ]/.test(base)) continue;
       if (!isVowel(base)) continue;
-
+      
       let value = letterValue(base);
-      value = applyDiacriticAdjustments(orig, value);
-
+      value = applyDiacriticAdjustments(char, value);
+      wordSum += value;
+      
       if (process.env.NODE_ENV !== 'production') {
         if (nfd.length > 1) {
-          console.debug(`[calcMotivacao] bônus na letra ${base}(${orig}): → ${value}`);
+          console.debug(`[calcMotivacao] ${char} (${base}): ${letterValue(base)} → ${value}`);
         }
       }
-
-      wordSum += value;
     }
     
     const wordReduced = reduceKeepMasters(wordSum);
@@ -216,34 +203,26 @@ export function calcImpressao(nome: string): number {
 export function calcExpressao(nome: string): number {
   if (!nome) return 0;
 
-  const cleanName = clean(nome);
   let sum = 0;
 
-  // Iterate cleaned letters and map to original letters to apply diacritics precisely
-  for (let i = 0, countMatched = 0; i < cleanName.length; i++) {
-    const ch = cleanName[i];
-    if (!ch) continue;
-
-    // Find i-th occurrence of this base letter in original string
-    let originalChar: string | undefined;
-    for (let j = 0, seenForThisBase = 0; j < nome.length; j++) {
-      const nfd = nome[j]?.normalize('NFD');
-      if (!nfd) continue;
-      const base = nfd[0]?.toUpperCase();
-      if (base === ch) {
-        if (seenForThisBase === 0) {
-          if (countMatched === i) {
-            originalChar = nome[j];
-            break;
-          }
-          countMatched++;
-        }
+  // Process each original character in the name
+  for (const char of nome) {
+    if (!char) continue;
+    
+    const nfd = char.normalize('NFD');
+    const base = nfd[0]?.toUpperCase();
+    
+    if (!base || !/[A-ZÇ]/.test(base)) continue;
+    
+    let value = letterValue(base);
+    value = applyDiacriticAdjustments(char, value);
+    sum += value;
+    
+    if (process.env.NODE_ENV !== 'production') {
+      if (nfd.length > 1) {
+        console.debug(`[calcExpressao] ${char} (${base}): ${letterValue(base)} → ${value}`);
       }
     }
-
-    let value = letterValue(ch);
-    value = applyDiacriticAdjustments(originalChar, value);
-    sum += value;
   }
 
   if (process.env.NODE_ENV !== 'production') {

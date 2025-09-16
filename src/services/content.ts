@@ -291,12 +291,15 @@ export async function getInterpretacaoMomento(
 // Topic aliases for compatibility
 const topicAliases: Record<string, string[]> = {
   'anjo_guarda': ['seu_anjo'],
+  'momentos_decisivos': ['momento_decisivo', 'primeiro_momento', 'segundo_momento', 'terceiro_momento', 'quarto_momento'],
   'momento_decisivo': ['momentos_decisivos'],
   'cores_do_dia': ['cores_pessoais'],
   'dias_beneficos': ['dias_favoraveis'],
   'triangulo_da_vida': ['triangulo_invertido'],
   'arcano': ['arcanos'],
-  'sintese_final': ['conclusao']
+  'sintese_final': ['conclusao'],
+  'desafios': ['desafio'],
+  'ciclos_vida': ['ciclo_vida']
 };
 
 export async function getTextoTopico(topico: string): Promise<string | null> {
