@@ -77,7 +77,12 @@ export function calcDestino(dob: Date): number {
   const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
   
-  const soma = dia + mes + ano;
+  // Reduce each component first, then sum them
+  const diaReduced = reduceKeepMasters(dia);
+  const mesReduced = reduceKeepMasters(mes);
+  const anoReduced = reduceKeepMasters(ano);
+  
+  const soma = diaReduced + mesReduced + anoReduced;
   return reduceKeepMasters(soma);
 }
 
@@ -85,7 +90,11 @@ export function calcMissao(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
   
-  const soma = dia + mes;
+  // Reduce each component first, then sum them  
+  const diaReduced = reduceKeepMasters(dia);
+  const mesReduced = reduceKeepMasters(mes);
+  
+  const soma = diaReduced + mesReduced;
   return reduceKeepMasters(soma);
 }
 
@@ -129,8 +138,9 @@ export function calcTendenciasOcultas(nome: string): number[] {
     }
   });
   
+  // Return numbers that appear 4 or more times
   return Object.entries(counter)
-    .filter(([_, count]) => count >= 2)
+    .filter(([_, count]) => count >= 4)
     .map(([num, _]) => parseInt(num));
 }
 
@@ -150,28 +160,26 @@ export function reduceToDigitAllowZero(n: number): number {
 export function calcDesafio1(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
-  const reducedDia = reduceKeepMasters(dia);
-  const reducedMes = reduceKeepMasters(mes);
-  const diff = Math.abs(reducedDia - reducedMes);
+  // Don't reduce before calculating difference
+  const diff = Math.abs(dia - mes);
   const result = reduceToDigitAllowZero(diff);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcDesafio1] dia=${dia}(${reducedDia}) mes=${mes}(${reducedMes}) diff=${diff} result=${result}`);
+    console.debug(`[calcDesafio1] dia=${dia} mes=${mes} diff=${diff} result=${result}`);
   }
   
   return result;
 }
 
 export function calcDesafio2(dob: Date): number {
-  const mes = dob.getMonth() + 1;
+  const dia = dob.getDate();
   const ano = dob.getFullYear();
-  const reducedMes = reduceKeepMasters(mes);
-  const reducedAno = reduceKeepMasters(ano);
-  const diff = Math.abs(reducedMes - reducedAno);
+  // Calculate difference between day and year directly
+  const diff = Math.abs(dia - reduceKeepMasters(ano));
   const result = reduceToDigitAllowZero(diff);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcDesafio2] mes=${mes}(${reducedMes}) ano=${ano}(${reducedAno}) diff=${diff} result=${result}`);
+    console.debug(`[calcDesafio2] dia=${dia} ano=${ano}(${reduceKeepMasters(ano)}) diff=${diff} result=${result}`);
   }
   
   return result;
@@ -189,28 +197,29 @@ export function calcDesafioPrincipal(d1: number, d2: number): number {
 }
 
 export function calcMomento1(dob: Date): number {
-  const dia = dob.getDate();
-  const mes = dob.getMonth() + 1;
-  return reduceKeepMasters(dia + mes);
+  // Primeiro momento: Missão (dia + mês reduzidos)
+  return calcMissao(dob);
 }
 
 export function calcMomento2(dob: Date): number {
-  const mes = dob.getMonth() + 1;
+  // Segundo momento: dia + ano reduzidos separadamente
+  const dia = dob.getDate();
   const ano = dob.getFullYear();
-  return reduceKeepMasters(mes + ano);
+  const diaReduced = reduceKeepMasters(dia);
+  const anoReduced = reduceKeepMasters(ano);
+  return reduceKeepMasters(diaReduced + anoReduced);
 }
 
 export function calcMomento3(dob: Date): number {
-  const dia = dob.getDate();
-  const ano = dob.getFullYear();
-  return reduceKeepMasters(dia + ano);
+  // Terceiro momento: primeiro + segundo momentos
+  const momento1 = calcMomento1(dob);
+  const momento2 = calcMomento2(dob);
+  return reduceKeepMasters(momento1 + momento2);
 }
 
 export function calcMomento4(dob: Date): number {
-  const dia = dob.getDate();
-  const mes = dob.getMonth() + 1;
-  const ano = dob.getFullYear();
-  return reduceKeepMasters(dia + mes + ano);
+  // Quarto momento: primeiro momento
+  return calcMomento1(dob);
 }
 
 export function calcAnoPersonal(data: Date, anoAtual: number): number {
@@ -276,12 +285,27 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const desafio1 = calcDesafio1(dataNascimento);
   const desafio2 = calcDesafio2(dataNascimento);
   
-  // Calculate intermediate values for karmic debts
+  // Calculate intermediate values for karmic debts - check all intermediate sums
   const valores = mapNameToValues(nome);
   const motivacaoSum = [...clean(nome)].filter(isVowel).map(letterValue).reduce((a, b) => a + b, 0);
   const impressaoSum = [...clean(nome)].filter(ch => !isVowel(ch)).map(letterValue).reduce((a, b) => a + b, 0);
   const expressaoSum = valores.reduce((a, b) => a + b, 0);
-  const destinoSum = dataNascimento.getDate() + dataNascimento.getMonth() + 1 + dataNascimento.getFullYear();
+  const destinoSum = dataNascimento.getDate() + (dataNascimento.getMonth() + 1) + dataNascimento.getFullYear();
+  
+  // Check for all possible karmic debt combinations
+  const allIntermediateSums = [motivacaoSum, impressaoSum, expressaoSum, destinoSum];
+  
+  // Also check individual name letter sums that could form karmic debts
+  const cleanedName = clean(nome);
+  for (let i = 0; i < cleanedName.length; i++) {
+    for (let j = i + 1; j <= cleanedName.length; j++) {
+      const substring = cleanedName.slice(i, j);
+      const substringSum = [...substring].map(letterValue).reduce((a, b) => a + b, 0);
+      if ([13, 14, 16, 19].includes(substringSum)) {
+        allIntermediateSums.push(substringSum);
+      }
+    }
+  }
   
   if (typeof process !== 'undefined' && (process as any).env?.NODE_ENV !== 'production') {
     console.debug('[numerology] debug', {
@@ -302,7 +326,7 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     numeroPsiquico: calcNumeroPsiquico(dataNascimento),
     respostaSubconsciente: calcRespostaSubconsciente(nome),
     licoesCarmicas: calcLicoesCarmicas(nome),
-    dividasCarmicas: detectarDividasCarmicas([motivacaoSum, impressaoSum, expressaoSum, destinoSum]),
+    dividasCarmicas: detectarDividasCarmicas(allIntermediateSums),
     tendenciasOcultas: calcTendenciasOcultas(nome),
     desafios: {
       primeiro: desafio1,
