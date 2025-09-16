@@ -1,7 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getLocalInterpretacao } from '@/services/content-helpers';
 
 // Cache for improved performance
 const contentCache = new Map<string, string>();
+const interpretationCache = new Map<string, string | null>();
 
 type Blocks = Record<string, string>;
 
@@ -125,11 +127,18 @@ function splitByHeading(raw: string, heading: RegExp, captureGroup = 1): Blocks 
 
 export async function getInterpretacao(topico: string, numero: number | string, _visited: Set<string> = new Set(), _depth = 0): Promise<string | null> {
   const numeroStr = String(numero);
+  const cacheKey = `${topico}:${numeroStr}`;
   console.debug(`[getInterpretacao] Buscando ${topico} número ${numeroStr} (depth=${_depth})`);
+
+  // Cache first
+  if (interpretationCache.has(cacheKey)) {
+    return interpretationCache.get(cacheKey)!;
+  }
 
   // Prevent infinite recursion between aliases
   if (_visited.has(topico) || _depth > 5) {
     console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${topico}`);
+    interpretationCache.set(cacheKey, null);
     return null;
   }
   _visited.add(topico);
@@ -145,7 +154,11 @@ export async function getInterpretacao(topico: string, numero: number | string, 
         if (_visited.has(alias)) continue;
         const aliasContent = await fetchConteudo(alias);
         if (aliasContent) {
-          return await getInterpretacao(alias, numero, new Set(_visited), _depth + 1);
+          const res = await getInterpretacao(alias, numero, new Set(_visited), _depth + 1);
+          if (res) {
+            interpretationCache.set(cacheKey, res);
+            return res;
+          }
         }
       }
 
@@ -154,11 +167,23 @@ export async function getInterpretacao(topico: string, numero: number | string, 
         if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
           const mainContent = await fetchConteudo(mainTopic);
           if (mainContent) {
-            return await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
+            const res = await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
+            if (res) {
+              interpretationCache.set(cacheKey, res);
+              return res;
+            }
           }
         }
       }
 
+      // Local fallback before giving up
+      const fallback = getLocalInterpretacao(topico, Number(numeroStr));
+      if (fallback) {
+        interpretationCache.set(cacheKey, fallback);
+        return fallback;
+      }
+
+      interpretationCache.set(cacheKey, null);
       return null;
     }
 
@@ -171,9 +196,13 @@ export async function getInterpretacao(topico: string, numero: number | string, 
         if (parsed[numeroStr]) {
           const item = parsed[numeroStr];
           if (typeof item === 'object' && item.titulo && item.descricao) {
-            return `**${item.titulo}**\n\n${item.descricao}${item.caracteristicas ? '\n\n**Características:**\n' + item.caracteristicas.join(', ') : ''}${item.positivos ? '\n\n**Aspectos Positivos:**\n' + item.positivos.join(', ') : ''}${item.desafios ? '\n\n**Desafios:**\n' + item.desafios.join(', ') : ''}`;
+            const text = `**${item.titulo}**\n\n${item.descricao}${item.caracteristicas ? '\n\n**Características:**\n' + item.caracteristicas.join(', ') : ''}${item.positivos ? '\n\n**Aspectos Positivos:**\n' + item.positivos.join(', ') : ''}${item.desafios ? '\n\n**Desafios:**\n' + item.desafios.join(', ') : ''}`;
+            interpretationCache.set(cacheKey, text);
+            return text;
           }
-          return String(item);
+          const text = String(item);
+          interpretationCache.set(cacheKey, text);
+          return text;
         }
 
         // Check if it's an array and find by number
@@ -181,9 +210,13 @@ export async function getInterpretacao(topico: string, numero: number | string, 
           const found = parsed.find((item: any) => item.numero === numero || item.numero === numeroStr);
           if (found) {
             if (typeof found === 'object' && found.titulo && found.descricao) {
-              return `**${found.titulo}**\n\n${found.descricao}${found.caracteristicas ? '\n\n**Características:**\n' + found.caracteristicas.join(', ') : ''}${found.positivos ? '\n\n**Aspectos Positivos:**\n' + found.positivos.join(', ') : ''}${found.desafios ? '\n\n**Desafios:**\n' + found.desafios.join(', ') : ''}`;
+              const text = `**${found.titulo}**\n\n${found.descricao}${found.caracteristicas ? '\n\n**Características:**\n' + found.caracteristicas.join(', ') : ''}${found.positivos ? '\n\n**Aspectos Positivos:**\n' + found.positivos.join(', ') : ''}${found.desafios ? '\n\n**Desafios:**\n' + found.desafios.join(', ') : ''}`;
+              interpretationCache.set(cacheKey, text);
+              return text;
             }
-            return String(found);
+            const text = String(found);
+            interpretationCache.set(cacheKey, text);
+            return text;
           }
         }
       } catch (parseError) {
@@ -205,6 +238,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       const content = match[2].trim();
       if (content.length > 10) {
         console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 1)`);
+        interpretationCache.set(cacheKey, content);
         return content;
       }
     }
@@ -220,6 +254,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       const content = match[2].trim();
       if (content.length > 10) {
         console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 2)`);
+        interpretationCache.set(cacheKey, content);
         return content;
       }
     }
@@ -236,7 +271,9 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       const content = match[3].trim();
       if (content.length > 10) {
         console.debug(`[getInterpretacao] Encontrado para ${topico} ${numeroStr} (padrão 3)`);
-        return title ? `**${title}**\n\n${content}` : content;
+        const text = title ? `**${title}**\n\n${content}` : content;
+        interpretationCache.set(cacheKey, text);
+        return text;
       }
     }
 
@@ -247,6 +284,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       if (_visited.has(alias)) continue;
       const result = await getInterpretacao(alias, numero, new Set(_visited), _depth + 1);
       if (result && !result.includes('em preparação')) {
+        interpretationCache.set(cacheKey, result);
         return result;
       }
     }
@@ -256,14 +294,19 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
         const aliasResult = await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
         if (aliasResult && !aliasResult.includes('em preparação')) {
+          interpretationCache.set(cacheKey, aliasResult);
           return aliasResult;
         }
       }
     }
 
-    return null;
+    // Local fallback
+    const fallback = getLocalInterpretacao(topico, Number(numeroStr));
+    interpretationCache.set(cacheKey, fallback);
+    return fallback;
   } catch (error) {
     console.error(`[getInterpretacao] Erro:`, error);
+    interpretationCache.set(cacheKey, null);
     return null;
   }
 }

@@ -16,6 +16,8 @@ export const useInterpretacao = (categoria: string, numero: number | string, opt
     enabled: options?.enabled !== false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   });
 
   return {

@@ -72,25 +72,19 @@ export function clean(text: string): string {
 }
 
 export function letterValue(ch: string): number {
-  // Cabalistic mapping (1-8, no group 9) with Y as vowel
+  // Pythagorean mapping (1-9 cyclical) - Portuguese support with Ç as C(3)
   const mapa: Record<string, number> = {
-    A: 1, I: 1, J: 1, Q: 1, Y: 1,  // Group 1
-    B: 2, K: 2, R: 2,               // Group 2  
-    C: 3, G: 3, L: 3, S: 3,         // Group 3
-    D: 4, M: 4, T: 4,               // Group 4
-    E: 5, H: 5, N: 5,               // Group 5
-    U: 6, V: 6, W: 6, X: 6, Ç: 6,  // Group 6
-    O: 7, Z: 7,                     // Group 7
-    F: 8, P: 8,                     // Group 8
-    // No group 9 in Cabalistic
+    A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
+    J: 1, K: 2, L: 3, M: 4, N: 5, O: 6, P: 7, Q: 8, R: 9,
+    S: 1, T: 2, U: 3, V: 4, W: 5, X: 6, Y: 7, Z: 8, Ç: 3,
   };
-  
+
   const result = mapa[ch.toUpperCase()] || 0;
-  
+
   if (process.env.NODE_ENV !== 'production') {
     console.debug(`[letterValue] "${ch}" -> ${result}`);
   }
-  
+
   return result;
 }
 
@@ -242,17 +236,17 @@ export function calcDestino(dob: Date): number {
   return reduceKeepMasters(soma);
 }
 
-export function calcMissao(dob: Date): number {
-  // Novo método: Missão = reduzir(Destino + Número Psíquico)
+export function calcMissao(nome: string, dob: Date): number {
+  // Missão = reduzir(Expressão + Destino)
+  const expressao = calcExpressao(nome);
   const destino = calcDestino(dob);
-  const numeroPsiquico = calcNumeroPsiquico(dob);
-  const soma = destino + numeroPsiquico;
+  const soma = expressao + destino;
   const result = reduceKeepMasters(soma);
-  
+
   if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMissao] destino=${destino} + numeroPsiquico=${numeroPsiquico} = ${soma} → ${result}`);
+    console.debug(`[calcMissao] expressao=${expressao} + destino=${destino} = ${soma} → ${result}`);
   }
-  
+
   return result;
 }
 
@@ -298,7 +292,7 @@ export function calcTendenciasOcultas(nome: string): number[] {
   const counter: Record<number, number> = {};
   
   values.forEach(v => {
-    if (v > 0 && v <= 8) { // Cabalistic: only 1-8
+    if (v > 0 && v <= 9) { // Pythagorean: 1-9
       counter[v] = (counter[v] || 0) + 1;
     }
   });
@@ -585,7 +579,7 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
       impressao: calcImpressao(nome),
       expressao: calcExpressao(nome),
       destino: calcDestino(dataNascimento),
-      missao: calcMissao(dataNascimento),
+      missao: calcMissao(nome, dataNascimento),
       dividasCarmicas
     });
   }
@@ -595,7 +589,7 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     impressao: calcImpressao(nome),
     expressao: calcExpressao(nome),
     destino: calcDestino(dataNascimento),
-    missao: calcMissao(dataNascimento),
+    missao: reduceKeepMasters(calcExpressao(nome) + calcDestino(dataNascimento)),
     numeroPsiquico: calcNumeroPsiquico(dataNascimento),
     respostaSubconsciente: calcRespostaSubconsciente(nome),
     licoesCarmicas: calcLicoesCarmicas(nome),
