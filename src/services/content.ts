@@ -13,15 +13,24 @@ export async function fetchConteudo(topico: string): Promise<string> {
   }
 
   if (!data?.conteudo) {
+    console.warn(`Nenhum conteúdo encontrado para tópico: ${topico}`);
     return '';
   }
 
   // Handle both string and object content formats
-  const content = typeof data.conteudo === 'string' 
-    ? data.conteudo 
-    : (data.conteudo as any)?.conteudo;
-    
-  return content || '';
+  let content = '';
+  if (typeof data.conteudo === 'string') {
+    content = data.conteudo;
+  } else if (data.conteudo && typeof data.conteudo === 'object') {
+    // Try to get content from nested object
+    content = (data.conteudo as any)?.conteudo || '';
+  }
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[fetchConteudo] ${topico} -> ${content.length} chars`);
+  }
+  
+  return content;
 }
 
 type Blocks = Record<string, string>;

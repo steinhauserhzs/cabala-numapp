@@ -3,13 +3,9 @@
 export function clean(text: string): string {
   return text
     .toUpperCase()
-    .replace(/[ÁÀÂÃ]/g, "A")
-    .replace(/[ÉÊ]/g, "E")
-    .replace(/[Í]/g, "I")
-    .replace(/[ÓÔÕ]/g, "O")
-    .replace(/[ÚÜ]/g, "U")
-    // Preserva Ç como letra válida
-    .replace(/[^A-ZÇ]/g, ""); // mantém apenas A-Z e Ç
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-ZÇ]/g, '');
 }
 
 export function letterValue(ch: string): number {
@@ -89,12 +85,21 @@ export function calcNumeroPsiquico(dob: Date): number {
 }
 
 export function calcRespostaSubconsciente(nome: string): number {
-  const values = mapNameToValues(nome);
-  const uniqueNumbers = new Set(values.filter(v => v > 0 && v <= 9));
-  const count = uniqueNumbers.size;
+  const cleanedName = clean(nome);
+  const valores = mapNameToValues(cleanedName);
   
-  // Limitar ao intervalo [2..9]
-  return Math.max(2, Math.min(9, count));
+  // Count unique values from 1-9 present in the name
+  const uniqueValues = new Set(valores.filter(v => v >= 1 && v <= 9));
+  const count = uniqueValues.size;
+  
+  // Clamp between 2 and 9
+  const result = Math.max(2, Math.min(9, count));
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`[calcRespostaSubconsciente] nome: ${nome}, valores: [${valores.join(',')}], únicos: [${Array.from(uniqueValues).sort().join(',')}], resultado: ${result}`);
+  }
+  
+  return result;
 }
 
 export function calcLicoesCarmicas(nome: string): number[] {

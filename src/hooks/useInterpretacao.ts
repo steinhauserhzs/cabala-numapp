@@ -1,10 +1,8 @@
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getInterpretacao } from '@/services/content';
-import { InterpretacaoNumerologica } from '@/data/interpretacoes';
 
 export const useInterpretacao = (categoria: string, numero: number): {
-  interpretacao: InterpretacaoNumerologica | null;
+  interpretacao: string | null;
   isLoading: boolean;
   error: Error | null;
 } => {
@@ -17,28 +15,8 @@ export const useInterpretacao = (categoria: string, numero: number): {
     gcTime: 10 * 60 * 1000,
   });
 
-  const interpretacao = useMemo(() => {
-    if (data) {
-      return {
-        titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
-        descricao: data,
-        caracteristicas: [],
-        aspectosPositivos: [],
-        desafios: []
-      } satisfies InterpretacaoNumerologica;
-    }
-
-    return {
-      titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
-      descricao: "Não há interpretação específica para este número neste tópico.",
-      caracteristicas: [],
-      aspectosPositivos: [],
-      desafios: []
-    } as InterpretacaoNumerologica;
-  }, [data, categoria, numero]);
-  
   return {
-    interpretacao,
+    interpretacao: data || null,
     isLoading,
     error: error as Error | null,
   };

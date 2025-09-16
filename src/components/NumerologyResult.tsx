@@ -5,7 +5,8 @@ import { MapaNumerologico } from '@/utils/numerology';
 import { useInterpretacao } from '@/hooks/useInterpretacao';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain } from 'lucide-react';
+import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain, Palette, Users, Triangle } from 'lucide-react';
+import { TopicCard } from './TopicCard';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -74,55 +75,13 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
                     <Skeleton className="h-4 w-1/2" />
                   </div>
                 ) : interpretacao ? (
-                  <>
-                    <p className="text-muted-foreground">{interpretacao.descricao}</p>
-                    
-                    {interpretacao.caracteristicas.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-blue-400 mb-1">Características:</h5>
-                        <ul className="text-xs space-y-1 text-muted-foreground">
-                          {interpretacao.caracteristicas.map((caracteristica, idx) => (
-                            <li key={idx} className="flex items-center">
-                              <span className="w-1 h-1 bg-blue-400 rounded-full mr-2"></span>
-                              {caracteristica}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {interpretacao.aspectosPositivos.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-green-400 mb-1">Aspectos Positivos:</h5>
-                        <ul className="text-xs space-y-1 text-muted-foreground">
-                          {interpretacao.aspectosPositivos.map((aspecto, idx) => (
-                            <li key={idx} className="flex items-center">
-                              <span className="w-1 h-1 bg-green-400 rounded-full mr-2"></span>
-                              {aspecto}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {interpretacao.desafios.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-yellow-400 mb-1">Desafios:</h5>
-                        <ul className="text-xs space-y-1 text-muted-foreground">
-                          {interpretacao.desafios.map((desafio, idx) => (
-                            <li key={idx} className="flex items-center">
-                              <span className="w-1 h-1 bg-yellow-400 rounded-full mr-2"></span>
-                              {desafio}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
+                  <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {interpretacao}
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground text-xs">
-                    Interpretação não disponível para este número.
-                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    Não há interpretação específica para este número neste tópico.
+                  </div>
                 )}
               </AccordionContent>
             </AccordionItem>
@@ -388,28 +347,75 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </div>
 
-        {/* Subconscious Response */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Brain className="mr-2 h-5 w-5" />
-              Resposta Subconsciente
-            </CardTitle>
-            <CardDescription>
-              Quantidade de números distintos (1-9) encontrados no seu nome completo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-4">
-              <div className={getNumberStyle(mapa.respostaSubconsciente)}>
-                {mapa.respostaSubconsciente}
-              </div>
-              <p className="text-muted-foreground">
-                Indica o nível de variedade em suas respostas emocionais e a riqueza de sua natureza subconsciente.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Resposta Subconsciente */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Resposta Subconsciente</h2>
+          <div className="max-w-md mx-auto">
+            <NumerologyCard
+              title="Resposta Subconsciente"
+              value={mapa.respostaSubconsciente}
+              description="Como você reage instintivamente às situações"
+              categoria="resposta_subconsciente"
+              icon={<Brain size={20} />}
+            />
+          </div>
+        </div>
+
+        {/* Tópicos Adicionais */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Informações Complementares</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <TopicCard
+              icon={<Star className="h-5 w-5 text-yellow-500" />}
+              title="Seu Anjo"
+              description="Seu anjo protetor e suas características"
+              topico="seu_anjo"
+            />
+            <TopicCard
+              icon={<Palette className="h-5 w-5 text-blue-500" />}
+              title="Cores Pessoais"
+              description="Cores que harmonizam com sua energia"
+              topico="cores_do_dia"
+            />
+            <TopicCard
+              icon={<Calendar className="h-5 w-5 text-green-500" />}
+              title="Dias Favoráveis"
+              description="Os melhores dias para suas atividades"
+              topico="dias_favoraveis"
+            />
+            <TopicCard
+              icon={<Zap className="h-5 w-5 text-purple-500" />}
+              title="Números Harmônicos"
+              description="Números que vibram em sua frequência"
+              topico="numeros_harmonicos"
+            />
+            <TopicCard
+              icon={<Users className="h-5 w-5 text-pink-500" />}
+              title="Harmonia Conjugal"
+              description="Compatibilidade nos relacionamentos"
+              topico="harmonia_conjugal"
+            />
+            <TopicCard
+              icon={<Triangle className="h-5 w-5 text-orange-500" />}
+              title="Triângulo Invertido da Vida"
+              description="Aspectos profundos de sua jornada"
+              topico="triangulo_invertido"
+            />
+          </div>
+        </div>
+
+        {/* Conclusão */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 text-center">Conclusão</h2>
+          <div className="max-w-4xl mx-auto">
+            <TopicCard
+              icon={<BookOpen className="h-5 w-5 text-indigo-500" />}
+              title="Síntese do Mapa"
+              description="Conclusão e orientações finais"
+              topico="conclusao"
+            />
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground mt-12">
