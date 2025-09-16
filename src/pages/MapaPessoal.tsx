@@ -33,7 +33,7 @@ const MapaPessoal = () => {
     return (
       <div>
         <div className="fixed top-4 left-4 z-50">
-          <Link to="/">
+          <Link to={user ? "/dashboard" : "/"}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
@@ -64,7 +64,7 @@ const MapaPessoal = () => {
   return (
     <div>
       <div className="fixed top-4 left-4 z-50">
-        <Link to="/">
+        <Link to={user ? "/dashboard" : "/"}>
           <Button variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
