@@ -201,29 +201,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     }
   ];
 
-  const cycleNumbers = [
-    {
-      title: "1º Ciclo de Vida",
-      value: mapa.ciclosDeVida.primeiro,
-      description: "Primeira fase da vida",
-      categoria: "ciclos_de_vida",
-      icon: <Calendar size={20} />
-    },
-    {
-      title: "2º Ciclo de Vida", 
-      value: mapa.ciclosDeVida.segundo,
-      description: "Segunda fase da vida",
-      categoria: "ciclos_de_vida",
-      icon: <Calendar size={20} />
-    },
-    {
-      title: "3º Ciclo de Vida",
-      value: mapa.ciclosDeVida.terceiro, 
-      description: "Terceira fase da vida",
-      categoria: "ciclos_de_vida",
-      icon: <Calendar size={20} />
-    }
-  ];
+  // Ciclos de vida removed from interface - using desafios instead
 
   const challengeNumbers = [
     {
@@ -241,17 +219,10 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       icon: <Mountain size={20} />
     },
     {
-      title: "3º Desafio",
-      value: mapa.desafios.terceiro,
-      description: "Terceiro desafio de vida",
+      title: "Desafio Principal",
+      value: mapa.desafios.principal,
+      description: "Desafio principal de vida",
       categoria: "desafios", 
-      icon: <Mountain size={20} />
-    },
-    {
-      title: "4º Desafio",
-      value: mapa.desafios.quarto,
-      description: "Quarto desafio de vida",
-      categoria: "desafios",
       icon: <Mountain size={20} />
     }
   ];
@@ -378,24 +349,14 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </div>
         </div>
 
-        {/* Cycle Numbers */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
-            Ciclos de Vida
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {cycleNumbers.map(item => (
-              <NumerologyCard key={item.title} {...item} />
-            ))}
-          </div>
-        </div>
+        {/* Removed Cycle Numbers section - not in current interface */}
 
         {/* Challenge Numbers */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-center mb-6 text-primary">
             Desafios de Vida
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {challengeNumbers.map(item => (
               <NumerologyCard key={item.title} {...item} />
             ))}

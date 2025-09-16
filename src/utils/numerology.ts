@@ -1,14 +1,19 @@
 // Utilities for numerological calculations according to Kabbalah
 
-export function removerAcentos(str: string): string {
-  return str
+export function clean(text: string): string {
+  return text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/Ç/g, "C")
-    .replace(/ç/g, "c");
+    .replace(/[ÁÀÂÃ]/g, "A")
+    .replace(/[ÉÊ]/g, "E")
+    .replace(/[Í]/g, "I")
+    .replace(/[ÓÔÕ]/g, "O")
+    .replace(/[ÚÜ]/g, "U")
+    .toUpperCase()
+    .replace(/[^A-ZÇ]/g, ""); // keep only A-Z and Ç
 }
 
-export function letraParaNumero(letra: string): number {
+export function letterValue(ch: string): number {
   const mapa: Record<string, number> = {
     A: 1, I: 1, J: 1, Q: 1, Y: 1,
     B: 2, K: 2, R: 2,
@@ -19,197 +24,179 @@ export function letraParaNumero(letra: string): number {
     O: 7, Z: 7,
     F: 8, P: 8
   };
-  return mapa[letra.toUpperCase()] || 0;
+  return mapa[ch.toUpperCase()] || 0;
 }
 
-export function reduzirNumero(n: number): number {
+export function reduceKeepMasters(n: number): number {
   while (![11, 22].includes(n) && n > 9) {
     n = n.toString().split("").reduce((soma, d) => soma + parseInt(d), 0);
   }
   return n;
 }
 
-export function calcularNome(nome: string): number {
-  const texto = removerAcentos(nome).toUpperCase().replace(/[^A-ZÇ]/g, "");
-  const numeros = [...texto].map(letraParaNumero);
-  return reduzirNumero(numeros.reduce((a, b) => a + b, 0));
+export function isVowel(ch: string): boolean {
+  return "AEIOUY".includes(ch.toUpperCase());
 }
 
-export function obterVogais(nome: string): string {
-  const vogais = "AEIOUY"; // Y conta como vogal
-  return removerAcentos(nome).toUpperCase().split("").filter(letra => vogais.includes(letra)).join("");
+export function mapNameToValues(nome: string): number[] {
+  const cleanName = clean(nome);
+  return [...cleanName].map(letterValue);
 }
 
-export function obterConsoantes(nome: string): string {
-  const vogais = "AEIOUY"; // Y conta como vogal
-  return removerAcentos(nome).toUpperCase().replace(/[^A-ZÇ]/g, "").split("").filter(letra => !vogais.includes(letra)).join("");
+export function calcMotivacao(nome: string): number {
+  const cleanName = clean(nome);
+  const vowelSum = [...cleanName]
+    .filter(isVowel)
+    .map(letterValue)
+    .reduce((a, b) => a + b, 0);
+  return reduceKeepMasters(vowelSum);
 }
 
-export function calcularMotivacao(nome: string): number {
-  const vogais = obterVogais(nome);
-  return calcularNome(vogais);
+export function calcImpressao(nome: string): number {
+  const cleanName = clean(nome);
+  const consonantSum = [...cleanName]
+    .filter(ch => !isVowel(ch))
+    .map(letterValue)
+    .reduce((a, b) => a + b, 0);
+  return reduceKeepMasters(consonantSum);
 }
 
-export function calcularImpressao(nome: string): number {
-  const consoantes = obterConsoantes(nome);
-  return calcularNome(consoantes);
+export function calcExpressao(nome: string): number {
+  const values = mapNameToValues(nome);
+  const sum = values.reduce((a, b) => a + b, 0);
+  return reduceKeepMasters(sum);
 }
 
-export function calcularDestino(data: Date): number {
-  const dia = data.getDate();
-  const mes = data.getMonth() + 1;
-  const ano = data.getFullYear();
+export function calcDestino(dob: Date): number {
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
   
   const soma = dia + mes + ano;
-  return reduzirNumero(soma);
+  return reduceKeepMasters(soma);
 }
 
-export function calcularMissao(data: Date): number {
-  const dia = data.getDate();
-  const mes = data.getMonth() + 1;
+export function calcMissao(dob: Date): number {
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
   
   const soma = dia + mes;
-  return reduzirNumero(soma);
+  return reduceKeepMasters(soma);
 }
 
-export function calcularNumeroPsiquico(data: Date): number {
-  const dia = data.getDate();
-  return reduzirNumero(dia);
+export function calcNumeroPsiquico(dob: Date): number {
+  const dia = dob.getDate();
+  return reduceKeepMasters(dia);
 }
 
-export function calcularRespostaSubconsciente(nome: string): number {
-  const texto = removerAcentos(nome).toUpperCase().replace(/[^A-ZÇ]/g, "");
-  const numerosEncontrados = new Set<number>();
+export function calcRespostaSubconsciente(nome: string): number {
+  const values = mapNameToValues(nome);
+  const uniqueNumbers = new Set(values.filter(v => v > 0 && v <= 9));
+  const count = uniqueNumbers.size;
   
-  for (const letra of texto) {
-    const numero = letraParaNumero(letra);
-    if (numero > 0) {
-      numerosEncontrados.add(numero);
+  // Limitar ao intervalo [2..9]
+  return Math.max(2, Math.min(9, count));
+}
+
+export function calcLicoesCarmicas(nome: string): number[] {
+  const values = mapNameToValues(nome);
+  const presentNumbers = new Set(values.filter(v => v > 0 && v <= 9));
+  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  return allNumbers.filter(num => !presentNumbers.has(num));
+}
+
+export function calcTendenciasOcultas(nome: string): number[] {
+  const values = mapNameToValues(nome);
+  const counter: Record<number, number> = {};
+  
+  values.forEach(v => {
+    if (v > 0 && v <= 9) {
+      counter[v] = (counter[v] || 0) + 1;
     }
-  }
+  });
   
-  return numerosEncontrados.size;
+  return Object.entries(counter)
+    .filter(([_, count]) => count >= 2)
+    .map(([num, _]) => parseInt(num));
 }
 
-export function calcularAnoPersonal(data: Date, anoAtual: number): number {
+export function detectarDividasCarmicas(valores: number[]): number[] {
+  return valores.filter(v => [13, 14, 16, 19].includes(v));
+}
+
+export function calcDesafio1(dob: Date): number {
+  const dia = reduceKeepMasters(dob.getDate());
+  const mes = reduceKeepMasters(dob.getMonth() + 1);
+  return Math.min(9, Math.abs(dia - mes));
+}
+
+export function calcDesafio2(dob: Date): number {
+  const mes = reduceKeepMasters(dob.getMonth() + 1);
+  const ano = reduceKeepMasters(dob.getFullYear());
+  return Math.min(9, Math.abs(mes - ano));
+}
+
+export function calcDesafioPrincipal(d1: number, d2: number): number {
+  return Math.min(9, Math.abs(d1 - d2));
+}
+
+export function calcMomento1(dob: Date): number {
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  return reduceKeepMasters(dia + mes);
+}
+
+export function calcMomento2(dob: Date): number {
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
+  return reduceKeepMasters(mes + ano);
+}
+
+export function calcMomento3(dob: Date): number {
+  const dia = dob.getDate();
+  const ano = dob.getFullYear();
+  return reduceKeepMasters(dia + ano);
+}
+
+export function calcMomento4(dob: Date): number {
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
+  return reduceKeepMasters(dia + mes + ano);
+}
+
+export function calcAnoPersonal(data: Date, anoAtual: number): number {
   const dia = data.getDate();
   const mes = data.getMonth() + 1;
   
   const soma = dia + mes + anoAtual;
-  return reduzirNumero(soma);
+  return reduceKeepMasters(soma);
 }
 
-export function calcularMesPersonal(anoPersonal: number, mesAtual: number): number {
+export function calcMesPersonal(anoPersonal: number, mesAtual: number): number {
   const soma = anoPersonal + mesAtual;
-  return reduzirNumero(soma);
+  return reduceKeepMasters(soma);
 }
 
-export function calcularDiaPersonal(mesPersonal: number, diaAtual: number): number {
+export function calcDiaPersonal(mesPersonal: number, diaAtual: number): number {
   const soma = mesPersonal + diaAtual;
-  return reduzirNumero(soma);
+  return reduceKeepMasters(soma);
 }
 
-// Novas funções para cálculos adicionais
-export function calcularLicoesCarmicas(nome: string): number[] {
-  const texto = removerAcentos(nome).toUpperCase().replace(/[^A-ZÇ]/g, "");
-  const numerosPresentes = new Set<number>();
-  
-  for (const letra of texto) {
-    const numero = letraParaNumero(letra);
-    if (numero > 0) {
-      numerosPresentes.add(numero);
-    }
-  }
-  
-  const todosNumeros = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  return todosNumeros.filter(num => !numerosPresentes.has(num));
-}
-
-export function calcularDividasCarmicas(nome: string, data: Date): number[] {
-  const dividas: number[] = [];
-  
-  // Verificar valores intermediários durante cálculos
-  const motivacao = calcularMotivacao(nome);
-  const impressao = calcularImpressao(nome);
-  const expressao = calcularNome(nome);
-  const destino = calcularDestino(data);
-  
-  // Verificar se algum cálculo intermediário resulta em 13, 14, 16 ou 19
-  const valoresIntermediarios = [
-    obterVogais(nome).split('').reduce((sum, letra) => sum + letraParaNumero(letra), 0),
-    obterConsoantes(nome).split('').reduce((sum, letra) => sum + letraParaNumero(letra), 0),
-    nome.split('').reduce((sum, letra) => sum + letraParaNumero(letra), 0),
-    data.getDate() + data.getMonth() + 1 + data.getFullYear()
-  ];
-  
-  for (const valor of valoresIntermediarios) {
-    if ([13, 14, 16, 19].includes(valor)) {
-      dividas.push(valor);
-    }
-  }
-  
-  return [...new Set(dividas)]; // Remove duplicatas
-}
-
-export function calcularTendenciasOcultas(nome: string): number[] {
-  const texto = removerAcentos(nome).toUpperCase().replace(/[^A-ZÇ]/g, "");
-  const contadores: Record<number, number> = {};
-  
-  for (const letra of texto) {
-    const numero = letraParaNumero(letra);
-    if (numero > 0) {
-      contadores[numero] = (contadores[numero] || 0) + 1;
-    }
-  }
-  
-  const media = Object.values(contadores).reduce((a, b) => a + b, 0) / Object.keys(contadores).length;
-  return Object.entries(contadores)
-    .filter(([_, count]) => count > media * 1.5)
-    .map(([numero, _]) => parseInt(numero));
-}
-
-export function calcularCiclosDeVida(data: Date): { primeiro: number; segundo: number; terceiro: number } {
-  const dia = reduzirNumero(data.getDate());
-  const mes = reduzirNumero(data.getMonth() + 1);
-  const ano = reduzirNumero(data.getFullYear());
-  
-  return {
-    primeiro: dia,
-    segundo: mes,
-    terceiro: ano
-  };
-}
-
-export function calcularDesafios(data: Date): { primeiro: number; segundo: number; terceiro: number; quarto: number } {
-  const dia = reduzirNumero(data.getDate());
-  const mes = reduzirNumero(data.getMonth() + 1);
-  const ano = reduzirNumero(data.getFullYear());
-  
-  const primeiro = Math.abs(mes - dia);
-  const segundo = Math.abs(ano - dia);
-  const terceiro = Math.abs(primeiro - segundo);
-  const quarto = Math.abs(mes - ano);
-  
-  return {
-    primeiro: Math.min(primeiro, 9),
-    segundo: Math.min(segundo, 9),
-    terceiro: Math.min(terceiro, 9),
-    quarto: Math.min(quarto, 9)
-  };
-}
-
-export function calcularMomentosDecisivos(data: Date): { primeiro: number; segundo: number; terceiro: number; quarto: number } {
-  const dia = data.getDate();
-  const mes = data.getMonth() + 1;
-  const ano = data.getFullYear();
-  
-  return {
-    primeiro: reduzirNumero(dia + mes),
-    segundo: reduzirNumero(mes + ano),
-    terceiro: reduzirNumero(dia + ano),
-    quarto: reduzirNumero(dia + mes + ano)
-  };
-}
+// Legacy compatibility functions (deprecated - use new calc* functions)
+export const removerAcentos = clean;
+export const letraParaNumero = letterValue;
+export const reduzirNumero = reduceKeepMasters;
+export const calcularNome = calcExpressao;
+export const calcularMotivacao = calcMotivacao;
+export const calcularImpressao = calcImpressao;
+export const calcularDestino = calcDestino;
+export const calcularMissao = calcMissao;
+export const calcularNumeroPsiquico = calcNumeroPsiquico;
+export const calcularRespostaSubconsciente = calcRespostaSubconsciente;
+export const calcularAnoPersonal = calcAnoPersonal;
+export const calcularMesPersonal = calcMesPersonal;
+export const calcularDiaPersonal = calcDiaPersonal;
 
 export interface MapaNumerologico {
   motivacao: number;
@@ -222,8 +209,7 @@ export interface MapaNumerologico {
   licoesCarmicas: number[];
   dividasCarmicas: number[];
   tendenciasOcultas: number[];
-  ciclosDeVida: { primeiro: number; segundo: number; terceiro: number };
-  desafios: { primeiro: number; segundo: number; terceiro: number; quarto: number };
+  desafios: { primeiro: number; segundo: number; principal: number };
   momentosDecisivos: { primeiro: number; segundo: number; terceiro: number; quarto: number };
   anoPersonal: number;
   mesPersonal: number;
@@ -236,25 +222,43 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const mesAtual = hoje.getMonth() + 1;
   const diaAtual = hoje.getDate();
   
-  const anoPersonal = calcularAnoPersonal(dataNascimento, anoAtual);
-  const mesPersonal = calcularMesPersonal(anoPersonal, mesAtual);
+  const anoPersonal = calcAnoPersonal(dataNascimento, anoAtual);
+  const mesPersonal = calcMesPersonal(anoPersonal, mesAtual);
+  
+  const desafio1 = calcDesafio1(dataNascimento);
+  const desafio2 = calcDesafio2(dataNascimento);
+  
+  // Calculate intermediate values for karmic debts
+  const valores = mapNameToValues(nome);
+  const motivacaoSum = [...clean(nome)].filter(isVowel).map(letterValue).reduce((a, b) => a + b, 0);
+  const impressaoSum = [...clean(nome)].filter(ch => !isVowel(ch)).map(letterValue).reduce((a, b) => a + b, 0);
+  const expressaoSum = valores.reduce((a, b) => a + b, 0);
+  const destinoSum = dataNascimento.getDate() + dataNascimento.getMonth() + 1 + dataNascimento.getFullYear();
   
   return {
-    motivacao: calcularMotivacao(nome),
-    impressao: calcularImpressao(nome),
-    expressao: calcularNome(nome),
-    destino: calcularDestino(dataNascimento),
-    missao: calcularMissao(dataNascimento),
-    numeroPsiquico: calcularNumeroPsiquico(dataNascimento),
-    respostaSubconsciente: calcularRespostaSubconsciente(nome), // Corrigido: baseado no nome
-    licoesCarmicas: calcularLicoesCarmicas(nome),
-    dividasCarmicas: calcularDividasCarmicas(nome, dataNascimento),
-    tendenciasOcultas: calcularTendenciasOcultas(nome),
-    ciclosDeVida: calcularCiclosDeVida(dataNascimento),
-    desafios: calcularDesafios(dataNascimento),
-    momentosDecisivos: calcularMomentosDecisivos(dataNascimento),
+    motivacao: calcMotivacao(nome),
+    impressao: calcImpressao(nome),
+    expressao: calcExpressao(nome),
+    destino: calcDestino(dataNascimento),
+    missao: calcMissao(dataNascimento),
+    numeroPsiquico: calcNumeroPsiquico(dataNascimento),
+    respostaSubconsciente: calcRespostaSubconsciente(nome),
+    licoesCarmicas: calcLicoesCarmicas(nome),
+    dividasCarmicas: detectarDividasCarmicas([motivacaoSum, impressaoSum, expressaoSum, destinoSum]),
+    tendenciasOcultas: calcTendenciasOcultas(nome),
+    desafios: {
+      primeiro: desafio1,
+      segundo: desafio2,
+      principal: calcDesafioPrincipal(desafio1, desafio2)
+    },
+    momentosDecisivos: {
+      primeiro: calcMomento1(dataNascimento),
+      segundo: calcMomento2(dataNascimento),
+      terceiro: calcMomento3(dataNascimento),
+      quarto: calcMomento4(dataNascimento)
+    },
     anoPersonal,
     mesPersonal,
-    diaPersonal: calcularDiaPersonal(mesPersonal, diaAtual)
+    diaPersonal: calcDiaPersonal(mesPersonal, diaAtual)
   };
 }
