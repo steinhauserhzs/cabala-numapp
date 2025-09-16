@@ -123,34 +123,42 @@ function splitByHeading(raw: string, heading: RegExp, captureGroup = 1): Blocks 
   return blocks;
 }
 
-export async function getInterpretacao(topico: string, numero: number | string): Promise<string | null> {
+export async function getInterpretacao(topico: string, numero: number | string, _visited: Set<string> = new Set(), _depth = 0): Promise<string | null> {
   const numeroStr = String(numero);
-  console.debug(`[getInterpretacao] Buscando ${topico} número ${numeroStr}`);
+  console.debug(`[getInterpretacao] Buscando ${topico} número ${numeroStr} (depth=${_depth})`);
+
+  // Prevent infinite recursion between aliases
+  if (_visited.has(topico) || _depth > 5) {
+    console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${topico}`);
+    return null;
+  }
+  _visited.add(topico);
 
   try {
     const raw = await fetchConteudo(topico);
     if (!raw) {
       console.warn(`[getInterpretacao] Conteúdo não encontrado para ${topico}`);
-      
+
       // Try aliases before giving up
       const aliases = topicAliases[topico] || [];
       for (const alias of aliases) {
+        if (_visited.has(alias)) continue;
         const aliasContent = await fetchConteudo(alias);
         if (aliasContent) {
-          return await getInterpretacao(alias, numero);
+          return await getInterpretacao(alias, numero, new Set(_visited), _depth + 1);
         }
       }
-      
+
       // Try reverse lookup in aliases
       for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
-        if (aliasArray.includes(topico)) {
+        if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
           const mainContent = await fetchConteudo(mainTopic);
           if (mainContent) {
-            return await getInterpretacao(mainTopic, numero);
+            return await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
           }
         }
       }
-      
+
       return null;
     }
 
@@ -158,7 +166,7 @@ export async function getInterpretacao(topico: string, numero: number | string):
     if (raw.startsWith('{') || raw.startsWith('[')) {
       try {
         const parsed = JSON.parse(raw);
-        
+
         // Check if it's a direct object with the number as key
         if (parsed[numeroStr]) {
           const item = parsed[numeroStr];
@@ -167,10 +175,10 @@ export async function getInterpretacao(topico: string, numero: number | string):
           }
           return String(item);
         }
-        
+
         // Check if it's an array and find by number
         if (Array.isArray(parsed)) {
-          const found = parsed.find(item => item.numero === numero || item.numero === numeroStr);
+          const found = parsed.find((item: any) => item.numero === numero || item.numero === numeroStr);
           if (found) {
             if (typeof found === 'object' && found.titulo && found.descricao) {
               return `**${found.titulo}**\n\n${found.descricao}${found.caracteristicas ? '\n\n**Características:**\n' + found.caracteristicas.join(', ') : ''}${found.positivos ? '\n\n**Aspectos Positivos:**\n' + found.positivos.join(', ') : ''}${found.desafios ? '\n\n**Desafios:**\n' + found.desafios.join(', ') : ''}`;
@@ -185,13 +193,13 @@ export async function getInterpretacao(topico: string, numero: number | string):
 
     // Parse text content based on common patterns
     const topicName = topico.charAt(0).toUpperCase() + topico.slice(1).replace(/_/g, ' ');
-    
+
     // Create pattern to match "Topic Number" format
     const sectionPattern = new RegExp(
       `(^|\\n)\\s*${topicName}\\s+${numeroStr}\\s*\\n([\\s\\S]*?)(?=\\n\\s*${topicName}\\s+\\d+|$)`,
       'im'
     );
-    
+
     let match = raw.match(sectionPattern);
     if (match && match[2]) {
       const content = match[2].trim();
@@ -200,13 +208,13 @@ export async function getInterpretacao(topico: string, numero: number | string):
         return content;
       }
     }
-    
+
     // Alternative pattern: just "Number" at line start
     const numberPattern = new RegExp(
       `(^|\\n)\\s*${numeroStr}\\s*\\n([\\s\\S]*?)(?=\\n\\s*\\d+\\s*\\n|$)`,
       'm'
     );
-    
+
     match = raw.match(numberPattern);
     if (match && match[2]) {
       const content = match[2].trim();
@@ -215,13 +223,13 @@ export async function getInterpretacao(topico: string, numero: number | string):
         return content;
       }
     }
-    
+
     // Pattern for numbered sections with description
     const descPattern = new RegExp(
       `(^|\\n)\\s*${numeroStr}\\s*[-.]?\\s*([^\\n]+)\\n([\\s\\S]*?)(?=\\n\\s*\\d+\\s*[-.]?|$)`,
       'm'
     );
-    
+
     match = raw.match(descPattern);
     if (match && match[3]) {
       const title = match[2].trim();
@@ -233,19 +241,20 @@ export async function getInterpretacao(topico: string, numero: number | string):
     }
 
     console.warn(`[getInterpretacao] Interpretação específica não encontrada para ${topico} ${numeroStr}`);
-    
-    // Try aliases
+
+    // Try aliases safely with visited set
     for (const alias of topicAliases[topico] || []) {
-      const result = await getInterpretacao(alias, numero);
+      if (_visited.has(alias)) continue;
+      const result = await getInterpretacao(alias, numero, new Set(_visited), _depth + 1);
       if (result && !result.includes('em preparação')) {
         return result;
       }
     }
 
-    // Try reverse aliases
+    // Try reverse aliases safely
     for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
-      if (aliasArray.includes(topico)) {
-        const aliasResult = await getInterpretacao(mainTopic, numero);
+      if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
+        const aliasResult = await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
         if (aliasResult && !aliasResult.includes('em preparação')) {
           return aliasResult;
         }
@@ -298,28 +307,35 @@ const topicAliases: Record<string, string[]> = {
   'missao': ['missão']
 };
 
-export async function getTextoTopico(topico: string): Promise<string | null> {
+export async function getTextoTopico(topico: string, _visited: Set<string> = new Set(), _depth = 0): Promise<string | null> {
+  if (_visited.has(topico) || _depth > 5) {
+    console.warn(`[getTextoTopico] Ciclo ou profundidade excedida em ${topico}`);
+    return null;
+  }
+  _visited.add(topico);
+
   // First try the exact topic
   let result = await fetchConteudo(topico);
-  
+
   if (!result) {
     // Try aliases
     const aliases = topicAliases[topico] || [];
     for (const alias of aliases) {
+      if (_visited.has(alias)) continue;
       result = await fetchConteudo(alias);
       if (result) break;
     }
-    
+
     // Try reverse lookup
     if (!result) {
       for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
-        if (aliasArray.includes(topico)) {
+        if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
           result = await fetchConteudo(mainTopic);
           if (result) break;
         }
       }
     }
   }
-  
+
   return result;
 }

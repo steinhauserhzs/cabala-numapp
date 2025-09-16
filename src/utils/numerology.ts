@@ -161,8 +161,7 @@ export function calcMotivacao(nome: string): number {
       if (!base || !/[A-ZÇ]/.test(base)) continue;
       if (!isVowel(base)) continue;
       
-      let value = letterValue(base);
-      value = applyDiacriticAdjustments(char, value);
+      const value = letterValue(base);
       wordSum += value;
       
       if (process.env.NODE_ENV !== 'production') {
@@ -214,15 +213,14 @@ export function calcExpressao(nome: string): number {
     
     if (!base || !/[A-ZÇ]/.test(base)) continue;
     
-    let value = letterValue(base);
-    value = applyDiacriticAdjustments(char, value);
-    sum += value;
-    
-    if (process.env.NODE_ENV !== 'production') {
-      if (nfd.length > 1) {
-        console.debug(`[calcExpressao] ${char} (${base}): ${letterValue(base)} → ${value}`);
+      const value = letterValue(base);
+      sum += value;
+      
+      if (process.env.NODE_ENV !== 'production') {
+        if (nfd.length > 1) {
+          console.debug(`[calcExpressao] ${char} (${base}): ${letterValue(base)} → ${value}`);
+        }
       }
-    }
   }
 
   if (process.env.NODE_ENV !== 'production') {
