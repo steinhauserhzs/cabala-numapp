@@ -16,7 +16,7 @@ export const useInterpretacao = (categoria: string, numero: number | string): {
   });
 
   return {
-    interpretacao: data && String(data).trim().length > 0 ? data : null,
+    interpretacao: data && String(data).trim().length > 0 && !data.includes('em preparação') && !data.includes('indisponível') ? data : null,
     isLoading,
     error: error as Error | null,
   };

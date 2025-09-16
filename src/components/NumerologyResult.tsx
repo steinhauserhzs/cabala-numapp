@@ -47,8 +47,10 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   React.useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       validateNumerologyCalculations().then(result => {
-        if (!result.passed) {
-          console.warn('Validation failed:', result.errors);
+        if (result.passed) {
+          console.log('✅ Todos os testes de validação passaram!');
+        } else {
+          console.warn('🔥 Validation failed:', result.errors);
         }
       });
     }
@@ -249,28 +251,28 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos.primeiro,
       description: "Primeiro momento decisivo",
-      categoria: "primeiro_momento",
+      categoria: "momentos_decisivos",
       icon: <Clock size={20} />
     },
     {
       title: "2º Momento Decisivo", 
       value: mapa.momentosDecisivos.segundo,
       description: "Segundo momento decisivo",
-      categoria: "segundo_momento",
+      categoria: "momentos_decisivos",
       icon: <Clock size={20} />
     },
     {
       title: "3º Momento Decisivo",
       value: mapa.momentosDecisivos.terceiro,
       description: "Terceiro momento decisivo", 
-      categoria: "terceiro_momento",
+      categoria: "momentos_decisivos",
       icon: <Clock size={20} />
     },
     {
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos.quarto,
       description: "Quarto momento decisivo",
-      categoria: "quarto_momento", 
+      categoria: "momentos_decisivos", 
       icon: <Clock size={20} />
     }
   ];
