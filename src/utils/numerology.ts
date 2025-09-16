@@ -101,8 +101,34 @@ export function reduceKeepMasters(n: number): number {
   return n;
 }
 
+// Apply diacritic adjustments based on the original character (with diacritics)
+function applyDiacriticAdjustments(originalChar: string | undefined, baseValue: number): number {
+  if (!originalChar) return baseValue;
+  const normalized = originalChar.normalize('NFD');
+  const marks = new Set(normalized.slice(1));
+  let value = baseValue;
+  if (marks.has('\u0303')) value += 3; // til (~)
+  if (marks.has('\u0301')) value += 2; // agudo (´)
+  if (marks.has('\u0302')) value += 7; // circunflexo (^)
+  if (marks.has('\u0308') || marks.has('\u0300')) value *= 2; // trema (¨) or grave (`)
+  return value;
+}
+
 export function isVowel(ch: string): boolean {
   return "AEIOUY".includes(ch.toUpperCase());
+}
+
+function getOriginalLettersArray(text: string): string[] {
+  const arr: string[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const nfd = text[i]?.normalize('NFD');
+    if (!nfd) continue;
+    const base = nfd[0]?.toUpperCase();
+    if (base && /[A-ZÇ]/.test(base)) {
+      arr.push(text[i]);
+    }
+  }
+  return arr;
 }
 
 export function mapNameToValues(nome: string): number[] {
@@ -138,38 +164,24 @@ export function calcMotivacao(nome: string): number {
     }
     wordStartIndex = nome.indexOf(word, wordStartIndex);
     
-    // Calculate vowels for this word with bonuses
-    for (let i = 0; i < cleanWord.length; i++) {
-      const char = cleanWord[i];
-      if (!char || !isVowel(char)) continue;
-      
-      let value = letterValue(char);
-      
-      // Find corresponding position in original text to check for diacritics
-      const charPositionInOriginal = wordStartIndex + i;
-      const originalChar = nome[charPositionInOriginal];
-      
-      if (originalChar) {
-        // Apply diacritic bonus based on original character
-        const bonus = diacriticBonuses.find(b => {
-          const originalNormalized = originalChar.normalize('NFD');
-          return originalNormalized && originalNormalized[0]?.toUpperCase() === char && 
-                 Math.abs(nome.indexOf(originalChar) - charPositionInOriginal) <= 1;
-        });
-        
-        if (bonus) {
-          if (bonus.bonus < 0) {
-            value *= Math.abs(bonus.bonus); // Multiplier
-          } else {
-            value += bonus.bonus; // Addition
-          }
-          
-          if (process.env.NODE_ENV !== 'production') {
-            console.debug(`[calcMotivacao] aplicando bônus na letra ${char}: ${letterValue(char)} → ${value}`);
-          }
+    // Calculate vowels scanning original word, applying diacritic bonuses per letter
+    for (let k = 0; k < word.length; k++) {
+      const orig = word[k];
+      if (!orig) continue;
+      const nfd = orig.normalize('NFD');
+      const base = nfd[0]?.toUpperCase();
+      if (!base || !/[A-ZÇ]/.test(base)) continue;
+      if (!isVowel(base)) continue;
+
+      let value = letterValue(base);
+      value = applyDiacriticAdjustments(orig, value);
+
+      if (process.env.NODE_ENV !== 'production') {
+        if (nfd.length > 1) {
+          console.debug(`[calcMotivacao] bônus na letra ${base}(${orig}): → ${value}`);
         }
       }
-      
+
       wordSum += value;
     }
     
@@ -203,62 +215,41 @@ export function calcImpressao(nome: string): number {
 
 export function calcExpressao(nome: string): number {
   if (!nome) return 0;
-  
+
   const cleanName = clean(nome);
-  const diacriticBonuses = extractDiacriticBonuses(nome);
   let sum = 0;
-  
-  // Calculate base sum with diacritic bonuses applied correctly
-  for (let i = 0; i < cleanName.length; i++) {
-    const char = cleanName[i];
-    if (!char) continue;
-    
-    let value = letterValue(char);
-    
-    // Find original character with diacritics to match bonus
-    let originalChar = '';
-    let charIndex = 0;
-    for (let j = 0; j < nome.length; j++) {
-      const currentChar = nome[j];
-      if (!currentChar) continue;
-      
-      const normalized = currentChar.normalize('NFD');
-      if (normalized[0]?.toUpperCase() === char) {
-        if (charIndex === i) {
-          originalChar = currentChar;
-          break;
-        }
-        charIndex++;
-      }
-    }
-    
-    // Apply diacritic bonus if found
-    if (originalChar) {
-      const bonus = diacriticBonuses.find(b => {
-        const origNormalized = originalChar.normalize('NFD');
-        return origNormalized[0]?.toUpperCase() === b.letter;
-      });
-      
-      if (bonus) {
-        if (bonus.bonus < 0) {
-          value *= Math.abs(bonus.bonus); // Multiplier
-        } else {
-          value += bonus.bonus; // Addition
-        }
-        
-        if (process.env.NODE_ENV !== 'production') {
-          console.debug(`[calcExpressao] bônus aplicado na letra ${char}: ${letterValue(char)} → ${value}`);
+
+  // Iterate cleaned letters and map to original letters to apply diacritics precisely
+  for (let i = 0, countMatched = 0; i < cleanName.length; i++) {
+    const ch = cleanName[i];
+    if (!ch) continue;
+
+    // Find i-th occurrence of this base letter in original string
+    let originalChar: string | undefined;
+    for (let j = 0, seenForThisBase = 0; j < nome.length; j++) {
+      const nfd = nome[j]?.normalize('NFD');
+      if (!nfd) continue;
+      const base = nfd[0]?.toUpperCase();
+      if (base === ch) {
+        if (seenForThisBase === 0) {
+          if (countMatched === i) {
+            originalChar = nome[j];
+            break;
+          }
+          countMatched++;
         }
       }
     }
-    
+
+    let value = letterValue(ch);
+    value = applyDiacriticAdjustments(originalChar, value);
     sum += value;
   }
-  
+
   if (process.env.NODE_ENV !== 'production') {
     console.debug(`[calcExpressao] soma com bônus: ${sum}`);
   }
-  
+
   return reduceKeepMasters(sum);
 }
 
