@@ -104,6 +104,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     categoria: string;
   }) => {
     const { interpretacao, isLoading } = useInterpretacao(categoria, value);
+    const [open, setOpen] = useState(false);
     
     return (
       <Card className="group hover:scale-105 transition-all duration-300 h-full">
@@ -125,30 +126,34 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         </CardHeader>
         
         <CardContent className="pt-0">
-          <Accordion type="single" collapsible>
-            <AccordionItem value="interpretation" className="border-none">
-              <AccordionTrigger className="text-sm hover:no-underline py-2">
-                Ver interpretação
-              </AccordionTrigger>
-              <AccordionContent className="space-y-3 text-sm">
-                {isLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ) : interpretacao ? (
-                  <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {interpretacao}
-                  </div>
-                ) : (
-                  <div className="text-sm text-foreground">
-                    Interpretação não disponível.
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="w-full text-left text-sm py-2 flex items-center justify-between font-medium hover:underline"
+            aria-expanded={open}
+          >
+            Ver interpretação
+            <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          {open && (
+            <div className="space-y-3 text-sm">
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : interpretacao ? (
+                <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {interpretacao}
+                </div>
+              ) : (
+                <div className="text-sm text-foreground">
+                  Interpretação não disponível.
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     );
