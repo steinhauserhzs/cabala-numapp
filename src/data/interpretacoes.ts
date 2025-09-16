@@ -134,31 +134,61 @@ export const interpretacoes: Record<string, Record<number, InterpretacaoNumerolo
 };
 
 // Função para extrair interpretação específica dos dados do Supabase
-export function extrairInterpretacaoDoConteudo(conteudo: any, numero: number): InterpretacaoNumerologica | null {
-  if (!conteudo || typeof conteudo !== 'object') return null;
-  
-  // Procurar pelo número específico no conteúdo
-  const numeroStr = numero.toString();
-  const numeroData = conteudo[numeroStr] || conteudo[`numero_${numeroStr}`] || conteudo[`n${numeroStr}`];
-  
-  if (!numeroData) return null;
-  
-  // Extrair informações do formato do Material Complementar
-  const titulo = numeroData.titulo || numeroData.name || `Número ${numero}`;
-  const descricao = numeroData.descricao || numeroData.description || numeroData.texto || "";
-  
-  // Extrair características, aspectos positivos e desafios
-  const caracteristicas = numeroData.caracteristicas || numeroData.traits || [];
-  const aspectosPositivos = numeroData.aspectos_positivos || numeroData.positivos || numeroData.positive || [];
-  const desafios = numeroData.desafios || numeroData.challenges || numeroData.negative || [];
-  
-  return {
-    titulo,
-    descricao,
-    caracteristicas: Array.isArray(caracteristicas) ? caracteristicas : [caracteristicas].filter(Boolean),
-    aspectosPositivos: Array.isArray(aspectosPositivos) ? aspectosPositivos : [aspectosPositivos].filter(Boolean),
-    desafios: Array.isArray(desafios) ? desafios : [desafios].filter(Boolean)
+export function extrairInterpretacaoDoConteudo(conteudo: any, numero: number, categoria: string): InterpretacaoNumerologica | null {
+  if (!conteudo || typeof conteudo !== 'string') {
+    return null;
+  }
+
+  // Mapear categorias para os padrões corretos de regex
+  const padroesPorCategoria: Record<string, string> = {
+    'motivacao': `Motivação (11|22|[1-9])`,
+    'impressao': `Impressão ([1-9])`,
+    'expressao': `Expressão (11|22|[1-9])`,
+    'destino': `Destino (11|22|[1-9])`,
+    'missao': `Missão (11|22|[1-9])`,
+    'numero_psiquico': `Número Psíquico ([1-9])`,
+    'resposta_subconsciente': `Resposta Subconsciente ([2-9])`,
+    'licoes_carmicas': `Lições Cármicas ([1-9])`,
+    'dividas_carmicas': `Dívidas Cármicas (13|14|16|19)`,
+    'tendencias_ocultas': `Tendências Ocultas ([1-9])`,
+    'ciclos_de_vida': `Ciclos de Vida ([1-9])`,
+    'desafios': `Desafio ([0-9])`,
+    'momentos_decisivos': `(Primeiro|Segundo|Terceiro|Quarto) Momento Decisivo (11|22|[1-9])`,
+    'ano_pessoal': `Ano Pessoal ([1-9])`,
+    'mes_pessoal': `Mês Pessoal (11|22|[1-9])`,
+    'dia_pessoal': `Dia Pessoal (11|22|[1-9])`,
+    'arcanos': `Arcano ([0-9]{1,2})`
   };
+
+  const padrao = padroesPorCategoria[categoria];
+  if (!padrao) {
+    return null;
+  }
+
+  // Criar regex para encontrar o bloco específico do número
+  const regexPattern = padrao.replace('([1-9])', numero.toString())
+    .replace('(11|22|[1-9])', numero.toString())
+    .replace('([0-9])', numero.toString())
+    .replace('([2-9])', numero.toString())
+    .replace('([0-9]{1,2})', numero.toString())
+    .replace('(13|14|16|19)', numero.toString());
+
+  const regex = new RegExp(`${regexPattern}\\s*\\n([\\s\\S]*?)(?=\\n(?:[A-ZÁÊÍÓÚ]|$))`, 'i');
+  const match = conteudo.match(regex);
+
+  if (match && match[1]) {
+    const textoCompleto = match[1].trim();
+    
+    return {
+      titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
+      descricao: textoCompleto,
+      caracteristicas: [],
+      aspectosPositivos: [],
+      desafios: []
+    };
+  }
+
+  return null;
 }
 
 export function obterInterpretacao(categoria: string, numero: number): InterpretacaoNumerologica | null {

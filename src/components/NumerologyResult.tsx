@@ -5,7 +5,7 @@ import { MapaNumerologico } from '@/utils/numerology';
 import { useInterpretacao } from '@/hooks/useInterpretacao';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun } from 'lucide-react';
+import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain } from 'lucide-react';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -28,18 +28,18 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
 
   const NumerologyCard = ({ 
     title, 
-    number, 
+    value, 
     description, 
     icon, 
-    category 
+    categoria 
   }: {
     title: string;
-    number: number;
+    value: number;
     description: string;
     icon: React.ReactNode;
-    category: string;
+    categoria: string;
   }) => {
-    const { interpretacao, isLoading } = useInterpretacao(category, number);
+    const { interpretacao, isLoading } = useInterpretacao(categoria, value);
     
     return (
       <Card className="group hover:scale-105 transition-all duration-300">
@@ -54,8 +54,8 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
                 <CardDescription className="text-sm">{description}</CardDescription>
               </div>
             </div>
-            <div className={getNumberStyle(number)}>
-              {number}
+            <div className={getNumberStyle(value)}>
+              {value}
             </div>
           </div>
         </CardHeader>
@@ -135,69 +135,179 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   const coreNumbers = [
     {
       title: "Motivação",
-      number: mapa.motivacao,
+      value: mapa.motivacao,
       description: "O que te motiva internamente",
-      icon: <Heart size={20} />,
-      category: "motivacao"
+      categoria: "motivacao",
+      icon: <Heart size={20} />
     },
     {
       title: "Impressão", 
-      number: mapa.impressao,
+      value: mapa.impressao,
       description: "Como os outros te veem",
-      icon: <Eye size={20} />,
-      category: "impressao"
+      categoria: "impressao",
+      icon: <Eye size={20} />
     },
     {
       title: "Expressão",
-      number: mapa.expressao, 
+      value: mapa.expressao, 
       description: "Sua personalidade total",
-      icon: <Star size={20} />,
-      category: "expressao"
+      categoria: "expressao",
+      icon: <Star size={20} />
     },
     {
       title: "Destino",
-      number: mapa.destino,
+      value: mapa.destino,
       description: "Seu caminho de vida",
-      icon: <Target size={20} />,
-      category: "destino"
+      categoria: "destino",
+      icon: <Target size={20} />
     },
     {
       title: "Missão",
-      number: mapa.missao,
+      value: mapa.missao,
       description: "Sua missão nesta vida",
-      icon: <Compass size={20} />,
-      category: "missao"
+      categoria: "missao",
+      icon: <Compass size={20} />
     },
     {
       title: "Número Psíquico",
-      number: mapa.numeroPsiquico,
+      value: mapa.numeroPsiquico,
       description: "Sua natureza psíquica",
-      icon: <Brain size={20} />,
-      category: "psiquico"
+      categoria: "numero_psiquico",
+      icon: <Brain size={20} />
+    }
+  ];
+
+  const karmaNumbers = [
+    {
+      title: "Lições Cármicas",
+      values: mapa.licoesCarmicas,
+      description: "Números ausentes no seu nome",
+      categoria: "licoes_carmicas",
+      icon: <BookOpen size={20} />
+    },
+    {
+      title: "Dívidas Cármicas", 
+      values: mapa.dividasCarmicas,
+      description: "Desafios de vidas passadas",
+      categoria: "dividas_carmicas",
+      icon: <AlertTriangle size={20} />
+    },
+    {
+      title: "Tendências Ocultas",
+      values: mapa.tendenciasOcultas, 
+      description: "Números em excesso no seu nome",
+      categoria: "tendencias_ocultas",
+      icon: <Zap size={20} />
+    }
+  ];
+
+  const cycleNumbers = [
+    {
+      title: "1º Ciclo de Vida",
+      value: mapa.ciclosDeVida.primeiro,
+      description: "Primeira fase da vida",
+      categoria: "ciclos_de_vida",
+      icon: <Calendar size={20} />
+    },
+    {
+      title: "2º Ciclo de Vida", 
+      value: mapa.ciclosDeVida.segundo,
+      description: "Segunda fase da vida",
+      categoria: "ciclos_de_vida",
+      icon: <Calendar size={20} />
+    },
+    {
+      title: "3º Ciclo de Vida",
+      value: mapa.ciclosDeVida.terceiro, 
+      description: "Terceira fase da vida",
+      categoria: "ciclos_de_vida",
+      icon: <Calendar size={20} />
+    }
+  ];
+
+  const challengeNumbers = [
+    {
+      title: "1º Desafio",
+      value: mapa.desafios.primeiro,
+      description: "Primeiro desafio de vida",
+      categoria: "desafios",
+      icon: <Mountain size={20} />
+    },
+    {
+      title: "2º Desafio",
+      value: mapa.desafios.segundo,
+      description: "Segundo desafio de vida", 
+      categoria: "desafios",
+      icon: <Mountain size={20} />
+    },
+    {
+      title: "3º Desafio",
+      value: mapa.desafios.terceiro,
+      description: "Terceiro desafio de vida",
+      categoria: "desafios", 
+      icon: <Mountain size={20} />
+    },
+    {
+      title: "4º Desafio",
+      value: mapa.desafios.quarto,
+      description: "Quarto desafio de vida",
+      categoria: "desafios",
+      icon: <Mountain size={20} />
+    }
+  ];
+
+  const decisionNumbers = [
+    {
+      title: "1º Momento Decisivo",
+      value: mapa.momentosDecisivos.primeiro,
+      description: "Primeiro momento decisivo",
+      categoria: "momentos_decisivos",
+      icon: <Clock size={20} />
+    },
+    {
+      title: "2º Momento Decisivo", 
+      value: mapa.momentosDecisivos.segundo,
+      description: "Segundo momento decisivo",
+      categoria: "momentos_decisivos",
+      icon: <Clock size={20} />
+    },
+    {
+      title: "3º Momento Decisivo",
+      value: mapa.momentosDecisivos.terceiro,
+      description: "Terceiro momento decisivo", 
+      categoria: "momentos_decisivos",
+      icon: <Clock size={20} />
+    },
+    {
+      title: "4º Momento Decisivo",
+      value: mapa.momentosDecisivos.quarto,
+      description: "Quarto momento decisivo",
+      categoria: "momentos_decisivos", 
+      icon: <Clock size={20} />
     }
   ];
 
   const personalNumbers = [
     {
       title: "Ano Pessoal",
-      number: mapa.anoPersonal,
+      value: mapa.anoPersonal,
       description: "Energia do ano atual",
-      icon: <Calendar size={20} />,
-      category: "ano"
+      categoria: "ano_pessoal",
+      icon: <Calendar size={20} />
     },
     {
       title: "Mês Pessoal", 
-      number: mapa.mesPersonal,
+      value: mapa.mesPersonal,
       description: "Energia do mês atual",
-      icon: <Clock size={20} />,
-      category: "mes"
+      categoria: "mes_pessoal",
+      icon: <Clock size={20} />
     },
     {
       title: "Dia Pessoal",
-      number: mapa.diaPersonal,
+      value: mapa.diaPersonal,
       description: "Energia do dia atual", 
-      icon: <Sun size={20} />,
-      category: "dia"
+      categoria: "dia_pessoal",
+      icon: <Sun size={20} />
     }
   ];
 
@@ -241,15 +351,65 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
             Núcleos Principais
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coreNumbers.map(num => (
-              <NumerologyCard 
-                key={num.title}
-                title={num.title}
-                number={num.number}
-                description={num.description}
-                icon={num.icon}
-                category={num.category}
-              />
+            {coreNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Karma Numbers */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+            Aspectos Cármicos
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {karmaNumbers.map((item) => (
+              <div key={item.title} className="bg-card border rounded-lg p-6 text-center hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  {item.icon}
+                  <h3 className="text-lg font-semibold">{item.title}</h3>
+                </div>
+                <div className="text-2xl font-bold mb-2 text-primary">
+                  {item.values.length > 0 ? item.values.join(', ') : 'Nenhum'}
+                </div>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Cycle Numbers */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+            Ciclos de Vida
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {cycleNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Challenge Numbers */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+            Desafios de Vida
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {challengeNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+
+        {/* Decision Numbers */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+            Momentos Decisivos
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {decisionNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
             ))}
           </div>
         </div>
@@ -258,23 +418,16 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center">
             <Calendar className="mr-2 h-6 w-6 text-secondary" />
-            Ciclos Pessoais
+            Ciclos Pessoais Atuais
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {personalNumbers.map(num => (
-              <NumerologyCard 
-                key={num.title}
-                title={num.title}
-                number={num.number}
-                description={num.description}
-                icon={num.icon}
-                category={num.category}
-              />
+            {personalNumbers.map(item => (
+              <NumerologyCard key={item.title} {...item} />
             ))}
           </div>
         </div>
 
-        {/* Additional Info */}
+        {/* Subconscious Response */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -282,7 +435,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
               Resposta Subconsciente
             </CardTitle>
             <CardDescription>
-              Baseada na frequência de dígitos na sua data de nascimento
+              Quantidade de números distintos (1-9) encontrados no seu nome completo
             </CardDescription>
           </CardHeader>
           <CardContent>

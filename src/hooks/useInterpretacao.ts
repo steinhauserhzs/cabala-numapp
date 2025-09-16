@@ -12,14 +12,20 @@ export const useInterpretacao = (categoria: string, numero: number): {
   const interpretacao = useMemo(() => {
     // Primeiro, tentar obter dos dados do Supabase
     if (conteudoSupabase && conteudoSupabase.conteudo) {
-      const interpretacaoSupabase = extrairInterpretacaoDoConteudo(conteudoSupabase.conteudo, numero);
+      const interpretacaoSupabase = extrairInterpretacaoDoConteudo(conteudoSupabase.conteudo, numero, categoria);
       if (interpretacaoSupabase) {
         return interpretacaoSupabase;
       }
     }
     
-    // Fallback para dados locais
-    return obterInterpretacao(categoria, numero);
+    // Fallback: mensagem padrão se não encontrar interpretação
+    return {
+      titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
+      descricao: "Não há interpretação específica para este número neste tópico.",
+      caracteristicas: [],
+      aspectosPositivos: [],
+      desafios: []
+    };
   }, [conteudoSupabase, categoria, numero]);
   
   return {

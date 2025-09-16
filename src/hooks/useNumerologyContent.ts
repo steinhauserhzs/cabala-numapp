@@ -36,13 +36,13 @@ export const useNumerologyContentByTopic = (topico: string) => {
         .from('conteudos_numerologia')
         .select('*')
         .eq('topico', topico)
-        .single();
+        .maybeSingle();
 
       if (error) {
         throw new Error(error.message);
       }
 
-      return data as NumerologyContent;
+      return data as NumerologyContent | null;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime in v4)
