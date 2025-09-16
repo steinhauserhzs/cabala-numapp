@@ -14,7 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conteudos_numerologia: {
+        Row: {
+          conteudo: Json
+          created_at: string
+          id: number
+          topico: string
+        }
+        Insert: {
+          conteudo: Json
+          created_at?: string
+          id?: number
+          topico: string
+        }
+        Update: {
+          conteudo?: Json
+          created_at?: string
+          id?: number
+          topico?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
