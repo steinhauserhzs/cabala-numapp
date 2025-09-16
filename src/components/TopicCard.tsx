@@ -27,6 +27,11 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
 
   const [open, setOpen] = useState(false);
 
+  const handleToggle = () => {
+    console.log(`Toggling TopicCard ${title}: ${open} -> ${!open}`);
+    setOpen(!open);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
@@ -39,25 +44,37 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
       <CardContent>
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="w-full text-left text-sm py-2 flex items-center justify-between font-medium hover:underline"
+          onClick={handleToggle}
+          className="w-full text-left text-sm py-2 px-2 flex items-center justify-between font-medium hover:underline hover:bg-muted/50 rounded transition-colors cursor-pointer z-10 relative"
           aria-expanded={open}
         >
           Ver Conteúdo
-          <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          <svg 
+            className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </button>
         {open && (
-          isLoading ? (
-            <div className="text-sm text-foreground">Carregando conteúdo...</div>
-          ) : conteudo ? (
-            <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-              {conteudo}
-            </div>
-          ) : (
-            <div className="text-sm text-foreground leading-relaxed">
-              Conteúdo indisponível no momento. Em breve adicionaremos este tópico.
-            </div>
-          )
+          <div className="mt-2 p-3 border-t border-border">
+            {isLoading ? (
+              <div className="text-sm text-foreground">Carregando conteúdo...</div>
+            ) : conteudo ? (
+              <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {conteudo}
+              </div>
+            ) : (
+              <div className="text-sm text-foreground leading-relaxed">
+                Conteúdo indisponível no momento. Em breve adicionaremos este tópico.
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

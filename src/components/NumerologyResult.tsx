@@ -106,6 +106,11 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     const { interpretacao, isLoading } = useInterpretacao(categoria, value);
     const [open, setOpen] = useState(false);
     
+    const handleToggle = () => {
+      console.log(`Toggling card ${title}: ${open} -> ${!open}`);
+      setOpen(!open);
+    };
+    
     return (
       <Card className="group hover:scale-105 transition-all duration-300 h-full">
         <CardHeader className="pb-3">
@@ -128,15 +133,25 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <CardContent className="pt-0">
           <button
             type="button"
-            onClick={() => setOpen((o) => !o)}
-            className="w-full text-left text-sm py-2 flex items-center justify-between font-medium hover:underline"
+            onClick={handleToggle}
+            className="w-full text-left text-sm py-2 px-2 flex items-center justify-between font-medium hover:underline hover:bg-muted/50 rounded transition-colors cursor-pointer z-10 relative"
             aria-expanded={open}
           >
             Ver interpretação
-            <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <svg 
+              className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
           </button>
           {open && (
-            <div className="space-y-3 text-sm">
+            <div className="mt-2 p-3 border-t border-border">
               {isLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
