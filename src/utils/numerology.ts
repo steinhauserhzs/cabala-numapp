@@ -6,6 +6,8 @@ interface DiacriticInfo {
 }
 
 export function extractDiacriticBonuses(text: string): DiacriticInfo[] {
+  if (!text) return [];
+  
   const bonuses: DiacriticInfo[] = [];
   const bonusMap: Record<string, number> = {
     '\u0303': 3,   // til (~)
@@ -17,10 +19,13 @@ export function extractDiacriticBonuses(text: string): DiacriticInfo[] {
   
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
+    if (!char) continue;
+    
     const normalized = char.normalize('NFD');
     
     if (normalized.length > 1) {
-      const baseLetter = normalized[0].toUpperCase();
+      const baseLetter = normalized[0]?.toUpperCase();
+      if (!baseLetter) continue;
       
       // Check all combining diacritics
       for (let j = 1; j < normalized.length; j++) {
@@ -47,6 +52,8 @@ export function extractDiacriticBonuses(text: string): DiacriticInfo[] {
 }
 
 export function clean(text: string): string {
+  if (!text) return '';
+  
   // Preserve Ç by temporarily replacing it
   const withPlaceholder = text.replace(/[çÇ]/g, '§');
   
@@ -104,6 +111,8 @@ export function mapNameToValues(nome: string): number[] {
 }
 
 export function calcMotivacao(nome: string): number {
+  if (!nome) return 0;
+  
   const diacriticBonuses = extractDiacriticBonuses(nome);
   const words = nome.trim().split(/\s+/);
   const wordResults: number[] = [];
@@ -115,30 +124,36 @@ export function calcMotivacao(nome: string): number {
   
   for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
     const word = words[wordIndex];
+    if (!word) continue;
+    
     const cleanWord = clean(word);
     let wordSum = 0;
     
     // Find position of this word in original text for correct diacritic mapping
     let wordStartIndex = 0;
     for (let i = 0; i < wordIndex; i++) {
-      wordStartIndex = nome.indexOf(words[i], wordStartIndex) + words[i].length;
+      if (words[i]) {
+        wordStartIndex = nome.indexOf(words[i], wordStartIndex) + words[i].length;
+      }
     }
     wordStartIndex = nome.indexOf(word, wordStartIndex);
     
     // Calculate vowels for this word with bonuses
     for (let i = 0; i < cleanWord.length; i++) {
       const char = cleanWord[i];
-      if (isVowel(char)) {
-        let value = letterValue(char);
-        
-        // Find corresponding position in original text to check for diacritics
-        const charPositionInOriginal = wordStartIndex + i;
-        const originalChar = nome[charPositionInOriginal];
-        
+      if (!char || !isVowel(char)) continue;
+      
+      let value = letterValue(char);
+      
+      // Find corresponding position in original text to check for diacritics
+      const charPositionInOriginal = wordStartIndex + i;
+      const originalChar = nome[charPositionInOriginal];
+      
+      if (originalChar) {
         // Apply diacritic bonus based on original character
         const bonus = diacriticBonuses.find(b => {
-          const originalNormalized = originalChar?.normalize('NFD');
-          return originalNormalized && originalNormalized[0].toUpperCase() === char && 
+          const originalNormalized = originalChar.normalize('NFD');
+          return originalNormalized && originalNormalized[0]?.toUpperCase() === char && 
                  Math.abs(nome.indexOf(originalChar) - charPositionInOriginal) <= 1;
         });
         
@@ -153,9 +168,9 @@ export function calcMotivacao(nome: string): number {
             console.debug(`[calcMotivacao] aplicando bônus na letra ${char}: ${letterValue(char)} → ${value}`);
           }
         }
-        
-        wordSum += value;
       }
+      
+      wordSum += value;
     }
     
     const wordReduced = reduceKeepMasters(wordSum);
@@ -187,6 +202,8 @@ export function calcImpressao(nome: string): number {
 }
 
 export function calcExpressao(nome: string): number {
+  if (!nome) return 0;
+  
   const cleanName = clean(nome);
   const diacriticBonuses = extractDiacriticBonuses(nome);
   let sum = 0;
@@ -194,16 +211,21 @@ export function calcExpressao(nome: string): number {
   // Calculate base sum with diacritic bonuses applied correctly
   for (let i = 0; i < cleanName.length; i++) {
     const char = cleanName[i];
+    if (!char) continue;
+    
     let value = letterValue(char);
     
     // Find original character with diacritics to match bonus
     let originalChar = '';
     let charIndex = 0;
     for (let j = 0; j < nome.length; j++) {
-      const normalized = nome[j].normalize('NFD');
-      if (normalized[0].toUpperCase() === char) {
+      const currentChar = nome[j];
+      if (!currentChar) continue;
+      
+      const normalized = currentChar.normalize('NFD');
+      if (normalized[0]?.toUpperCase() === char) {
         if (charIndex === i) {
-          originalChar = nome[j];
+          originalChar = currentChar;
           break;
         }
         charIndex++;
@@ -211,20 +233,22 @@ export function calcExpressao(nome: string): number {
     }
     
     // Apply diacritic bonus if found
-    const bonus = diacriticBonuses.find(b => {
-      const origNormalized = originalChar.normalize('NFD');
-      return origNormalized[0].toUpperCase() === b.letter;
-    });
-    
-    if (bonus) {
-      if (bonus.bonus < 0) {
-        value *= Math.abs(bonus.bonus); // Multiplier
-      } else {
-        value += bonus.bonus; // Addition
-      }
+    if (originalChar) {
+      const bonus = diacriticBonuses.find(b => {
+        const origNormalized = originalChar.normalize('NFD');
+        return origNormalized[0]?.toUpperCase() === b.letter;
+      });
       
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug(`[calcExpressao] bônus aplicado na letra ${char}: ${letterValue(char)} → ${value}`);
+      if (bonus) {
+        if (bonus.bonus < 0) {
+          value *= Math.abs(bonus.bonus); // Multiplier
+        } else {
+          value += bonus.bonus; // Addition
+        }
+        
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug(`[calcExpressao] bônus aplicado na letra ${char}: ${letterValue(char)} → ${value}`);
+        }
       }
     }
     
