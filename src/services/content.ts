@@ -14,21 +14,22 @@ export async function fetchConteudo(topico: string): Promise<string> {
   console.debug(`[fetchConteudo] Buscando tópico: "${topico}"`);
 
   try {
-    // Try exact match first
-    const { data: exactMatch, error: exactError } = await supabase
+    // Try exact match first - use limit(1) to avoid PGRST116 errors
+    let { data, error } = await supabase
       .from('conteudos_numerologia')
       .select('conteudo')
       .eq('topico', topico)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (exactError) {
-      console.error('[fetchConteudo] Erro na busca exata:', exactError);
+    if (error) {
+      console.error('[fetchConteudo] Erro na busca exata:', error);
     }
 
-    if (exactMatch?.conteudo) {
-      const content = typeof exactMatch.conteudo === 'string' 
-        ? exactMatch.conteudo 
-        : JSON.stringify(exactMatch.conteudo, null, 2);
+    if (data && data.length > 0) {
+      const content = typeof data[0].conteudo === 'string' 
+        ? data[0].conteudo 
+        : JSON.stringify(data[0].conteudo, null, 2);
       
       contentCache.set(topico, content);
       console.debug(`[fetchConteudo] Encontrado exato para "${topico}":`, content.substring(0, 100) + '...');
@@ -36,20 +37,21 @@ export async function fetchConteudo(topico: string): Promise<string> {
     }
 
     // Try case-insensitive match
-    const { data: caseInsensitive, error: caseError } = await supabase
+    ({ data, error } = await supabase
       .from('conteudos_numerologia')
       .select('conteudo')
       .ilike('topico', topico)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1));
 
-    if (caseError) {
-      console.error('[fetchConteudo] Erro na busca case-insensitive:', caseError);
+    if (error) {
+      console.error('[fetchConteudo] Erro na busca case-insensitive:', error);
     }
 
-    if (caseInsensitive?.conteudo) {
-      const content = typeof caseInsensitive.conteudo === 'string' 
-        ? caseInsensitive.conteudo 
-        : JSON.stringify(caseInsensitive.conteudo, null, 2);
+    if (data && data.length > 0) {
+      const content = typeof data[0].conteudo === 'string' 
+        ? data[0].conteudo 
+        : JSON.stringify(data[0].conteudo, null, 2);
       
       contentCache.set(topico, content);
       console.debug(`[fetchConteudo] Encontrado case-insensitive para "${topico}":`, content.substring(0, 100) + '...');
@@ -57,20 +59,21 @@ export async function fetchConteudo(topico: string): Promise<string> {
     }
 
     // Try partial match
-    const { data: partialMatch, error: partialError } = await supabase
+    ({ data, error } = await supabase
       .from('conteudos_numerologia')
       .select('conteudo')
       .ilike('topico', `%${topico}%`)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1));
 
-    if (partialError) {
-      console.error('[fetchConteudo] Erro na busca parcial:', partialError);
+    if (error) {
+      console.error('[fetchConteudo] Erro na busca parcial:', error);
     }
 
-    if (partialMatch?.conteudo) {
-      const content = typeof partialMatch.conteudo === 'string' 
-        ? partialMatch.conteudo 
-        : JSON.stringify(partialMatch.conteudo, null, 2);
+    if (data && data.length > 0) {
+      const content = typeof data[0].conteudo === 'string' 
+        ? data[0].conteudo 
+        : JSON.stringify(data[0].conteudo, null, 2);
       
       contentCache.set(topico, content);
       console.debug(`[fetchConteudo] Encontrado parcial para "${topico}":`, content.substring(0, 100) + '...');
@@ -78,6 +81,8 @@ export async function fetchConteudo(topico: string): Promise<string> {
     }
 
     console.warn(`[fetchConteudo] Tópico "${topico}" não encontrado`);
+    // Cache empty result to avoid repeated queries
+    contentCache.set(topico, '');
     return '';
   } catch (error) {
     console.error('[fetchConteudo] Erro:', error);
@@ -271,16 +276,26 @@ export async function getInterpretacaoMomento(
 
 // Topic aliases for compatibility
 const topicAliases: Record<string, string[]> = {
-  'anjo_guarda': ['seu_anjo'],
+  'anjo_guarda': ['seu_anjo', 'anjo_da_guarda', 'anjo da guarda'],
   'momentos_decisivos': ['momento_decisivo', 'primeiro_momento', 'segundo_momento', 'terceiro_momento', 'quarto_momento'],
   'momento_decisivo': ['momentos_decisivos'],
-  'cores_do_dia': ['cores_pessoais'],
-  'dias_beneficos': ['dias_favoraveis'],
-  'triangulo_da_vida': ['triangulo_invertido'],
+  'cores_do_dia': ['cores_pessoais', 'cores pessoais'],
+  'dias_beneficos': ['dias_favoraveis', 'dias favoráveis'],
+  'triangulo_da_vida': ['triangulo_invertido', 'triângulo_invertido', 'triângulo da vida'],
   'arcano': ['arcanos'],
-  'sintese_final': ['conclusao'],
+  'sintese_final': ['conclusao', 'conclusão', 'síntese_final', 'síntese final'],
   'desafios': ['desafio'],
-  'ciclos_vida': ['ciclo_vida']
+  'ciclos_vida': ['ciclo_vida', 'ciclos de vida', 'ciclo de vida'],
+  'numero_alma': ['numero_da_alma', 'número_alma', 'número_da_alma'],
+  'numero_personalidade': ['numero_da_personalidade', 'número_personalidade', 'número_da_personalidade'],
+  'numero_expressao': ['numero_da_expressao', 'número_expressão', 'número_da_expressão', 'expressão', 'expressao'],
+  'numero_motivacao': ['numero_da_motivacao', 'número_motivação', 'número_da_motivação', 'motivação', 'motivacao'],
+  'numero_impressao': ['numero_da_impressao', 'número_impressão', 'número_da_impressão', 'impressão', 'impressao'],
+  'numero_psiquico': ['número_psíquico', 'numero psiquico', 'número psiquico'],
+  'ano_pessoal': ['ano pessoal'],
+  'mes_pessoal': ['mês_pessoal', 'mes pessoal', 'mês pessoal'],
+  'dia_pessoal': ['dia pessoal'],
+  'missao': ['missão']
 };
 
 export async function getTextoTopico(topico: string): Promise<string | null> {

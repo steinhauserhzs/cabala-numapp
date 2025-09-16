@@ -103,8 +103,8 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     icon: React.ReactNode;
     categoria: string;
   }) => {
-    const { interpretacao, isLoading } = useInterpretacao(categoria, value);
     const [open, setOpen] = useState(false);
+    const { interpretacao, isLoading } = useInterpretacao(categoria, value, { enabled: open });
     
     const handleToggle = () => {
       console.log(`Toggling card ${title}: ${open} -> ${!open}`);

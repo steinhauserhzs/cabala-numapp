@@ -12,6 +12,8 @@ interface TopicCardProps {
 }
 
 export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, topico, fallbackTopico }) => {
+  const [open, setOpen] = useState(false);
+  
   const { data: conteudo, isLoading } = useQuery({
     queryKey: ['topico', topico, fallbackTopico],
     queryFn: async () => {
@@ -23,9 +25,10 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: open,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
-
-  const [open, setOpen] = useState(false);
 
   const handleToggle = () => {
     console.log(`Toggling TopicCard ${title}: ${open} -> ${!open}`);

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getInterpretacao } from '@/services/content';
 
-export const useInterpretacao = (categoria: string, numero: number | string): {
+export const useInterpretacao = (categoria: string, numero: number | string, options?: { enabled?: boolean }): {
   interpretacao: string | null;
   isLoading: boolean;
   error: Error | null;
@@ -13,6 +13,9 @@ export const useInterpretacao = (categoria: string, numero: number | string): {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: options?.enabled !== false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   return {
