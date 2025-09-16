@@ -232,28 +232,28 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos.primeiro,
       description: "Primeiro momento decisivo",
-      categoria: "momentos_decisivos",
+      categoria: "primeiro_momento",
       icon: <Clock size={20} />
     },
     {
       title: "2º Momento Decisivo", 
       value: mapa.momentosDecisivos.segundo,
       description: "Segundo momento decisivo",
-      categoria: "momentos_decisivos",
+      categoria: "segundo_momento",
       icon: <Clock size={20} />
     },
     {
       title: "3º Momento Decisivo",
       value: mapa.momentosDecisivos.terceiro,
       description: "Terceiro momento decisivo", 
-      categoria: "momentos_decisivos",
+      categoria: "terceiro_momento",
       icon: <Clock size={20} />
     },
     {
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos.quarto,
       description: "Quarto momento decisivo",
-      categoria: "momentos_decisivos", 
+      categoria: "quarto_momento", 
       icon: <Clock size={20} />
     }
   ];

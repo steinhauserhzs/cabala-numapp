@@ -1,36 +1,45 @@
 import { useMemo } from 'react';
-import { useNumerologyContentByTopic } from './useNumerologyContent';
-import { obterInterpretacao, extrairInterpretacaoDoConteudo, InterpretacaoNumerologica } from '@/data/interpretacoes';
+import { useQuery } from '@tanstack/react-query';
+import { getInterpretacao } from '@/services/content';
+import { InterpretacaoNumerologica } from '@/data/interpretacoes';
 
 export const useInterpretacao = (categoria: string, numero: number): {
   interpretacao: InterpretacaoNumerologica | null;
   isLoading: boolean;
   error: Error | null;
 } => {
-  const { data: conteudoSupabase, isLoading, error } = useNumerologyContentByTopic(categoria);
-  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['interpretacao', categoria, numero],
+    queryFn: async () => {
+      return await getInterpretacao(categoria, numero);
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
   const interpretacao = useMemo(() => {
-    // Primeiro, tentar obter dos dados do Supabase
-    if (conteudoSupabase && conteudoSupabase.conteudo) {
-      const interpretacaoSupabase = extrairInterpretacaoDoConteudo(conteudoSupabase.conteudo, numero, categoria);
-      if (interpretacaoSupabase) {
-        return interpretacaoSupabase;
-      }
+    if (data) {
+      return {
+        titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
+        descricao: data,
+        caracteristicas: [],
+        aspectosPositivos: [],
+        desafios: []
+      } satisfies InterpretacaoNumerologica;
     }
-    
-    // Fallback: mensagem padrão se não encontrar interpretação
+
     return {
       titulo: `${categoria.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ${numero}`,
       descricao: "Não há interpretação específica para este número neste tópico.",
       caracteristicas: [],
       aspectosPositivos: [],
       desafios: []
-    };
-  }, [conteudoSupabase, categoria, numero]);
+    } as InterpretacaoNumerologica;
+  }, [data, categoria, numero]);
   
   return {
     interpretacao,
     isLoading,
-    error
+    error: error as Error | null,
   };
 };

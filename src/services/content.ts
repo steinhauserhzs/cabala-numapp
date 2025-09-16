@@ -94,6 +94,10 @@ export async function getInterpretacao(topico: string, numero: number | string):
     if (!pattern) return rawContent; // Return full content if no pattern
     
     const blocks = splitByHeading(rawContent, pattern);
+    // Debug: log parsed keys once per topic
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[parse] ${topico} -> blocos:`, Object.keys(blocks));
+    }
     contentCache.set(cacheKey, blocks);
   }
   

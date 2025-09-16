@@ -2,15 +2,14 @@
 
 export function clean(text: string): string {
   return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .toUpperCase()
     .replace(/[ÁÀÂÃ]/g, "A")
     .replace(/[ÉÊ]/g, "E")
     .replace(/[Í]/g, "I")
     .replace(/[ÓÔÕ]/g, "O")
     .replace(/[ÚÜ]/g, "U")
-    .toUpperCase()
-    .replace(/[^A-ZÇ]/g, ""); // keep only A-Z and Ç
+    // Preserva Ç como letra válida
+    .replace(/[^A-ZÇ]/g, ""); // mantém apenas A-Z e Ç
 }
 
 export function letterValue(ch: string): number {
@@ -234,6 +233,16 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const impressaoSum = [...clean(nome)].filter(ch => !isVowel(ch)).map(letterValue).reduce((a, b) => a + b, 0);
   const expressaoSum = valores.reduce((a, b) => a + b, 0);
   const destinoSum = dataNascimento.getDate() + dataNascimento.getMonth() + 1 + dataNascimento.getFullYear();
+  
+  if (typeof process !== 'undefined' && (process as any).env?.NODE_ENV !== 'production') {
+    console.debug('[numerology] debug', {
+      nomeLimpo: clean(nome),
+      motivacao: { sum: motivacaoSum, reduced: reduceKeepMasters(motivacaoSum) },
+      impressao: { sum: impressaoSum, reduced: reduceKeepMasters(impressaoSum) },
+      expressao: { sum: expressaoSum, reduced: reduceKeepMasters(expressaoSum) },
+      destino: { sum: destinoSum, reduced: reduceKeepMasters(destinoSum) },
+    });
+  }
   
   return {
     motivacao: calcMotivacao(nome),
