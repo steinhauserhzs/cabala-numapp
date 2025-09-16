@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { NumerologyForm } from '@/components/NumerologyForm';
 import { NumerologyResult } from '@/components/NumerologyResult';
 import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const { user } = useAuth();
   const [showResult, setShowResult] = useState(false);
   const [numerologyMap, setNumerologyMap] = useState<MapaNumerologico | null>(null);
   const [userName, setUserName] = useState('');
@@ -26,16 +30,49 @@ const Index = () => {
 
   if (showResult && numerologyMap && userBirthDate) {
     return (
-      <NumerologyResult 
-        mapa={numerologyMap}
-        name={userName}
-        birthDate={userBirthDate}
-        onBack={handleBack}
-      />
+      <div>
+        {user && (
+          <div className="fixed top-4 right-4 z-50">
+            <Link to="/dashboard">
+              <Button variant="outline">
+                Ir para Dashboard
+              </Button>
+            </Link>
+          </div>
+        )}
+        <NumerologyResult 
+          mapa={numerologyMap}
+          name={userName}
+          birthDate={userBirthDate}
+          onBack={handleBack}
+        />
+      </div>
     );
   }
 
-  return <NumerologyForm onSubmit={handleFormSubmit} />;
+  return (
+    <div>
+      {user && (
+        <div className="fixed top-4 right-4 z-50">
+          <Link to="/dashboard">
+            <Button variant="outline">
+              Ir para Dashboard
+            </Button>
+          </Link>
+        </div>
+      )}
+      {!user && (
+        <div className="fixed top-4 right-4 z-50">
+          <Link to="/auth">
+            <Button variant="outline">
+              Entrar / Cadastrar
+            </Button>
+          </Link>
+        </div>
+      )}
+      <NumerologyForm onSubmit={handleFormSubmit} />
+    </div>
+  );
 };
 
 export default Index;
