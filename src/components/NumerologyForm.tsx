@@ -53,17 +53,17 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
     <div className="min-h-screen bg-gradient-mystical flex items-center justify-center p-4">
       <div className="w-full max-w-md relative">
         {/* Floating mystical elements */}
-        <div className="absolute -top-10 -left-10 text-primary/30 animate-float">
+        <div className="absolute -top-10 -left-10 text-primary/40 animate-float">
           <Stars size={24} />
         </div>
-        <div className="absolute -top-8 -right-8 text-secondary/30 animate-float" style={{ animationDelay: '2s' }}>
+        <div className="absolute -top-8 -right-8 text-primary/30 animate-float" style={{ animationDelay: '2s' }}>
           <Moon size={20} />
         </div>
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-primary-glow/30 animate-float" style={{ animationDelay: '4s' }}>
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-primary/30 animate-float" style={{ animationDelay: '4s' }}>
           <Sparkles size={18} />
         </div>
 
-        <Card className="backdrop-blur-md bg-card/90 shadow-mystical border-primary/30">
+        <Card className="bg-card shadow-mystical border-primary/20">
           <CardHeader className="text-center space-y-4">
             <div className="flex justify-center">
               <div className="p-3 rounded-full bg-gradient-cosmic shadow-glow">
@@ -74,7 +74,7 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
               <CardTitle className="text-3xl font-bold bg-gradient-cosmic bg-clip-text text-transparent">
                 Numapp
               </CardTitle>
-              <CardDescription className="text-lg text-secondary mt-2">
+              <CardDescription className="text-lg text-primary mt-2">
                 Numerologia Cabalística
               </CardDescription>
             </div>
