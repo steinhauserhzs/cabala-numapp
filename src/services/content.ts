@@ -144,13 +144,14 @@ export async function getInterpretacao(topico: string, numero: number | string, 
     return interpretationCache.get(cacheKey)!;
   }
 
-  // Prevent infinite recursion between aliases
-  if (_visited.has(topicKey) || _depth > 5) {
-    console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${topicKey}`);
+  // Prevent infinite recursion between aliases (track by original topic string)
+  const visitedKey = topico;
+  if (_visited.has(visitedKey) || _depth > 8) {
+    console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${visitedKey}`);
     interpretationCache.set(cacheKey, null);
     return null;
   }
-  _visited.add(topicKey);
+  _visited.add(visitedKey);
 
   try {
     const raw = await fetchConteudo(topicKey);
@@ -201,30 +202,43 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       try {
         const parsed = JSON.parse(raw);
 
-        if (parsed[numeroStr] !== undefined) {
-          const item = parsed[numeroStr];
-          let text: string | null = null;
-          if (typeof item === 'string') {
-            text = item;
-          } else if (item && typeof item === 'object') {
-            text = item.conteudo ?? item.content ?? item.texto ?? item.descricao ?? null;
+        // Helper to extract text from a value that can be string or object with common keys
+        const extractText = (val: any): string | null => {
+          if (val == null) return null;
+          if (typeof val === 'string') return val;
+          if (typeof val === 'object') {
+            return val.conteudo ?? val.content ?? val.texto ?? val.descricao ?? null;
           }
-          if (text != null) {
-            interpretationCache.set(cacheKey, String(text));
-            return String(text);
+          return null;
+        };
+
+        // Try direct object map: { "9": "..." } or { "9": { conteudo: "..." } }
+        if (!Array.isArray(parsed) && typeof parsed === 'object') {
+          const direct = extractText((parsed as any)[numeroStr]);
+          if (direct != null) {
+            interpretationCache.set(cacheKey, String(direct));
+            return String(direct);
+          }
+
+          // Try common nested containers
+          const containers = ['conteudos', 'content', 'textos', 'itens', 'items', 'interpretacoes', 'interpretações'];
+          for (const key of containers) {
+            const container = (parsed as any)[key];
+            if (container && typeof container === 'object') {
+              const nested = extractText(container[numeroStr]);
+              if (nested != null) {
+                interpretationCache.set(cacheKey, String(nested));
+                return String(nested);
+              }
+            }
           }
         }
 
         // Check if it's an array and find by number
         if (Array.isArray(parsed)) {
-          const found = parsed.find((item: any) => item?.numero === numero || item?.numero === numeroStr);
+          const found = parsed.find((item: any) => item?.numero === numero || item?.numero === numeroStr || item?.n === numero || item?.n === numeroStr);
           if (found !== undefined) {
-            let text: string | null = null;
-            if (typeof found === 'string') {
-              text = found;
-            } else if (found && typeof found === 'object') {
-              text = found.conteudo ?? found.content ?? found.texto ?? found.descricao ?? null;
-            }
+            const text = extractText(found);
             if (text != null) {
               interpretationCache.set(cacheKey, String(text));
               return String(text);
