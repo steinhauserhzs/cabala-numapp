@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { getLocalInterpretacao } from '@/services/content-helpers';
+import { canonicalizeTopic, getLocalInterpretacao } from '@/services/content-helpers';
 
 // Cache for improved performance
 const contentCache = new Map<string, string>();
@@ -8,7 +8,11 @@ const interpretationCache = new Map<string, string | null>();
 type Blocks = Record<string, string>;
 
 export async function fetchConteudo(topico: string): Promise<string> {
-  // Check cache first
+  const topicKey = canonicalizeTopic(topico);
+  // Check cache first (canonical and raw)
+  if (contentCache.has(topicKey)) {
+    return contentCache.get(topicKey)!;
+  }
   if (contentCache.has(topico)) {
     return contentCache.get(topico)!;
   }
@@ -33,8 +37,9 @@ export async function fetchConteudo(topico: string): Promise<string> {
         ? data[0].conteudo 
         : JSON.stringify(data[0].conteudo, null, 2);
       
+      contentCache.set(topicKey, content);
       contentCache.set(topico, content);
-      console.debug(`[fetchConteudo] Encontrado exato para "${topico}":`, content.substring(0, 100) + '...');
+      console.debug(`[fetchConteudo] Encontrado exato para "${topico}"`, content.substring(0, 100) + '...');
       return content;
     }
 
@@ -55,8 +60,9 @@ export async function fetchConteudo(topico: string): Promise<string> {
         ? data[0].conteudo 
         : JSON.stringify(data[0].conteudo, null, 2);
       
+      contentCache.set(topicKey, content);
       contentCache.set(topico, content);
-      console.debug(`[fetchConteudo] Encontrado case-insensitive para "${topico}":`, content.substring(0, 100) + '...');
+      console.debug(`[fetchConteudo] Encontrado case-insensitive para "${topico}"`, content.substring(0, 100) + '...');
       return content;
     }
 
@@ -77,13 +83,15 @@ export async function fetchConteudo(topico: string): Promise<string> {
         ? data[0].conteudo 
         : JSON.stringify(data[0].conteudo, null, 2);
       
+      contentCache.set(topicKey, content);
       contentCache.set(topico, content);
-      console.debug(`[fetchConteudo] Encontrado parcial para "${topico}":`, content.substring(0, 100) + '...');
+      console.debug(`[fetchConteudo] Encontrado parcial para "${topico}"`, content.substring(0, 100) + '...');
       return content;
     }
 
     console.warn(`[fetchConteudo] Tópico "${topico}" não encontrado`);
     // Cache empty result to avoid repeated queries
+    contentCache.set(canonicalizeTopic(topico), '');
     contentCache.set(topico, '');
     return '';
   } catch (error) {
@@ -127,8 +135,9 @@ function splitByHeading(raw: string, heading: RegExp, captureGroup = 1): Blocks 
 
 export async function getInterpretacao(topico: string, numero: number | string, _visited: Set<string> = new Set(), _depth = 0): Promise<string | null> {
   const numeroStr = String(numero);
-  const cacheKey = `${topico}:${numeroStr}`;
-  console.debug(`[getInterpretacao] Buscando ${topico} número ${numeroStr} (depth=${_depth})`);
+  const topicKey = canonicalizeTopic(topico);
+  const cacheKey = `${topicKey}:${numeroStr}`;
+  console.debug(`[getInterpretacao] Buscando ${topicKey} número ${numeroStr} (depth=${_depth})`);
 
   // Cache first
   if (interpretationCache.has(cacheKey)) {
@@ -136,20 +145,20 @@ export async function getInterpretacao(topico: string, numero: number | string, 
   }
 
   // Prevent infinite recursion between aliases
-  if (_visited.has(topico) || _depth > 5) {
-    console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${topico}`);
+  if (_visited.has(topicKey) || _depth > 5) {
+    console.warn(`[getInterpretacao] Ciclo ou profundidade excedida em ${topicKey}`);
     interpretationCache.set(cacheKey, null);
     return null;
   }
-  _visited.add(topico);
+  _visited.add(topicKey);
 
   try {
-    const raw = await fetchConteudo(topico);
+    const raw = await fetchConteudo(topicKey);
     if (!raw) {
-      console.warn(`[getInterpretacao] Conteúdo não encontrado para ${topico}`);
+      console.warn(`[getInterpretacao] Conteúdo não encontrado para ${topicKey}`);
 
       // Try aliases before giving up
-      const aliases = topicAliases[topico] || [];
+      const aliases = topicAliases[topicKey] || [];
       for (const alias of aliases) {
         if (_visited.has(alias)) continue;
         const aliasContent = await fetchConteudo(alias);
@@ -164,7 +173,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
 
       // Try reverse lookup in aliases
       for (const [mainTopic, aliasArray] of Object.entries(topicAliases)) {
-        if (aliasArray.includes(topico) && !_visited.has(mainTopic)) {
+        if (aliasArray.includes(topicKey) && !_visited.has(mainTopic)) {
           const mainContent = await fetchConteudo(mainTopic);
           if (mainContent) {
             const res = await getInterpretacao(mainTopic, numero, new Set(_visited), _depth + 1);
@@ -177,7 +186,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       }
 
       // Local fallback before giving up
-      const fallback = getLocalInterpretacao(topico, Number(numeroStr));
+      const fallback = getLocalInterpretacao(topicKey, Number(numeroStr));
       if (fallback) {
         interpretationCache.set(cacheKey, fallback);
         return fallback;
@@ -192,31 +201,34 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       try {
         const parsed = JSON.parse(raw);
 
-        // Check if it's a direct object with the number as key
-        if (parsed[numeroStr]) {
+        if (parsed[numeroStr] !== undefined) {
           const item = parsed[numeroStr];
-          if (typeof item === 'object' && item.titulo && item.descricao) {
-            const text = `**${item.titulo}**\n\n${item.descricao}${item.caracteristicas ? '\n\n**Características:**\n' + item.caracteristicas.join(', ') : ''}${item.positivos ? '\n\n**Aspectos Positivos:**\n' + item.positivos.join(', ') : ''}${item.desafios ? '\n\n**Desafios:**\n' + item.desafios.join(', ') : ''}`;
-            interpretationCache.set(cacheKey, text);
-            return text;
+          let text: string | null = null;
+          if (typeof item === 'string') {
+            text = item;
+          } else if (item && typeof item === 'object') {
+            text = item.conteudo ?? item.content ?? item.texto ?? item.descricao ?? null;
           }
-          const text = String(item);
-          interpretationCache.set(cacheKey, text);
-          return text;
+          if (text != null) {
+            interpretationCache.set(cacheKey, String(text));
+            return String(text);
+          }
         }
 
         // Check if it's an array and find by number
         if (Array.isArray(parsed)) {
-          const found = parsed.find((item: any) => item.numero === numero || item.numero === numeroStr);
-          if (found) {
-            if (typeof found === 'object' && found.titulo && found.descricao) {
-              const text = `**${found.titulo}**\n\n${found.descricao}${found.caracteristicas ? '\n\n**Características:**\n' + found.caracteristicas.join(', ') : ''}${found.positivos ? '\n\n**Aspectos Positivos:**\n' + found.positivos.join(', ') : ''}${found.desafios ? '\n\n**Desafios:**\n' + found.desafios.join(', ') : ''}`;
-              interpretationCache.set(cacheKey, text);
-              return text;
+          const found = parsed.find((item: any) => item?.numero === numero || item?.numero === numeroStr);
+          if (found !== undefined) {
+            let text: string | null = null;
+            if (typeof found === 'string') {
+              text = found;
+            } else if (found && typeof found === 'object') {
+              text = found.conteudo ?? found.content ?? found.texto ?? found.descricao ?? null;
             }
-            const text = String(found);
-            interpretationCache.set(cacheKey, text);
-            return text;
+            if (text != null) {
+              interpretationCache.set(cacheKey, String(text));
+              return String(text);
+            }
           }
         }
       } catch (parseError) {
