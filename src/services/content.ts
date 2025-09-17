@@ -202,33 +202,74 @@ export async function getInterpretacao(topico: string, numero: number | string, 
       try {
         const parsed = JSON.parse(raw);
 
-        // Helper to extract text from a value that can be string or object with common keys
-        const extractText = (val: any): string | null => {
+        // Helper to convert any value (string/object/array) into full text preserving structure
+        const toText = (val: any): string | null => {
           if (val == null) return null;
           if (typeof val === 'string') return val;
-          if (typeof val === 'object') {
-            return val.conteudo ?? val.content ?? val.texto ?? val.descricao ?? null;
+
+          // Prefer well-known keys when it's an object representing a single interpretation
+          const preferKeys = [
+            'texto_integral', 'textoIntegral', 'texto_completo', 'textoCompleto',
+            'integral', 'completo', 'full', 'conteudo_integral', 'conteudoCompleto',
+            'conteudo', 'content', 'texto', 'descricao', 'descrição', 'resumo'
+          ];
+
+          if (Array.isArray(val)) {
+            const parts = val
+              .map(item => toText(item))
+              .filter((s): s is string => Boolean(s && s.trim().length > 0));
+            return parts.length ? parts.join('\n\n') : null;
           }
+
+          if (typeof val === 'object') {
+            // First try preferred keys explicitly
+            for (const k of preferKeys) {
+              if (k in val) {
+                const t = toText((val as any)[k]);
+                if (t) return t;
+              }
+            }
+
+            // Otherwise, concatenate all string/array/object text fields recursively, in stable order
+            const blacklist = new Set(['numero', 'n', 'id', 'key']);
+            const parts: string[] = [];
+            for (const [k, v] of Object.entries(val as Record<string, any>)) {
+              if (blacklist.has(k)) continue;
+              const t = toText(v);
+              if (t && t.trim().length > 0) {
+                // Include key as a bold section title when it looks like a label
+                const isLabel = /titulo|título|title|secao|seção|section|capitulo|capítulo|topico|tópico/i.test(k);
+                const label = k.replace(/_/g, ' ');
+                parts.push(isLabel ? `**${label}**\n\n${t}` : t);
+              }
+            }
+            return parts.length ? parts.join('\n\n') : null;
+          }
+
           return null;
         };
 
-        // Try direct object map: { "9": "..." } or { "9": { conteudo: "..." } }
+        // Try direct object map: { "9": "..." } or { "9": { ... } }
         if (!Array.isArray(parsed) && typeof parsed === 'object') {
-          const direct = extractText((parsed as any)[numeroStr]);
-          if (direct != null) {
-            interpretationCache.set(cacheKey, String(direct));
-            return String(direct);
+          const direct = (parsed as any)[numeroStr];
+          const directText = toText(direct);
+          if (directText != null) {
+            interpretationCache.set(cacheKey, String(directText));
+            return String(directText);
           }
 
           // Try common nested containers
-          const containers = ['conteudos', 'content', 'textos', 'itens', 'items', 'interpretacoes', 'interpretações'];
+          const containers = [
+            'conteudos', 'content', 'textos', 'itens', 'items',
+            'interpretacoes', 'interpretações', 'dados', 'data', 'sections', 'secoes', 'seções'
+          ];
           for (const key of containers) {
             const container = (parsed as any)[key];
             if (container && typeof container === 'object') {
-              const nested = extractText(container[numeroStr]);
-              if (nested != null) {
-                interpretationCache.set(cacheKey, String(nested));
-                return String(nested);
+              const nestedText = toText(container?.[numeroStr]);
+              if (nestedText != null) {
+                interpretationCache.set(cacheKey, String(nestedText));
+                return String(nestedText);
               }
             }
           }
@@ -238,7 +279,7 @@ export async function getInterpretacao(topico: string, numero: number | string, 
         if (Array.isArray(parsed)) {
           const found = parsed.find((item: any) => item?.numero === numero || item?.numero === numeroStr || item?.n === numero || item?.n === numeroStr);
           if (found !== undefined) {
-            const text = extractText(found);
+            const text = toText(found);
             if (text != null) {
               interpretationCache.set(cacheKey, String(text));
               return String(text);
