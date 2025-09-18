@@ -57,4 +57,30 @@ export const PERFIL_PITAGORICO: NumerologyProfile = {
   subconscClamp: [2, 9], // Traditional clamp
 };
 
+// New profile: Perfil Conecta (adjustable parameters to match reference docs)
+export const PERFIL_CONECTA: NumerologyProfile = {
+  name: "Perfil Conecta",
+  // Start with Cabalistic 1-8 table with Ç=6 (can be tuned if needed)
+  map: {
+    A: 1, I: 1, Q: 1, J: 1, Y: 1,
+    B: 2, K: 2, R: 2,
+    C: 3, G: 3, L: 3, S: 3,
+    D: 4, M: 4, T: 4,
+    E: 5, H: 5, N: 5,
+    U: 6, V: 6, W: 6, X: 6, "Ç": 6,
+    O: 7, Z: 7,
+    F: 8, P: 8,
+  },
+  vowels: new Set(["A", "E", "I", "O", "U", "Y"]),
+  includeParticlesInNameNumbers: true,
+  particles: new Set(["DE", "DA", "DO", "DOS", "DAS", "E"]),
+  masters: new Set([11, 22]),
+  // Conecta defaults (can be tuned to match expected values exactly)
+  useGlobalVowelSum: true,
+  accentBonusPerVowel: 2,
+  missionFormula: "EXP_PLUS_DEST",
+  numberRange: [1, 8],
+  subconscClamp: [2, 8],
+};
+
 export default PERFIL_OFICIAL_JF;

@@ -1,5 +1,11 @@
 // Core numerology calculation utilities with profile support
-import { NumerologyProfile, PERFIL_OFICIAL_JF } from './numerology-profile';
+import { NumerologyProfile, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } from './numerology-profile';
+
+// Active profile management
+let activeProfile: NumerologyProfile = PERFIL_OFICIAL_JF;
+export function setActiveProfile(profile: NumerologyProfile) { activeProfile = profile; }
+export function getActiveProfile(): NumerologyProfile { return activeProfile; }
+export function getAvailableProfiles(): NumerologyProfile[] { return [PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA]; }
 
 // Re-export for convenience
 export { PERFIL_OFICIAL_JF, type NumerologyProfile };
@@ -103,7 +109,7 @@ export function reduceToDigitAllowZero(n: number): number {
 export function calcNameWithAudit(
   raw: string, 
   type: 'expressao' | 'motivacao' | 'impressao',
-  profile: NumerologyProfile = PERFIL_OFICIAL_JF
+  profile: NumerologyProfile = getActiveProfile()
 ): { result: number; audit: AuditLog } {
   const audit: AuditLog = {
     operation: type,
@@ -214,19 +220,19 @@ export function calcNameWithAudit(
 }
 
 // Specific calculation functions
-export function calcExpressao(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcExpressao(raw: string, profile: NumerologyProfile = getActiveProfile()): number {
   return calcNameWithAudit(raw, 'expressao', profile).result;
 }
 
-export function calcMotivacao(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcMotivacao(raw: string, profile: NumerologyProfile = getActiveProfile()): number {
   return calcNameWithAudit(raw, 'motivacao', profile).result;
 }
 
-export function calcImpressao(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcImpressao(raw: string, profile: NumerologyProfile = getActiveProfile()): number {
   return calcNameWithAudit(raw, 'impressao', profile).result;
 }
 
-export function calcDestino(d: number, m: number, y: number, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcDestino(d: number, m: number, y: number, profile: NumerologyProfile = getActiveProfile()): number {
   // Sum all digits of DD/MM/YYYY
   const dateStr = `${d.toString().padStart(2, '0')}${m.toString().padStart(2, '0')}${y}`;
   const sum = dateStr.split('').map(Number).reduce((acc, digit) => acc + digit, 0);
@@ -236,13 +242,13 @@ export function calcDestino(d: number, m: number, y: number, profile: Numerology
   return result;
 }
 
-export function calcPsiquico(d: number, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcPsiquico(d: number, profile: NumerologyProfile = getActiveProfile()): number {
   const result = reduceKeepMasters(d, profile.masters);
   log(`calcPsiquico: day=${d} → ${result}`);
   return result;
 }
 
-export function calcMissao(raw: string, d: number, m: number, y: number, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcMissao(raw: string, d: number, m: number, y: number, profile: NumerologyProfile = getActiveProfile()): number {
   const expressao = calcExpressao(raw, profile);
   const destino = calcDestino(d, m, y, profile);
   const psiquico = calcPsiquico(d, profile);

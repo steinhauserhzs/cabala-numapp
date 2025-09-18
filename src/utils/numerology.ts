@@ -25,10 +25,13 @@ import { calcAnjoGuardaFromSupabase } from './angelParser';
 // Re-export audit functionality
 export { 
   enableDebugMode, 
-  getAuditLogs, 
+  getAuditLogs,
   clearAuditLogs,
   type AuditLog 
 };
+
+// Profile management re-exports
+export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './numerology-core';
 
 // Helper functions
 export const clean = stripButKeepCedilla;
