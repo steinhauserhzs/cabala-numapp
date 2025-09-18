@@ -13,6 +13,7 @@ import { GuardianAngelCard } from './GuardianAngelCard';
 import { validateNumerologyCalculations } from '@/utils/numerologyValidator';
 import { enableDebugMode, getAuditLogs, clearAuditLogs } from '@/utils/numerology';
 import { AuditModal } from '@/components/AuditModal';
+import { testCalculations, testJessicaCalculations } from '@/utils/debug-test';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -60,7 +61,15 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         console.log('📊 Resultados obtidos:', result.results);
       }
     });
-  }, []);
+    
+    // Test current user's calculation
+    console.log('🧮 Testing current calculation for:', name);
+    console.log('📋 Current mapa:', mapa);
+    
+    // Run debug tests
+    testJessicaCalculations();
+    testCalculations();
+  }, [name, mapa]);
   
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR');

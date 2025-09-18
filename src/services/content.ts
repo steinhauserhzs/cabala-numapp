@@ -39,7 +39,7 @@ export async function fetchConteudo(topico: string): Promise<string> {
       }
     }
 
-    // Handle JSON content properly
+    // Handle nested JSON content structure from Supabase
     let content = '';
     if (data?.conteudo) {
       const rawContent = data.conteudo;
@@ -47,9 +47,17 @@ export async function fetchConteudo(topico: string): Promise<string> {
       
       if (typeof rawContent === 'string') {
         content = rawContent;
-      } else if (typeof rawContent === 'object') {
-        // If it's already a parsed JSON object, stringify it for parsing
-        content = JSON.stringify(rawContent);
+      } else if (typeof rawContent === 'object' && rawContent !== null) {
+        // Check for nested structure: { conteudo: { conteudo: "actual text" } }
+        const obj = rawContent as any;
+        if (obj.conteudo && typeof obj.conteudo === 'object' && obj.conteudo.conteudo) {
+          content = String(obj.conteudo.conteudo);
+        } else if (obj.conteudo && typeof obj.conteudo === 'string') {
+          content = obj.conteudo;
+        } else {
+          // Fallback: stringify the object for further parsing
+          content = JSON.stringify(rawContent);
+        }
       } else {
         content = String(rawContent);
       }
