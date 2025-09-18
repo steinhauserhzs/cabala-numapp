@@ -64,19 +64,13 @@ export const calcNumeroPsiquico = (dob: Date): number => {
 
 export { calcRespostaSubconsciente, calcLicoesCarmicas, calcTendenciasOcultas };
 
-// Detect karmic debts in name
+// Import and use fixed karmic debts detection
+import { detectKarmicDebts } from './karmic-debts-fix';
+
+// Detect karmic debts in name (using improved algorithm)
 export const detectarDividasCarmicas = (nome: string): number[] => {
-  const valores = mapNameToValues(nome);
-  const karmicDebts = [13, 14, 16, 19];
-  const found: number[] = [];
-  
-  for (const debt of karmicDebts) {
-    if (valores.includes(debt)) {
-      found.push(debt);
-    }
-  }
-  
-  return found;
+  const profile = getActiveProfile();
+  return detectKarmicDebts(nome, profile);
 };
 
 // Life cycle calculations

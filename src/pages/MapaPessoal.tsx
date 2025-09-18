@@ -23,6 +23,13 @@ const MapaPessoal = () => {
   const handleFormSubmit = (name: string, birthDate: Date) => {
     try {
       console.log('[MapaPessoal] Submitting form with:', { name, birthDate });
+      
+      // FOR DEBUGGING: Test calibration
+      if (name.toLowerCase().includes('hairã') || name.toLowerCase().includes('haira')) {
+        const { testCalibration } = require('@/utils/calibrated-profile');
+        testCalibration();
+      }
+      
       const mapa = gerarMapaNumerologico(name, birthDate);
       setNumerologyMap(mapa);
       setUserName(name);

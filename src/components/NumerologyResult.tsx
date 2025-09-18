@@ -16,6 +16,7 @@ import { AuditModal } from '@/components/AuditModal';
 import { testCalculations, testJessicaCalculations } from '@/utils/debug-test';
 import { testCurrentCalculation, validateJessicaCalculation } from '@/utils/calculation-test';
 import { validateHairãCalculation } from '@/utils/hairã-validation';
+import { DebugNumerologyPanel } from './DebugNumerologyPanel';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -603,6 +604,11 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
               topico="conclusao"
             />
           </div>
+        </div>
+
+        {/* Debug Panel */}
+        <div className="mt-8">
+          <DebugNumerologyPanel mapa={mapa} name={name} birthDate={birthDate} />
         </div>
 
         {/* Footer */}
