@@ -12,6 +12,8 @@ export async function fetchConteudo(topico: string): Promise<string> {
   }
 
   try {
+    console.log(`[fetchConteudo] Fetching content for topic: ${topico}`);
+    
     // Try exact match first
     let { data, error } = await supabase
       .from('conteudos_numerologia')
@@ -20,6 +22,7 @@ export async function fetchConteudo(topico: string): Promise<string> {
       .maybeSingle();
 
     if (error || !data) {
+      console.log(`[fetchConteudo] Exact match failed for ${topico}, trying case-insensitive`);
       // Try case-insensitive match
       const { data: allData, error: allError } = await supabase
         .from('conteudos_numerologia')
@@ -30,12 +33,29 @@ export async function fetchConteudo(topico: string): Promise<string> {
           item.topico.toLowerCase() === topico.toLowerCase()
         );
         if (found) {
+          console.log(`[fetchConteudo] Found case-insensitive match: ${found.topico}`);
           data = { conteudo: found.conteudo };
         }
       }
     }
 
-    const content = data?.conteudo ? String(data.conteudo) : '';
+    // Handle JSON content properly
+    let content = '';
+    if (data?.conteudo) {
+      const rawContent = data.conteudo;
+      console.log(`[fetchConteudo] Raw content type:`, typeof rawContent, rawContent);
+      
+      if (typeof rawContent === 'string') {
+        content = rawContent;
+      } else if (typeof rawContent === 'object') {
+        // If it's already a parsed JSON object, stringify it for parsing
+        content = JSON.stringify(rawContent);
+      } else {
+        content = String(rawContent);
+      }
+    }
+
+    console.log(`[fetchConteudo] Final content for ${topico}:`, content.substring(0, 200) + '...');
     contentCache.set(topico, content);
     return content;
   } catch (error) {
@@ -88,19 +108,34 @@ export async function getInterpretacao(topico: string, numero: number | string):
 }
 
 function parseContent(raw: string, numeroStr: string): string | null {
+  console.log(`[parseContent] Parsing for number ${numeroStr}, raw content:`, raw.substring(0, 200) + '...');
+  
   if (raw.startsWith('{') || raw.startsWith('[')) {
     try {
       const parsed = JSON.parse(raw);
+      console.log(`[parseContent] Parsed JSON structure:`, Object.keys(parsed));
+      
       const direct = parsed[numeroStr];
-      if (typeof direct === 'string') return direct;
-      if (direct?.texto_integral) return direct.texto_integral;
-      if (direct?.conteudo) return direct.conteudo;
+      console.log(`[parseContent] Direct lookup for ${numeroStr}:`, direct);
+      
+      if (typeof direct === 'string' && direct.trim()) {
+        console.log(`[parseContent] Found direct string for ${numeroStr}`);
+        return direct;
+      }
+      if (direct?.texto_integral) {
+        console.log(`[parseContent] Found texto_integral for ${numeroStr}`);
+        return direct.texto_integral;
+      }
+      if (direct?.conteudo) {
+        console.log(`[parseContent] Found conteudo for ${numeroStr}`);
+        return direct.conteudo;
+      }
     } catch (error) {
-      console.warn('JSON parse error:', error);
+      console.warn('[parseContent] JSON parse error:', error);
     }
   }
   
-  // Text parsing
+  // Text parsing for non-JSON content
   const patterns = [
     new RegExp(`^\\s*${numeroStr}[.:\\s-]*([\\s\\S]*?)(?=^\\s*(?:\\d+[.:\\s-]|$))`, 'm'),
     new RegExp(`(?:^|\\n)\\s*${numeroStr}[.:\\s-]*([\\s\\S]*?)(?=\\n\\s*\\d+[.:\\s-]|$)`, 'g'),
@@ -110,10 +145,14 @@ function parseContent(raw: string, numeroStr: string): string | null {
     const match = raw.match(pattern);
     if (match?.[1]?.trim()) {
       const content = match[1].trim();
-      if (content.length > 10) return content;
+      if (content.length > 10) {
+        console.log(`[parseContent] Found text content for ${numeroStr}`);
+        return content;
+      }
     }
   }
   
+  console.log(`[parseContent] No content found for ${numeroStr}`);
   return null;
 }
 
