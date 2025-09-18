@@ -22,6 +22,7 @@ import {
   getActiveProfile
 } from './numerology-core';
 import { calcAnjoGuardaFromSupabase } from './angelParser';
+import { gerarMapaNumerologicoPuro } from './numerology-pure';
 
 // Re-export audit functionality
 export { 
@@ -178,9 +179,6 @@ export interface MapaNumerologico {
 
 // Main function to generate complete numerological map - now using pure functions
 export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
-  const { gerarMapaNumerologicoPuro } = require('./numerology-pure');
-  const { getActiveProfile } = require('./profile-singleton');
-  
   const profile = getActiveProfile();
   const mapaBase = gerarMapaNumerologicoPuro(nome, dataNascimento, profile);
   

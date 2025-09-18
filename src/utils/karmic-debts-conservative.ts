@@ -1,6 +1,7 @@
 // Conservative karmic debts detection - only raw word/name sums
 import { NumerologyProfile } from './numerology-profile';
 import { stripButKeepCedilla } from './numerology-core-fixed';
+import { getActiveProfile } from './profile-singleton';
 
 export function detectKarmicDebtsConservative(raw: string, profile: NumerologyProfile): number[] {
   const normalized = stripButKeepCedilla(raw);
@@ -39,9 +40,8 @@ export function detectKarmicDebtsConservative(raw: string, profile: NumerologyPr
 
 // Test function
 export function testKarmicDebtsConservative() {
-  const { getActiveProfile } = require('./profile-singleton');
   const profile = getActiveProfile();
-  
+
   const testCases = [
     "hairã zupanc steinhauser",
     "jessica paula de souza",

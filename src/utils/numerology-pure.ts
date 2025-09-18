@@ -1,7 +1,7 @@
 // Pure numerology calculation functions (stateless)
 import { 
   calcExpressao, calcMotivacao, calcImpressao, calcDestino, calcPsiquico, calcMissao,
-  calcRespostaSubconsciente, calcLicoesCarmicas, calcTendenciasOcultas 
+  calcRespostaSubconsciente, calcLicoesCarmicas, calcTendenciasOcultas, reduceKeepMasters, reduceToDigitAllowZero 
 } from './numerology-core-fixed';
 import { detectKarmicDebtsConservative } from './karmic-debts-conservative';
 import { NumerologyProfile } from './numerology-profile';
@@ -13,7 +13,6 @@ export function calcCiclosVida(day: number, month: number, year: number, profile
   segundo: number; 
   terceiro: number;
 } {
-  const { reduceKeepMasters } = require('./numerology-core-fixed');
   
   return {
     primeiro: reduceKeepMasters(month, profile.masters),
@@ -28,7 +27,6 @@ export function calcDesafios(day: number, month: number, year: number, profile: 
   segundo: number;
   principal: number;
 } {
-  const { reduceToDigitAllowZero } = require('./numerology-core-fixed');
   
   const primeiro = Math.abs(month - day);
   const segundo = Math.abs(day - year);
@@ -48,7 +46,6 @@ export function calcMomentosDecisivos(day: number, month: number, year: number, 
   terceiro: number;
   quarto: number;
 } {
-  const { reduceKeepMasters } = require('./numerology-core-fixed');
   
   return {
     primeiro: reduceKeepMasters(month + day, profile.masters),
@@ -64,7 +61,6 @@ export function calcTemposPessoais(day: number, month: number, year: number, pro
   mesPersonal: number;
   diaPersonal: number;
 } {
-  const { reduceKeepMasters } = require('./numerology-core-fixed');
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const currentDay = new Date().getDate();

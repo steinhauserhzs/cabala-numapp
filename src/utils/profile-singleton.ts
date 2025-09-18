@@ -1,5 +1,5 @@
 // Singleton profile manager to prevent runtime mutations
-import { NumerologyProfile, PERFIL_OFICIAL_JF } from './numerology-profile';
+import { NumerologyProfile, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } from './numerology-profile';
 
 // Single source of truth for active profile
 let activeProfile: NumerologyProfile = PERFIL_OFICIAL_JF;
@@ -17,7 +17,6 @@ export function setActiveProfile(profile: NumerologyProfile): void {
 
 // Available profiles registry
 export function getAvailableProfiles(): NumerologyProfile[] {
-  const { PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } = require('./numerology-profile');
   return [PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA];
 }
 
