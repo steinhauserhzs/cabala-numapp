@@ -147,11 +147,18 @@ export async function getInterpretacao(topico: string, numero: number | string):
 }
 
 function parseContent(raw: string, numeroStr: string): string | null {
-  console.log(`[parseContent] Parsing for number ${numeroStr}, raw content:`, raw.substring(0, 200) + '...');
+  // Normalize hidden spaces and line breaks
+  const normalized = raw
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width spaces
+    .replace(/\u00A0/g, ' ') // non-breaking spaces
+    .replace(/\r\n?|\r/g, '\n')
+    .trim();
+  console.log(`[parseContent] Parsing for number ${numeroStr}, raw content:`, normalized.substring(0, 200) + '...');
   
-  if (raw.startsWith('{') || raw.startsWith('[')) {
+  const rawToUse = normalized;
+  if (rawToUse.startsWith('{') || rawToUse.startsWith('[')) {
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(rawToUse);
       console.log(`[parseContent] Parsed JSON structure:`, Array.isArray(parsed) ? 'array' : Object.keys(parsed));
 
       const containers: any[] = Array.isArray(parsed) ? parsed : [parsed, (parsed as any).conteudo, (parsed as any).data, (parsed as any).items];
@@ -181,7 +188,7 @@ function parseContent(raw: string, numeroStr: string): string | null {
   ];
   
   for (const pattern of patterns) {
-    const match = raw.match(pattern);
+    const match = rawToUse.match(pattern);
     if (match?.[1]?.trim()) {
       const content = match[1].trim();
       if (content.length > 10) {

@@ -18,7 +18,8 @@ import {
   type AuditLog,
   enableDebugMode,
   getAuditLogs,
-  clearAuditLogs
+  clearAuditLogs,
+  getActiveProfile
 } from './numerology-core';
 import { calcAnjoGuardaFromSupabase } from './angelParser';
 
@@ -37,12 +38,25 @@ export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './nume
 export const clean = stripButKeepCedilla;
 export const letterValue = (ch: string): number => {
   const letter = ch.toUpperCase();
-  return PERFIL_OFICIAL_JF.map[letter] || 0;
+  // Use active profile mapping
+  const { map } = require('./numerology-core');
+  // Fallback to official map if dynamic import fails
+  try {
+    const { getActiveProfile } = require('./numerology-core');
+    return getActiveProfile().map[letter] || 0;
+  } catch {
+    return PERFIL_OFICIAL_JF.map[letter] || 0;
+  }
 };
 export { reduceKeepMasters };
 
 export const isVowel = (ch: string): boolean => {
-  return PERFIL_OFICIAL_JF.vowels.has(ch.toUpperCase());
+  try {
+    const { getActiveProfile } = require('./numerology-core');
+    return getActiveProfile().vowels.has(ch.toUpperCase());
+  } catch {
+    return PERFIL_OFICIAL_JF.vowels.has(ch.toUpperCase());
+  }
 };
 
 export const mapNameToValues = (nome: string): number[] => {
@@ -206,10 +220,13 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
   const momento3 = calcMomento3(dataNascimento);
   const momento4 = calcMomento4(dataNascimento);
   
-  // Life cycles (same as decisive moments for simplicity)
-  const ciclo1 = momento1;
-  const ciclo2 = momento2;
-  const ciclo3 = momento3;
+  // Life cycles per Conecta reference: reduced month, day (masters kept), and year
+  const month = dataNascimento.getMonth() + 1;
+  const day = dataNascimento.getDate();
+  const year = dataNascimento.getFullYear();
+  const ciclo1 = reduceKeepMasters(month);
+  const ciclo2 = reduceKeepMasters(day);
+  const ciclo3 = reduceKeepMasters(year);
   
   // Personal timing
   const currentYear = new Date().getFullYear();

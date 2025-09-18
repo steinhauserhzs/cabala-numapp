@@ -2,7 +2,7 @@
 import { NumerologyProfile, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } from './numerology-profile';
 
 // Active profile management
-let activeProfile: NumerologyProfile = PERFIL_OFICIAL_JF;
+let activeProfile: NumerologyProfile = PERFIL_CONECTA;
 export function setActiveProfile(profile: NumerologyProfile) { activeProfile = profile; }
 export function getActiveProfile(): NumerologyProfile { return activeProfile; }
 export function getAvailableProfiles(): NumerologyProfile[] { return [PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA]; }
@@ -260,7 +260,7 @@ export function calcMissao(raw: string, d: number, m: number, y: number, profile
   return result;
 }
 
-export function calcRespostaSubconsciente(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number {
+export function calcRespostaSubconsciente(raw: string, profile: NumerologyProfile = getActiveProfile()): number {
   const normalized = stripButKeepCedilla(raw);
   const values: number[] = [];
   
@@ -283,7 +283,7 @@ export function calcRespostaSubconsciente(raw: string, profile: NumerologyProfil
   return result;
 }
 
-export function calcLicoesCarmicas(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number[] {
+export function calcLicoesCarmicas(raw: string, profile: NumerologyProfile = getActiveProfile()): number[] {
   const normalized = stripButKeepCedilla(raw);
   const values: number[] = [];
   
@@ -303,7 +303,7 @@ export function calcLicoesCarmicas(raw: string, profile: NumerologyProfile = PER
   return result;
 }
 
-export function calcTendenciasOcultas(raw: string, profile: NumerologyProfile = PERFIL_OFICIAL_JF): number[] {
+export function calcTendenciasOcultas(raw: string, profile: NumerologyProfile = getActiveProfile()): number[] {
   const normalized = stripButKeepCedilla(raw);
   const values: number[] = [];
   

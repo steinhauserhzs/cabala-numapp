@@ -75,9 +75,9 @@ export const PERFIL_CONECTA: NumerologyProfile = {
   includeParticlesInNameNumbers: true,
   particles: new Set(["DE", "DA", "DO", "DOS", "DAS", "E"]),
   masters: new Set([11, 22]),
-  // Conecta defaults (can be tuned to match expected values exactly)
-  useGlobalVowelSum: true,
-  accentBonusPerVowel: 2,
+  // Conecta tuned defaults to match reference docs
+  useGlobalVowelSum: false, // per-word vowel reduction, then sum
+  accentBonusPerVowel: 3, // stronger bonus for accented vowels (e.g., ã)
   missionFormula: "EXP_PLUS_DEST",
   numberRange: [1, 8],
   subconscClamp: [2, 8],
