@@ -6,6 +6,33 @@ import { canonicalizeTopic, getLocalInterpretacao } from './content-helpers';
 const contentCache = new Map<string, string>();
 const interpretationCache = new Map<string, string | null>();
 
+// Helper: extract readable text from various JSON shapes
+function extractText(input: any): string {
+  if (input == null) return '';
+  if (typeof input === 'string') return input;
+  if (Array.isArray(input)) return input.map(extractText).filter(Boolean).join('\n\n');
+  if (typeof input === 'object') {
+    // Common direct fields
+    if (typeof (input as any).conteudo === 'string') return (input as any).conteudo;
+    if ((input as any).conteudo && typeof (input as any).conteudo === 'object') {
+      const nested = extractText((input as any).conteudo);
+      if (nested) return nested;
+    }
+    if (typeof (input as any).texto_integral === 'string') return (input as any).texto_integral;
+    if (typeof (input as any).descricao === 'string') return (input as any).descricao;
+
+    // Numeric-key dictionary (e.g., {"1": "...", "2": {...}})
+    const keys = Object.keys(input as any);
+    const numericKeys = keys.filter(k => /^\d+$/.test(k)).sort((a, b) => parseInt(a) - parseInt(b));
+    if (numericKeys.length) {
+      const parts = numericKeys.map(k => `${k}: ${extractText((input as any)[k])}`.trim());
+      return parts.join('\n\n');
+    }
+  }
+  // Fallback
+  try { return JSON.stringify(input); } catch { return String(input); }
+}
+
 export async function fetchConteudo(topico: string): Promise<string> {
   if (contentCache.has(topico)) {
     return contentCache.get(topico)!;
@@ -41,26 +68,10 @@ export async function fetchConteudo(topico: string): Promise<string> {
 
     // Handle nested JSON content structure from Supabase
     let content = '';
-    if (data?.conteudo) {
-      const rawContent = data.conteudo;
-      console.log(`[fetchConteudo] Raw content type:`, typeof rawContent, rawContent);
-      
-      if (typeof rawContent === 'string') {
-        content = rawContent;
-      } else if (typeof rawContent === 'object' && rawContent !== null) {
-        // Check for nested structure: { conteudo: { conteudo: "actual text" } }
-        const obj = rawContent as any;
-        if (obj.conteudo && typeof obj.conteudo === 'object' && obj.conteudo.conteudo) {
-          content = String(obj.conteudo.conteudo);
-        } else if (obj.conteudo && typeof obj.conteudo === 'string') {
-          content = obj.conteudo;
-        } else {
-          // Fallback: stringify the object for further parsing
-          content = JSON.stringify(rawContent);
-        }
-      } else {
-        content = String(rawContent);
-      }
+    if (data?.conteudo !== undefined) {
+      content = extractText(data.conteudo);
+    } else {
+      content = '';
     }
 
     console.log(`[fetchConteudo] Final content for ${topico}:`, content.substring(0, 200) + '...');
@@ -121,22 +132,19 @@ function parseContent(raw: string, numeroStr: string): string | null {
   if (raw.startsWith('{') || raw.startsWith('[')) {
     try {
       const parsed = JSON.parse(raw);
-      console.log(`[parseContent] Parsed JSON structure:`, Object.keys(parsed));
-      
-      const direct = parsed[numeroStr];
-      console.log(`[parseContent] Direct lookup for ${numeroStr}:`, direct);
-      
-      if (typeof direct === 'string' && direct.trim()) {
-        console.log(`[parseContent] Found direct string for ${numeroStr}`);
-        return direct;
-      }
-      if (direct?.texto_integral) {
-        console.log(`[parseContent] Found texto_integral for ${numeroStr}`);
-        return direct.texto_integral;
-      }
-      if (direct?.conteudo) {
-        console.log(`[parseContent] Found conteudo for ${numeroStr}`);
-        return direct.conteudo;
+      console.log(`[parseContent] Parsed JSON structure:`, Array.isArray(parsed) ? 'array' : Object.keys(parsed));
+
+      const containers: any[] = Array.isArray(parsed) ? parsed : [parsed, (parsed as any).conteudo, (parsed as any).data, (parsed as any).items];
+      for (const container of containers) {
+        if (!container || typeof container !== 'object') continue;
+        const direct = (container as any)[numeroStr];
+        if (direct != null) {
+          const txt = extractText(direct);
+          if (txt && txt.trim()) {
+            console.log(`[parseContent] Found JSON content for ${numeroStr} in container`);
+            return txt;
+          }
+        }
       }
     } catch (error) {
       console.warn('[parseContent] JSON parse error:', error);
@@ -145,8 +153,11 @@ function parseContent(raw: string, numeroStr: string): string | null {
   
   // Text parsing for non-JSON content
   const patterns = [
+    // Simple: lines starting with the number
     new RegExp(`^\\s*${numeroStr}[.:\\s-]*([\\s\\S]*?)(?=^\\s*(?:\\d+[.:\\s-]|$))`, 'm'),
     new RegExp(`(?:^|\\n)\\s*${numeroStr}[.:\\s-]*([\\s\\S]*?)(?=\\n\\s*\\d+[.:\\s-]|$)`, 'g'),
+    // Headings like "Motivação 3" or "Número 3"
+    new RegExp(`(?:^|\\n)[^\\n]*?(?:Motiv[aã]?[cç][aã]o|Impress[aã]o|Express[aã]o|N[úu]mero)\\s*${numeroStr}[.:\\s-]*([\\s\\S]*?)(?=\\n[^\\n]*?(?:Motiv|Impress|Express|N[úu]mero)\\s*\\d+|$)`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -165,7 +176,16 @@ function parseContent(raw: string, numeroStr: string): string | null {
 }
 
 export async function getTextoTopico(topico: string): Promise<string | null> {
-  return await fetchConteudo(topico);
+  // Try the requested topic, then its aliases
+  const primary = await fetchConteudo(topico);
+  if (primary && primary.trim()) return primary;
+
+  const aliases = topicAliases[topico] || [];
+  for (const alias of aliases) {
+    const alt = await fetchConteudo(alias);
+    if (alt && alt.trim()) return alt;
+  }
+  return null;
 }
 
 const topicAliases: Record<string, string[]> = {
