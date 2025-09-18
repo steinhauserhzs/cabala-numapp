@@ -41,8 +41,8 @@ export const PERFIL_CALIBRADO: NumerologyProfile = {
   useGlobalVowelSum: true, // Global vowel sum needed for Motivação 22
   accentBonusPerVowel: 6, // Precise bonus to reach Motivação 22
   missionFormula: "EXP_PLUS_DEST", // Expressão + Destino for Missão
-  numberRange: [1, 8],
-  subconscClamp: [2, 8],
+  numberRange: [1, 9],
+  subconscClamp: [2, 9],
 };
 
 // Test function to validate calibration

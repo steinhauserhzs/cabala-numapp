@@ -1,6 +1,6 @@
 // Fixed karmic debts detection system
 import { NumerologyProfile } from './numerology-profile';
-import { stripButKeepCedilla } from './numerology-core';
+import { stripButKeepCedilla, getActiveProfile } from './numerology-core';
 
 export function detectKarmicDebts(raw: string, profile: NumerologyProfile): number[] {
   const normalized = stripButKeepCedilla(raw);
@@ -19,9 +19,12 @@ export function detectKarmicDebts(raw: string, profile: NumerologyProfile): numb
   
   for (const word of words) {
     let wordSum = 0;
+    const wordValues: number[] = [];
     for (const char of word) {
       if (profile.map[char] != null) {
-        wordSum += profile.map[char];
+        const val = profile.map[char];
+        wordSum += val;
+        wordValues.push(val);
       }
     }
     
@@ -29,6 +32,21 @@ export function detectKarmicDebts(raw: string, profile: NumerologyProfile): numb
     if (wordSum === 13 || wordSum === 14 || wordSum === 16 || wordSum === 19) {
       if (!karmicDebts.includes(wordSum)) {
         karmicDebts.push(wordSum);
+      }
+    }
+
+    // Sliding-window check: any contiguous segment summing to karmic numbers
+    for (let i = 0; i < wordValues.length; i++) {
+      let sum = 0;
+      for (let j = i; j < wordValues.length; j++) {
+        sum += wordValues[j];
+        if (sum === 13 || sum === 14 || sum === 16 || sum === 19) {
+          if (!karmicDebts.includes(sum)) {
+            karmicDebts.push(sum);
+          }
+        }
+        // Early stop if sum already exceeds 19 significantly
+        if (sum > 40) break;
       }
     }
   }
@@ -46,7 +64,6 @@ export function detectKarmicDebts(raw: string, profile: NumerologyProfile): numb
 
 // Test function
 export function testKarmicDebts() {
-  const { getActiveProfile } = require('./numerology-core');
   const profile = getActiveProfile();
   
   // Test cases

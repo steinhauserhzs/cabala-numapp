@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, Bug, CheckCircle, XCircle } from 'lucide-react';
 import { validateAllReferences } from '@/utils/reference-validation';
 import { testCalibration } from '@/utils/calibrated-profile';
+import { getActiveProfile } from '@/utils/numerology';
 
 interface DebugNumerologyPanelProps {
   mapa?: any;
@@ -17,6 +18,7 @@ export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyP
   const [isOpen, setIsOpen] = useState(false);
   const [calibrationResult, setCalibrationResult] = useState<any>(null);
   const [validationResult, setValidationResult] = useState<any>(null);
+  const profile = getActiveProfile();
 
   const runCalibrationTest = () => {
     try {
@@ -80,6 +82,21 @@ export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyP
                 </div>
               </div>
             )}
+
+            {/* Active Profile Info */}
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+              <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                Perfil Ativo: {profile.name}
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                <div>Vogal Global: <span className="font-mono">{String(profile.useGlobalVowelSum)}</span></div>
+                <div>Bônus Acento: <span className="font-mono">{profile.accentBonusPerVowel}</span></div>
+                <div>Missão: <span className="font-mono">{profile.missionFormula}</span></div>
+                <div>Range: <span className="font-mono">[{profile.numberRange[0]}, {profile.numberRange[1]}]</span></div>
+                <div>Clamp Subconsciente: <span className="font-mono">[{profile.subconscClamp[0]}, {profile.subconscClamp[1]}]</span></div>
+                <div>Mestres: <span className="font-mono">[{Array.from(profile.masters).join(', ')}]</span></div>
+              </div>
+            </div>
 
             {/* Test Buttons */}
             <div className="flex flex-wrap gap-2">
