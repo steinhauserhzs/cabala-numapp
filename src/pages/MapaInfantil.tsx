@@ -18,10 +18,7 @@ const MapaInfantil = () => {
   const [parentName, setParentName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Set consistent numerology profile
-  useEffect(() => {
-    setActiveProfile(PERFIL_CONECTA);
-  }, []);
+  // Using global profile from main.tsx (no override)
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

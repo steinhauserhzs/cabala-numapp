@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Bug, CheckCircle, XCircle } from 'lucide-react';
-import { validateAllReferences } from '@/utils/reference-validation';
-import { testCalibration } from '@/utils/calibrated-profile';
-import { getActiveProfile } from '@/utils/numerology';
+import { testCalibrationPure } from '@/utils/pure-calibration';
+import { runPureRegressionTests } from '@/utils/regression-test-component';
+import { getActiveProfile } from '@/utils/profile-singleton';
 
 interface DebugNumerologyPanelProps {
   mapa?: any;
@@ -17,12 +17,12 @@ interface DebugNumerologyPanelProps {
 export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [calibrationResult, setCalibrationResult] = useState<any>(null);
-  const [validationResult, setValidationResult] = useState<any>(null);
+  const [regressionResult, setRegressionResult] = useState<any>(null);
   const profile = getActiveProfile();
 
   const runCalibrationTest = () => {
     try {
-      const result = testCalibration();
+      const result = testCalibrationPure();
       setCalibrationResult(result);
     } catch (error) {
       console.error('Calibration test failed:', error);
@@ -30,13 +30,13 @@ export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyP
     }
   };
 
-  const runValidationTests = () => {
+  const runRegressionTests = () => {
     try {
-      const result = validateAllReferences();
-      setValidationResult(result);
+      const result = runPureRegressionTests();
+      setRegressionResult(result);
     } catch (error) {
-      console.error('Validation tests failed:', error);
-      setValidationResult({ error: String(error) });
+      console.error('Regression tests failed:', error);
+      setRegressionResult({ error: String(error) });
     }
   };
 
@@ -111,10 +111,10 @@ export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyP
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={runValidationTests}
+                onClick={runRegressionTests}
                 className="bg-purple-50 hover:bg-purple-100 border-purple-300"
               >
-                Validar Todas Referências
+                Teste de Regressão
               </Button>
             </div>
 
@@ -149,28 +149,28 @@ export function DebugNumerologyPanel({ mapa, name, birthDate }: DebugNumerologyP
               </div>
             )}
 
-            {/* Validation Results */}
-            {validationResult && (
+            {/* Regression Results */}
+            {regressionResult && (
               <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
                 <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2 flex items-center gap-2">
-                  {validationResult.allPassed ? 
+                  {regressionResult.allPassed ? 
                     <CheckCircle className="h-4 w-4" /> : 
                     <XCircle className="h-4 w-4" />
                   }
-                  Validação de Referências
+                  Teste de Regressão
                 </h4>
-                {validationResult.error ? (
-                  <p className="text-red-600">{validationResult.error}</p>
+                {regressionResult.error ? (
+                  <p className="text-red-600">{regressionResult.error}</p>
                 ) : (
                   <div className="space-y-2 text-sm">
-                    <p className="font-medium">{validationResult.summary}</p>
-                    {validationResult.results?.map((result: any, index: number) => (
+                    <p className="font-medium">{regressionResult.summary}</p>
+                    {regressionResult.results?.map((result: any, index: number) => (
                       <div key={index} className="flex items-center gap-2">
                         {result.passed ? 
                           <CheckCircle className="h-3 w-3 text-green-600" /> : 
                           <XCircle className="h-3 w-3 text-red-600" />
                         }
-                        <span>{result.testCase.name}</span>
+                        <span>{result.name}</span>
                         {!result.passed && (
                           <span className="text-xs text-red-600">
                             ({result.errors.length} errors)

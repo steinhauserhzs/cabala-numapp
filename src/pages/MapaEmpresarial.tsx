@@ -16,10 +16,7 @@ const MapaEmpresarial = () => {
   const [cnpj, setCnpj] = useState('');
   const [errors, setErrors] = useState<{ companyName?: string; foundingDate?: string; cnpj?: string }>({});
 
-  // Set consistent numerology profile
-  useEffect(() => {
-    setActiveProfile(PERFIL_CONECTA);
-  }, []);
+  // Using global profile from main.tsx (no override)
 
   const validateForm = () => {
     const newErrors: { companyName?: string; foundingDate?: string; cnpj?: string } = {};

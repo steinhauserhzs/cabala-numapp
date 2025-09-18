@@ -1,6 +1,5 @@
-// Numerology calculation utilities using PERFIL_OFICIAL_JF
+// Numerology calculation utilities - UNIFIED ENGINE
 import { 
-  calcNameWithAudit, 
   calcExpressao, 
   calcMotivacao, 
   calcImpressao,
@@ -13,14 +12,11 @@ import {
   reduceKeepMasters,
   reduceToDigitAllowZero,
   stripButKeepCedilla,
-  countAccentedVowels,
-  PERFIL_OFICIAL_JF,
   type AuditLog,
   enableDebugMode,
   getAuditLogs,
-  clearAuditLogs,
-  getActiveProfile
-} from './numerology-core';
+  clearAuditLogs
+} from './numerology-core-fixed';
 import { calcAnjoGuardaFromSupabase } from './angelParser';
 import { gerarMapaNumerologicoPuro } from './numerology-pure';
 
@@ -33,9 +29,10 @@ export {
 };
 
 // Profile management re-exports
-export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './numerology-core';
+export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './profile-singleton';
 
 // Helper functions
+import { getActiveProfile } from './profile-singleton';
 export const clean = stripButKeepCedilla;
 export const letterValue = (ch: string): number => {
   const letter = ch.toUpperCase();
@@ -65,13 +62,13 @@ export const calcNumeroPsiquico = (dob: Date): number => {
 
 export { calcRespostaSubconsciente, calcLicoesCarmicas, calcTendenciasOcultas };
 
-// Import and use fixed karmic debts detection
-import { detectKarmicDebts } from './karmic-debts-fix';
+// Import and use conservative karmic debts detection
+import { detectKarmicDebtsConservative } from './karmic-debts-conservative';
 
-// Detect karmic debts in name (using improved algorithm)
+// Detect karmic debts in name (using conservative algorithm)
 export const detectarDividasCarmicas = (nome: string): number[] => {
   const profile = getActiveProfile();
-  return detectKarmicDebts(nome, profile);
+  return detectKarmicDebtsConservative(nome, profile);
 };
 
 // Life cycle calculations

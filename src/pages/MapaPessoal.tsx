@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { NumerologyForm } from '@/components/NumerologyForm';
 import { NumerologyResult } from '@/components/NumerologyResult';
-import { gerarMapaNumerologico, type MapaNumerologico, setActiveProfile } from '@/utils/numerology';
-import { PERFIL_CONECTA } from '@/utils/numerology-profile';
+import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
@@ -15,20 +14,11 @@ const MapaPessoal = () => {
   const [userName, setUserName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<Date | null>(null);
 
-  // Use global active profile set in main.tsx for consistency
-  useEffect(() => {
-    // No override here to keep a single source of truth
-  }, []);
+  // No profile override - use single source of truth from main.tsx
 
   const handleFormSubmit = async (name: string, birthDate: Date) => {
     try {
       console.log('[MapaPessoal] Submitting form with:', { name, birthDate });
-      
-      // FOR DEBUGGING: Test calibration (use dynamic import in browser ESM)
-      if (name.toLowerCase().includes('hairã') || name.toLowerCase().includes('haira')) {
-        const mod = await import('@/utils/calibrated-profile');
-        mod.testCalibration();
-      }
       
       const mapa = gerarMapaNumerologico(name, birthDate);
       setNumerologyMap(mapa);
@@ -37,7 +27,6 @@ const MapaPessoal = () => {
       setShowResult(true);
     } catch (err) {
       console.error('Erro ao gerar mapa numerológico:', err);
-      // Optional: show a simple alert to ensure user feedback without adding new deps/UI
       alert('Ocorreu um erro ao gerar o mapa. Tente novamente.');
     }
   };
