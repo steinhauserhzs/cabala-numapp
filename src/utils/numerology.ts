@@ -295,12 +295,117 @@ export function calcDiaPersonal(mesPersonal: number, diaAtual: number): number {
   return reduceKeepMasters(soma);
 }
 
-export function calcAnjoGuarda(dob: Date): string {
-  // Legacy function kept for compatibility - but should use calcAnjoGuardaFromSupabase for accuracy
-  console.warn('[calcAnjoGuarda] Using legacy angel calculation. Consider using calcAnjoGuardaFromSupabase for Supabase content.');
+// Complete the main numerological map generation function
+export interface MapaNumerologico {
+  motivacao: number;
+  impressao: number;
+  expressao: number;
+  destino: number;
+  missao: number;
+  numeroPsiquico: number;
+  respostaSubconsciente: number;
+  licoesCarmicas: number[];
+  tendenciasOcultas: number[];
+  dividasCarmicas: number[];
+  ciclosVida: {
+    primeiro: number;
+    segundo: number;
+    terceiro: number;
+  };
+  desafios: {
+    primeiro: number;
+    segundo: number;
+    principal: number;
+  };
+  momentosDecisivos: {
+    primeiro: number;
+    segundo: number;
+    terceiro: number;
+    quarto: number;
+  };
+  anoPersonal: number;
+  mesPersonal: number;
+  diaPersonal: number;
+}
+
+export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
+  enableDebugMode(process.env.NODE_ENV !== 'production');
+  clearAuditLogs(); // Clear previous audit logs
   
-  const dia = dob.getDate();
-  const mes = dob.getMonth() + 1;
+  const agora = new Date();
+  const anoAtual = agora.getFullYear();
+  const mesAtual = agora.getMonth() + 1;
+  const diaAtual = agora.getDate();
+
+  // Basic calculations using PERFIL_OFICIAL_JF
+  const motivacao = calcMotivacao(nome);
+  const impressao = calcImpressao(nome);
+  const expressao = calcExpressao(nome);
+  const destino = calcDestino(dataNascimento);
+  const missao = calcMissao(nome, dataNascimento);
+  const numeroPsiquico = calcNumeroPsiquico(dataNascimento);
+  const respostaSubconsciente = calcRespostaSubconsciente(nome);
+  const licoesCarmicas = calcLicoesCarmicas(nome);
+  const tendenciasOcultas = calcTendenciasOcultas(nome);
+  const dividasCarmicas = detectarDividasCarmicas(nome);
+
+  // Life cycles
+  const dia = dataNascimento.getDate();
+  const mes = dataNascimento.getMonth() + 1;
+  const ano = dataNascimento.getFullYear();
+  
+  const ciclosVida = {
+    primeiro: reduceKeepMasters(mes),
+    segundo: reduceKeepMasters(dia),
+    terceiro: reduceKeepMasters(ano)
+  };
+
+  // Challenges
+  const desafio1 = calcDesafio1(dataNascimento);
+  const desafio2 = calcDesafio2(dataNascimento);
+  const desafios = {
+    primeiro: desafio1,
+    segundo: desafio2,
+    principal: calcDesafioPrincipal(desafio1, desafio2)
+  };
+
+  // Decisive moments
+  const momentosDecisivos = {
+    primeiro: calcMomento1(dataNascimento),
+    segundo: calcMomento2(dataNascimento),
+    terceiro: calcMomento3(dataNascimento),
+    quarto: calcMomento4(dataNascimento)
+  };
+
+  // Personal year calculations
+  const anoPersonal = calcAnoPersonal(dataNascimento, anoAtual);
+  const mesPersonal = calcMesPersonal(anoPersonal, mesAtual);
+  const diaPersonal = calcDiaPersonal(mesPersonal, diaAtual);
+
+  return {
+    motivacao,
+    impressao,
+    expressao,
+    destino,
+    missao,
+    numeroPsiquico,
+    respostaSubconsciente,
+    licoesCarmicas,
+    tendenciasOcultas,
+    dividasCarmicas,
+    ciclosVida,
+    desafios,
+    momentosDecisivos,
+    anoPersonal,
+    mesPersonal,
+    diaPersonal
+  };
+}
+
+// Legacy compatibility exports
+export const removerAcentos = clean;
+export const letraParaNumero = letterValue;
+export { calcAnjoGuarda };
   
   // Calculate day of year (1-365/366)
   const start = new Date(dob.getFullYear(), 0, 0);
@@ -421,3 +526,7 @@ export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaN
     diaPersonal: calcDiaPersonal(mesPersonal, diaAtual)
   };
 }
+
+// Legacy compatibility exports
+export const removerAcentos = clean;
+export const letraParaNumero = letterValue;

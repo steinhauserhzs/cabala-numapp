@@ -11,6 +11,8 @@ import { generatePDF } from '@/utils/pdf';
 import { useToast } from '@/hooks/use-toast';
 import { GuardianAngelCard } from './GuardianAngelCard';
 import { validateNumerologyCalculations } from '@/utils/numerologyValidator';
+import { enableDebugMode, getAuditLogs, clearAuditLogs } from '@/utils/numerology';
+import { AuditModal } from '@/components/AuditModal';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -41,11 +43,13 @@ const AngelInterpretationContent = ({ angelName }: { angelName: string }) => {
 
 export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyResultProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const { toast } = useToast();
   
   // Run validation on mount for debugging
   React.useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
+      enableDebugMode(true); // Enable audit logging
       validateNumerologyCalculations().then(result => {
         if (result.passed) {
           console.log('✅ Validação passou! Todos os cálculos corretos.');
@@ -360,19 +364,33 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
             <span>Voltar</span>
           </Button>
           
-          <Button 
-            variant="secondary" 
-            onClick={handleGeneratePDF}
-            disabled={isGeneratingPDF}
-            className="flex items-center space-x-2"
-          >
-            {isGeneratingPDF ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
+          <div className="flex items-center space-x-2">
+            {process.env.NODE_ENV !== 'production' && (
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAudit(true)}
+                className="flex items-center space-x-2"
+                size="sm"
+              >
+                <AlertTriangle size={16} />
+                <span>Debug</span>
+              </Button>
             )}
-            <span>{isGeneratingPDF ? 'Gerando...' : 'Exportar PDF'}</span>
-          </Button>
+            
+            <Button 
+              variant="secondary" 
+              onClick={handleGeneratePDF}
+              disabled={isGeneratingPDF}
+              className="flex items-center space-x-2"
+            >
+              {isGeneratingPDF ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+              <span>{isGeneratingPDF ? 'Gerando...' : 'Exportar PDF'}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Title */}
@@ -563,6 +581,13 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <div className="text-center text-xs text-muted-foreground mt-12">
           Mapa gerado pela sabedoria da Numerologia Cabalística
         </div>
+
+        {/* Audit Modal */}
+        <AuditModal 
+          isOpen={showAudit} 
+          onClose={() => setShowAudit(false)} 
+          auditLogs={getAuditLogs()} 
+        />
       </div>
     </div>
   );
