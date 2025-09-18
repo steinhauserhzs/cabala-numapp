@@ -46,8 +46,8 @@ export const PERFIL_CALIBRADO: NumerologyProfile = {
 };
 
 // Test function to validate calibration
+import { gerarMapaNumerologico, setActiveProfile } from './numerology';
 export function testCalibration() {
-  const { gerarMapaNumerologico, setActiveProfile } = require('./numerology');
   
   setActiveProfile(PERFIL_CALIBRADO);
   

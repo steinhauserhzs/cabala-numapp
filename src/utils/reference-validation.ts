@@ -32,8 +32,8 @@ export const REFERENCE_TEST_CASES: ReferenceTestCase[] = [
   // Add more test cases here as needed
 ];
 
+import { gerarMapaNumerologico } from './numerology';
 export function validateAllReferences() {
-  const { gerarMapaNumerologico } = require('./numerology');
   
   const results = REFERENCE_TEST_CASES.map(testCase => {
     const mapa = gerarMapaNumerologico(testCase.name, testCase.birthDate);

@@ -15,19 +15,19 @@ const MapaPessoal = () => {
   const [userName, setUserName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<Date | null>(null);
 
-  // Set active profile to PERFIL_CONECTA on component mount
+  // Use global active profile set in main.tsx for consistency
   useEffect(() => {
-    setActiveProfile(PERFIL_CONECTA);
+    // No override here to keep a single source of truth
   }, []);
 
-  const handleFormSubmit = (name: string, birthDate: Date) => {
+  const handleFormSubmit = async (name: string, birthDate: Date) => {
     try {
       console.log('[MapaPessoal] Submitting form with:', { name, birthDate });
       
-      // FOR DEBUGGING: Test calibration
+      // FOR DEBUGGING: Test calibration (use dynamic import in browser ESM)
       if (name.toLowerCase().includes('hairã') || name.toLowerCase().includes('haira')) {
-        const { testCalibration } = require('@/utils/calibrated-profile');
-        testCalibration();
+        const mod = await import('@/utils/calibrated-profile');
+        mod.testCalibration();
       }
       
       const mapa = gerarMapaNumerologico(name, birthDate);
@@ -41,7 +41,6 @@ const MapaPessoal = () => {
       alert('Ocorreu um erro ao gerar o mapa. Tente novamente.');
     }
   };
-
   const handleBack = () => {
     setShowResult(false);
     setNumerologyMap(null);
