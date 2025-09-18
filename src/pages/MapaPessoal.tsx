@@ -21,11 +21,18 @@ const MapaPessoal = () => {
   }, []);
 
   const handleFormSubmit = (name: string, birthDate: Date) => {
-    const mapa = gerarMapaNumerologico(name, birthDate);
-    setNumerologyMap(mapa);
-    setUserName(name);
-    setUserBirthDate(birthDate);
-    setShowResult(true);
+    try {
+      console.log('[MapaPessoal] Submitting form with:', { name, birthDate });
+      const mapa = gerarMapaNumerologico(name, birthDate);
+      setNumerologyMap(mapa);
+      setUserName(name);
+      setUserBirthDate(birthDate);
+      setShowResult(true);
+    } catch (err) {
+      console.error('Erro ao gerar mapa numerológico:', err);
+      // Optional: show a simple alert to ensure user feedback without adding new deps/UI
+      alert('Ocorreu um erro ao gerar o mapa. Tente novamente.');
+    }
   };
 
   const handleBack = () => {
