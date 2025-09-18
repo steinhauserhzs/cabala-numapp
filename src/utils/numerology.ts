@@ -1,128 +1,72 @@
 // Utilities for numerological calculations according to Kabbalah
+// Now uses the new profile-based system for accurate calculations
 
+import { 
+  PERFIL_OFICIAL_JF, 
+  calcExpressao as calcExpressaoCore,
+  calcMotivacao as calcMotivacaoCore,
+  calcImpressao as calcImpressaoCore,
+  calcDestino as calcDestinoCore,
+  calcPsiquico as calcPsiquicoCore,
+  calcMissao as calcMissaoCore,
+  calcRespostaSubconsciente as calcRespostaSubconscienteCore,
+  calcLicoesCarmicas as calcLicoesCarmicasCore,
+  calcTendenciasOcultas as calcTendenciasOcultasCore,
+  reduceKeepMasters as reduceKeepMastersCore,
+  reduceToDigitAllowZero as reduceToDigitAllowZeroCore,
+  stripButKeepCedilla,
+  countAccentedVowels,
+  enableDebugMode,
+  getAuditLogs,
+  clearAuditLogs,
+  type AuditLog
+} from './numerology-core';
+import { NumerologyProfile } from './numerology-profile';
+
+// Export the audit system for debugging
+export { enableDebugMode, getAuditLogs, clearAuditLogs, type AuditLog };
+
+// Legacy interface for diacritic bonuses (deprecated)
 interface DiacriticInfo {
   letter: string;
   bonus: number;
 }
 
 export function extractDiacriticBonuses(text: string): DiacriticInfo[] {
-  if (!text) return [];
-  
+  // Legacy function - now just counts accented vowels with standard bonus
+  const count = countAccentedVowels(text);
   const bonuses: DiacriticInfo[] = [];
-  const bonusMap: Record<string, number> = {
-    '\u0303': 3,   // til (~)
-    '\u0301': 2,   // agudo (´)
-    '\u0302': 7,   // circunflexo (^)
-    '\u0308': 2,   // trema (¨) - multiplicador
-    '\u0300': 2,   // grave (`) - multiplicador
-  };
   
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (!char) continue;
-    
-    const normalized = char.normalize('NFD');
-    
-    if (normalized.length > 1) {
-      const baseLetter = normalized[0]?.toUpperCase();
-      if (!baseLetter) continue;
-      
-      // Check all combining diacritics
-      for (let j = 1; j < normalized.length; j++) {
-        const diacritic = normalized[j];
-        
-        if (bonusMap[diacritic]) {
-          const isMultiplier = diacritic === '\u0308' || diacritic === '\u0300'; // trema ou grave
-          const bonusValue = bonusMap[diacritic];
-          
-          bonuses.push({
-            letter: baseLetter,
-            bonus: isMultiplier ? -bonusValue : bonusValue // Negative for multipliers (will apply as ×)
-          });
-          
-          if (process.env.NODE_ENV !== 'production') {
-            console.debug(`[diacritic] "${char}" -> ${baseLetter} + ${isMultiplier ? `×${bonusValue}` : `+${bonusValue}`}`);
-          }
-        }
-      }
-    }
+  // Find accented vowels in original text for backward compatibility
+  const accentedPattern = /[áéíóúâêôãõàäëïöüýÁÉÍÓÚÂÊÔÃÕÀÄËÏÖÜÝ]/g;
+  let match;
+  while ((match = accentedPattern.exec(text)) !== null) {
+    const char = match[0];
+    const baseLetter = char.normalize('NFD')[0]?.toUpperCase() || char.toUpperCase();
+    bonuses.push({
+      letter: baseLetter,
+      bonus: 2 // Standard bonus in PERFIL_OFICIAL_JF
+    });
   }
   
   return bonuses;
 }
 
 export function clean(text: string): string {
-  if (!text) return '';
-  
-  // Preserve Ç by temporarily replacing it
-  const withPlaceholder = text.replace(/[çÇ]/g, '§');
-  
-  const normalized = withPlaceholder
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
-    .replace(/[^A-Z§]/g, '')
-    .replace(/§/g, 'Ç'); // Restore Ç
-    
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[clean] "${text}" -> "${normalized}"`);
-  }
-  
-  return normalized;
+  return stripButKeepCedilla(text);
 }
 
 export function letterValue(ch: string): number {
-  // Pythagorean mapping (1-9 cyclical) - Portuguese support with Ç as C(3)
-  const mapa: Record<string, number> = {
-    A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
-    J: 1, K: 2, L: 3, M: 4, N: 5, O: 6, P: 7, Q: 8, R: 9,
-    S: 1, T: 2, U: 3, V: 4, W: 5, X: 6, Y: 7, Z: 8, Ç: 3,
-  };
-
-  const result = mapa[ch.toUpperCase()] || 0;
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[letterValue] "${ch}" -> ${result}`);
-  }
-
-  return result;
+  // Now uses PERFIL_OFICIAL_JF mapping by default (Cabalistic 1-8 with Ç=6)
+  return PERFIL_OFICIAL_JF.map[ch.toUpperCase()] || 0;
 }
 
 export function reduceKeepMasters(n: number): number {
-  while (![11, 22].includes(n) && n > 9) {
-    n = n.toString().split("").reduce((soma, d) => soma + parseInt(d), 0);
-  }
-  return n;
-}
-
-// Apply diacritic adjustments based on the original character (with diacritics)
-function applyDiacriticAdjustments(originalChar: string | undefined, baseValue: number): number {
-  if (!originalChar) return baseValue;
-  const normalized = originalChar.normalize('NFD');
-  const marks = new Set(normalized.slice(1));
-  let value = baseValue;
-  if (marks.has('\u0303')) value += 3; // til (~)
-  if (marks.has('\u0301')) value += 2; // agudo (´)
-  if (marks.has('\u0302')) value += 7; // circunflexo (^)
-  if (marks.has('\u0308') || marks.has('\u0300')) value *= 2; // trema (¨) or grave (`)
-  return value;
+  return reduceKeepMastersCore(n, PERFIL_OFICIAL_JF.masters);
 }
 
 export function isVowel(ch: string): boolean {
-  return "AEIOUY".includes(ch.toUpperCase());
-}
-
-function getOriginalLettersArray(text: string): string[] {
-  const arr: string[] = [];
-  for (let i = 0; i < text.length; i++) {
-    const nfd = text[i]?.normalize('NFD');
-    if (!nfd) continue;
-    const base = nfd[0]?.toUpperCase();
-    if (base && /[A-ZÇ]/.test(base)) {
-      arr.push(text[i]);
-    }
-  }
-  return arr;
+  return PERFIL_OFICIAL_JF.vowels.has(ch.toUpperCase());
 }
 
 export function mapNameToValues(nome: string): number[] {
@@ -131,182 +75,46 @@ export function mapNameToValues(nome: string): number[] {
 }
 
 export function calcMotivacao(nome: string): number {
-  if (!nome) return 0;
-  
-  const words = nome.trim().split(/\s+/);
-  const wordResults: number[] = [];
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMotivacao] processando palavras: [${words.join(', ')}]`);
-  }
-  
-  for (const word of words) {
-    if (!word) continue;
-    
-    let wordSum = 0;
-    
-    // Process each original character in the word
-    for (const char of word) {
-      if (!char) continue;
-      
-      const nfd = char.normalize('NFD');
-      const base = nfd[0]?.toUpperCase();
-      
-      if (!base || !/[A-ZÇ]/.test(base)) continue;
-      if (!isVowel(base)) continue;
-      
-      const value = letterValue(base);
-      wordSum += value;
-      
-      if (process.env.NODE_ENV !== 'production') {
-        if (nfd.length > 1) {
-          console.debug(`[calcMotivacao] ${char} (${base}): ${letterValue(base)} → ${value}`);
-        }
-      }
-    }
-    
-    const wordReduced = reduceKeepMasters(wordSum);
-    wordResults.push(wordReduced);
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.debug(`[calcMotivacao] palavra "${word}": soma=${wordSum} → reduzido=${wordReduced}`);
-    }
-  }
-  
-  // Sum word results without reducing final result (preserve 11/22)
-  const finalSum = wordResults.reduce((a, b) => a + b, 0);
-  const result = [11, 22].includes(finalSum) ? finalSum : reduceKeepMasters(finalSum);
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMotivacao] resultados por palavra: [${wordResults.join(', ')}], soma final: ${finalSum} → ${result}`);
-  }
-  
-  return result;
+  return calcMotivacaoCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function calcImpressao(nome: string): number {
-  const cleanName = clean(nome);
-  const consonantSum = [...cleanName]
-    .filter(ch => !isVowel(ch))
-    .map(letterValue)
-    .reduce((a, b) => a + b, 0);
-  return reduceKeepMasters(consonantSum);
+  return calcImpressaoCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function calcExpressao(nome: string): number {
-  if (!nome) return 0;
-
-  let sum = 0;
-
-  // Process each original character in the name
-  for (const char of nome) {
-    if (!char) continue;
-    
-    const nfd = char.normalize('NFD');
-    const base = nfd[0]?.toUpperCase();
-    
-    if (!base || !/[A-ZÇ]/.test(base)) continue;
-    
-      const value = letterValue(base);
-      sum += value;
-      
-      if (process.env.NODE_ENV !== 'production') {
-        if (nfd.length > 1) {
-          console.debug(`[calcExpressao] ${char} (${base}): ${letterValue(base)} → ${value}`);
-        }
-      }
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcExpressao] soma com bônus: ${sum}`);
-  }
-
-  return reduceKeepMasters(sum);
+  return calcExpressaoCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function calcDestino(dob: Date): number {
   const dia = dob.getDate();
   const mes = dob.getMonth() + 1;
   const ano = dob.getFullYear();
-  
-  // Sum all digits of the full birth date (preserve master numbers only at the end)
-  const digits = `${dia}${mes}${ano}`.replace(/[^0-9]/g, '');
-  const soma = digits.split("").reduce((acc, d) => acc + Number(d), 0);
-  
-  return reduceKeepMasters(soma);
+  return calcDestinoCore(dia, mes, ano, PERFIL_OFICIAL_JF);
 }
 
 export function calcMissao(nome: string, dob: Date): number {
-  // Missão = reduzir(Expressão + Destino)
-  const expressao = calcExpressao(nome);
-  const destino = calcDestino(dob);
-  const soma = expressao + destino;
-  const result = reduceKeepMasters(soma);
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcMissao] expressao=${expressao} + destino=${destino} = ${soma} → ${result}`);
-  }
-
-  return result;
+  const dia = dob.getDate();
+  const mes = dob.getMonth() + 1;
+  const ano = dob.getFullYear();
+  return calcMissaoCore(nome, dia, mes, ano, PERFIL_OFICIAL_JF);
 }
 
 export function calcNumeroPsiquico(dob: Date): number {
   const dia = dob.getDate();
-  return reduceKeepMasters(dia);
+  return calcPsiquicoCore(dia, PERFIL_OFICIAL_JF);
 }
 
 export function calcRespostaSubconsciente(nome: string): number {
-  const cleanedName = clean(nome);
-  const valores = mapNameToValues(cleanedName);
-  
-  // Count unique values from 1-9 present in the name
-  const uniqueValues = new Set(valores.filter(v => v >= 1 && v <= 9));
-  const count = uniqueValues.size;
-  
-  // Clamp between 2 and 9
-  const result = Math.max(2, Math.min(9, count));
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcRespostaSubconsciente] nome: ${nome}, valores: [${valores.join(',')}], únicos: [${Array.from(uniqueValues).sort().join(',')}], resultado: ${result}`);
-  }
-  
-  return result;
+  return calcRespostaSubconscienteCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function calcLicoesCarmicas(nome: string): number[] {
-  const values = mapNameToValues(nome);
-  const presentNumbers = new Set(values.filter(v => v >= 1 && v <= 9)); // Check 1-9 range for missing numbers
-  const allNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // Full range 1-9
-  
-  const result = allNumbers.filter(num => !presentNumbers.has(num));
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcLicoesCarmicas] presente: [${Array.from(presentNumbers).sort().join(',')}], ausentes: [${result.join(',')}]`);
-  }
-  
-  return result;
+  return calcLicoesCarmicasCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function calcTendenciasOcultas(nome: string): number[] {
-  const values = mapNameToValues(nome);
-  const counter: Record<number, number> = {};
-  
-  values.forEach(v => {
-    if (v > 0 && v <= 9) { // Pythagorean: 1-9
-      counter[v] = (counter[v] || 0) + 1;
-    }
-  });
-  
-  // Return numbers that appear 4 or more times (correct threshold for test case)
-  const result = Object.entries(counter)
-    .filter(([_, count]) => count >= 4)
-    .map(([num, _]) => parseInt(num));
-    
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(`[calcTendenciasOcultas] contador:`, counter, `result: [${result.join(',')}]`);
-  }
-  
-  return result;
+  return calcTendenciasOcultasCore(nome, PERFIL_OFICIAL_JF);
 }
 
 export function detectarDividasCarmicas(nome: string): number[] {
@@ -367,11 +175,7 @@ function getAllReductionSteps(n: number): number[] {
 
 // Helper for challenges that allows 0 and doesn't preserve masters
 export function reduceToDigitAllowZero(n: number): number {
-  while (n >= 10) {
-    const digits = n.toString().split('').map(Number);
-    n = digits.reduce((sum, digit) => sum + digit, 0);
-  }
-  return n;
+  return reduceToDigitAllowZeroCore(n);
 }
 
 export function calcDesafio1(dob: Date): number {
