@@ -176,83 +176,19 @@ export interface MapaNumerologico {
   anjoGuarda: string;
 }
 
-// Main function to generate complete numerological map
+// Main function to generate complete numerological map - now using pure functions
 export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
-  // Core numbers
-  const motivacao = calcMotivacao(nome);
-  const impressao = calcImpressao(nome);
-  const expressao = calcExpressao(nome);
-  const destino = calcDestino(dataNascimento.getDate(), dataNascimento.getMonth() + 1, dataNascimento.getFullYear());
-  const missao = calcMissao(nome, dataNascimento.getDate(), dataNascimento.getMonth() + 1, dataNascimento.getFullYear());
-  const numeroPsiquico = calcNumeroPsiquico(dataNascimento);
+  const { gerarMapaNumerologicoPuro } = require('./numerology-pure');
+  const { getActiveProfile } = require('./profile-singleton');
   
-  // Response and lessons
-  const respostaSubconsciente = calcRespostaSubconsciente(nome);
-  const licoesCarmicas = calcLicoesCarmicas(nome);
-  const tendenciasOcultas = calcTendenciasOcultas(nome);
-  const dividasCarmicas = detectarDividasCarmicas(nome);
-  
-  // Challenges
-  const desafio1 = calcDesafio1(dataNascimento);
-  const desafio2 = calcDesafio2(dataNascimento);
-  const desafioPrincipal = calcDesafioPrincipal(desafio1, desafio2);
-  
-  // Decisive moments
-  const momento1 = calcMomento1(dataNascimento);
-  const momento2 = calcMomento2(dataNascimento);
-  const momento3 = calcMomento3(dataNascimento);
-  const momento4 = calcMomento4(dataNascimento);
-  
-  // Life cycles per Conecta reference: reduced month, day (masters kept), and year
-  const month = dataNascimento.getMonth() + 1;
-  const day = dataNascimento.getDate();
-  const year = dataNascimento.getFullYear();
-  const ciclo1 = reduceKeepMasters(month);
-  const ciclo2 = reduceKeepMasters(day);
-  const ciclo3 = reduceKeepMasters(year);
-  
-  // Personal timing
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  const currentDay = new Date().getDate();
-  
-  const anoPersonal = calcAnoPersonal(dataNascimento, currentYear);
-  const mesPersonal = calcMesPersonal(anoPersonal, currentMonth);
-  const diaPersonal = calcDiaPersonal(mesPersonal, currentDay);
+  const profile = getActiveProfile();
+  const mapaBase = gerarMapaNumerologicoPuro(nome, dataNascimento, profile);
   
   // Guardian angel (will be filled by caller from Supabase)
   const anjoGuarda = ""; // Placeholder - filled by external function
   
   return {
-    motivacao,
-    impressao,
-    expressao,
-    destino,
-    missao,
-    numeroPsiquico,
-    respostaSubconsciente,
-    licoesCarmicas,
-    tendenciasOcultas,
-    dividasCarmicas,
-    desafios: {
-      primeiro: desafio1,
-      segundo: desafio2,
-      principal: desafioPrincipal
-    },
-    momentosDecisivos: {
-      primeiro: momento1,
-      segundo: momento2,
-      terceiro: momento3,
-      quarto: momento4
-    },
-    ciclosVida: {
-      primeiro: ciclo1,
-      segundo: ciclo2,
-      terceiro: ciclo3
-    },
-    anoPersonal,
-    mesPersonal,
-    diaPersonal,
+    ...mapaBase,
     anjoGuarda
   };
 }

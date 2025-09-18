@@ -1,0 +1,40 @@
+{
+  "testCases": [
+    {
+      "name": "hairã zupanc steinhauser",
+      "birthDate": "2000-05-11",
+      "expected": {
+        "motivacao": 22,
+        "expressao": 11,
+        "impressao": 7,
+        "destino": 9,
+        "missao": 2,
+        "ciclos": [5, 11, 2],
+        "desafios": [3, 0, 3],
+        "momentos": [7, 4, 11, 7],
+        "licoes": [9],
+        "resposta": 8,
+        "dividas": [13],
+        "tendencias": [1, 5]
+      }
+    },
+    {
+      "name": "jéssica paula de souza",
+      "birthDate": "1991-05-28", 
+      "expected": {
+        "motivacao": 9,
+        "expressao": 8,
+        "impressao": 8,
+        "destino": 8,
+        "missao": 7,
+        "ciclos": [5, 1, 2],
+        "desafios": [4, 1, 3],
+        "momentos": [6, 3, 9, 7],
+        "licoes": [2, 9],
+        "resposta": 7,
+        "dividas": [],
+        "tendencias": [1, 3]
+      }
+    }
+  ]
+}

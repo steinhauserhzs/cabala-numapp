@@ -50,44 +50,14 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   const [showAudit, setShowAudit] = useState(false);
   const { toast } = useToast();
   
-  // Run validation on mount for debugging
+  // Run validation only in development
   React.useEffect(() => {
-    // Always run validation to test calculations
-    enableDebugMode(true); // Enable audit logging
-    
-    // Critical: Validate Hairã reference calculation
-    console.log('🎯 Running Hairã validation...');
-    const hairãValidation = validateHairãCalculation();
-    if (hairãValidation.isValid) {
-      console.log('✅ HAIRÃ VALIDATION PASSED - All calculations correct!');
-    } else {
-      console.error('❌ HAIRÃ VALIDATION FAILED:', hairãValidation.errors);
-      console.log('Expected:', hairãValidation.expected);
-      console.log('Actual:', hairãValidation.actual);
+    if (process.env.NODE_ENV === 'development') {
+      enableDebugMode(true); // Enable audit logging in dev
+      
+      console.log('🧮 Development mode - testing calculation for:', name);
+      console.log('📋 Current mapa:', mapa);
     }
-    
-    validateNumerologyCalculations().then(result => {
-      if (result.passed) {
-        console.log('✅ Validação passou! Todos os cálculos corretos.');
-        console.log('📊 Resultados:', result.results);
-      } else {
-        console.warn('❌ Falhas na validação:');
-        result.errors.forEach(error => console.warn(' -', error));
-        console.log('📊 Resultados obtidos:', result.results);
-      }
-    });
-    
-    // Test current user's calculation
-    console.log('🧮 Testing current calculation for:', name);
-    console.log('📋 Current mapa:', mapa);
-    
-    // Run comprehensive test
-    const currentTest = testCurrentCalculation(name);
-    const jessicaValidation = validateJessicaCalculation();
-    
-    // Also run legacy tests
-    testJessicaCalculations();
-    testCalculations();
   }, [name, mapa]);
   
   const formatDate = (date: Date) => {

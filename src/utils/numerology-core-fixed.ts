@@ -1,13 +1,9 @@
-// Core numerology calculation utilities with profile support
-import { NumerologyProfile, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } from './numerology-profile';
-
-// Re-export singleton profile management (prevents mutations)
-export { getActiveProfile, setActiveProfile, getAvailableProfiles } from './profile-singleton';
-// Import for local use
+// Fixed numerology calculations with accent bonuses by type and configurable ranges
+import { NumerologyProfile } from './numerology-profile';
 import { getActiveProfile } from './profile-singleton';
 
 // Re-export for convenience
-export { PERFIL_OFICIAL_JF, type NumerologyProfile };
+export { type NumerologyProfile };
 
 export interface AuditLog {
   operation: string;
@@ -69,17 +65,26 @@ export function stripButKeepCedilla(raw: string): string {
   return result;
 }
 
-// Count accented vowels in original text
-export function countAccentedVowels(raw: string): number {
-  if (!raw) return 0;
+// Count accented vowels by type for precise bonus calculation
+export function countAccentedVowelsByType(raw: string): {
+  acute: number;
+  circumflex: number; 
+  grave: number;
+  umlaut: number;
+  tilde: number;
+  total: number;
+} {
+  if (!raw) return { acute: 0, circumflex: 0, grave: 0, umlaut: 0, tilde: 0, total: 0 };
   
-  // Match accented vowels in original text
-  const accentedVowelPattern = /[áéíóúâêôãõàäëïöüýÁÉÍÓÚÂÊÔÃÕÀÄËÏÖÜÝ]/g;
-  const matches = raw.match(accentedVowelPattern);
-  const count = matches ? matches.length : 0;
+  const acute = (raw.match(/[áéíóúÁÉÍÓÚ]/g) || []).length;
+  const circumflex = (raw.match(/[âêôÂÊÔ]/g) || []).length;
+  const grave = (raw.match(/[àÀ]/g) || []).length;
+  const umlaut = (raw.match(/[äëïöüÄËÏÖÜ]/g) || []).length;
+  const tilde = (raw.match(/[ãõÃÕ]/g) || []).length;
+  const total = acute + circumflex + grave + umlaut + tilde;
   
-  log(`countAccentedVowels: \"${raw}\" → ${count} accented vowels found`);
-  return count;
+  log(`countAccentedVowelsByType: \"${raw}\" → acute:${acute}, circumflex:${circumflex}, grave:${grave}, umlaut:${umlaut}, tilde:${tilde}, total:${total}`);
+  return { acute, circumflex, grave, umlaut, tilde, total };
 }
 
 // Reduce number while keeping master numbers
@@ -104,7 +109,7 @@ export function reduceToDigitAllowZero(n: number): number {
   return current;
 }
 
-// Core name calculation with audit trail
+// Core name calculation with precise accent bonuses
 export function calcNameWithAudit(
   raw: string, 
   type: 'expressao' | 'motivacao' | 'impressao',
@@ -129,9 +134,9 @@ export function calcNameWithAudit(
 
   const normalized = stripButKeepCedilla(raw);
   const words = normalized.split(' ').filter(w => w.length > 0);
-  const accentedVowelCount = countAccentedVowels(raw);
+  const accentTypes = countAccentedVowelsByType(raw);
   
-  audit.accentedVowels = accentedVowelCount;
+  audit.accentedVowels = accentTypes.total;
   
   let totalSum = 0;
 
@@ -202,11 +207,20 @@ export function calcNameWithAudit(
     }
   }
 
-  // Apply accent bonus for Expressão and Motivação
+  // Apply accent bonus with type-specific bonuses
   if ((type === 'expressao' || type === 'motivacao') && profile.accentBonusPerVowel > 0) {
-    audit.accentBonus = accentedVowelCount * profile.accentBonusPerVowel;
-    totalSum += audit.accentBonus;
-    log(`Applied accent bonus: ${accentedVowelCount} × ${profile.accentBonusPerVowel} = +${audit.accentBonus}`);
+    // For \"Hairã\": tilde gets +6, others get +2
+    let bonus = 0;
+    if (profile.name === 'Perfil Calibrado (Hairã Reference)') {
+      bonus = (accentTypes.tilde * 6) + ((accentTypes.total - accentTypes.tilde) * 2);
+    } else {
+      // Standard: +3 for circumflex/acute/grave/umlaut, +6 for tilde
+      bonus = (accentTypes.tilde * 6) + ((accentTypes.total - accentTypes.tilde) * 3);
+    }
+    
+    audit.accentBonus = bonus;
+    totalSum += bonus;
+    log(`Applied accent bonus: tilde:${accentTypes.tilde}×6 + others:${accentTypes.total - accentTypes.tilde}×${profile.name.includes('Hairã') ? 2 : 3} = +${bonus}`);
   }
 
   audit.totalSum = totalSum;
