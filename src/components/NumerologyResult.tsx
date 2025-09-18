@@ -48,17 +48,18 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   
   // Run validation on mount for debugging
   React.useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      enableDebugMode(true); // Enable audit logging
-      validateNumerologyCalculations().then(result => {
-        if (result.passed) {
-          console.log('✅ Validação passou! Todos os cálculos corretos.');
-        } else {
-          console.warn('❌ Falhas na validação:');
-          result.errors.forEach(error => console.warn(' -', error));
-        }
-      });
-    }
+    // Always run validation to test calculations
+    enableDebugMode(true); // Enable audit logging
+    validateNumerologyCalculations().then(result => {
+      if (result.passed) {
+        console.log('✅ Validação passou! Todos os cálculos corretos.');
+        console.log('📊 Resultados:', result.results);
+      } else {
+        console.warn('❌ Falhas na validação:');
+        result.errors.forEach(error => console.warn(' -', error));
+        console.log('📊 Resultados obtidos:', result.results);
+      }
+    });
   }, []);
   
   const formatDate = (date: Date) => {
