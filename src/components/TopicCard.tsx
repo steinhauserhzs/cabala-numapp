@@ -14,12 +14,17 @@ interface TopicCardProps {
 export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, topico, fallbackTopico }) => {
   const [open, setOpen] = useState(false);
   
-  const { data: conteudo, isLoading } = useQuery({
+  const { data: conteudo, isLoading, error } = useQuery({
     queryKey: ['topico', topico, fallbackTopico],
     queryFn: async () => {
+      console.log(`[TopicCard] Fetching content for: ${topico}, fallback: ${fallbackTopico}`);
       let content = await getTextoTopico(topico);
+      console.log(`[TopicCard] Primary content for ${topico}:`, content ? `${content.substring(0, 100)}...` : 'NULL');
+      
       if (!content && fallbackTopico) {
+        console.log(`[TopicCard] Trying fallback: ${fallbackTopico}`);
         content = await getTextoTopico(fallbackTopico);
+        console.log(`[TopicCard] Fallback content for ${fallbackTopico}:`, content ? `${content.substring(0, 100)}...` : 'NULL');
       }
       return content;
     },
@@ -68,13 +73,18 @@ export const TopicCard: React.FC<TopicCardProps> = ({ icon, title, description, 
           <div className="mt-2 p-3 border-t border-border">
             {isLoading ? (
               <div className="text-sm text-foreground">Carregando conteúdo...</div>
+            ) : error ? (
+              <div className="text-sm text-destructive">
+                Erro ao carregar conteúdo: {error instanceof Error ? error.message : 'Erro desconhecido'}
+              </div>
             ) : conteudo ? (
               <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {conteudo}
               </div>
             ) : (
-              <div className="text-sm text-foreground leading-relaxed">
-                Conteúdo indisponível no momento. Em breve adicionaremos este tópico.
+              <div className="text-sm text-muted-foreground leading-relaxed">
+                Conteúdo indisponível no momento. Tópico: "{topico}"
+                {fallbackTopico && `, fallback: "${fallbackTopico}"`}
               </div>
             )}
           </div>

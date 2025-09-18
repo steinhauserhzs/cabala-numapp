@@ -12,21 +12,41 @@ function extractText(input: any): string {
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(extractText).filter(Boolean).join('\n\n');
   if (typeof input === 'object') {
-    // Common direct fields
+    // Direct text fields
     if (typeof (input as any).conteudo === 'string') return (input as any).conteudo;
+    if (typeof (input as any).texto_integral === 'string') return (input as any).texto_integral;
+    if (typeof (input as any).descricao === 'string') return (input as any).descricao;
+
+    // Nested content object
     if ((input as any).conteudo && typeof (input as any).conteudo === 'object') {
       const nested = extractText((input as any).conteudo);
       if (nested) return nested;
     }
-    if (typeof (input as any).texto_integral === 'string') return (input as any).texto_integral;
-    if (typeof (input as any).descricao === 'string') return (input as any).descricao;
 
     // Numeric-key dictionary (e.g., {"1": "...", "2": {...}})
     const keys = Object.keys(input as any);
     const numericKeys = keys.filter(k => /^\d+$/.test(k)).sort((a, b) => parseInt(a) - parseInt(b));
-    if (numericKeys.length) {
-      const parts = numericKeys.map(k => `${k}: ${extractText((input as any)[k])}`.trim());
+    if (numericKeys.length > 0) {
+      // For topic cards showing overview, combine all entries
+      const parts = numericKeys.map(k => {
+        const item = (input as any)[k];
+        if (typeof item === 'string') return `${k}: ${item}`;
+        if (typeof item === 'object') {
+          const titulo = item.titulo || `Número ${k}`;
+          const desc = item.descricao || item.texto_integral || extractText(item);
+          return `${titulo}\n${desc}`;
+        }
+        return `${k}: ${extractText(item)}`;
+      });
       return parts.join('\n\n');
+    }
+    
+    // Non-numeric object - try to extract meaningful content
+    const meaningfulKeys = Object.keys(input as any).filter(k => 
+      !['id', 'topico', 'created_at', 'updated_at'].includes(k)
+    );
+    if (meaningfulKeys.length > 0) {
+      return meaningfulKeys.map(k => extractText((input as any)[k])).filter(Boolean).join('\n\n');
     }
   }
   // Fallback

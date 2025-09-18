@@ -14,6 +14,7 @@ import { validateNumerologyCalculations } from '@/utils/numerologyValidator';
 import { enableDebugMode, getAuditLogs, clearAuditLogs } from '@/utils/numerology';
 import { AuditModal } from '@/components/AuditModal';
 import { testCalculations, testJessicaCalculations } from '@/utils/debug-test';
+import { testCurrentCalculation, validateJessicaCalculation } from '@/utils/calculation-test';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -66,7 +67,11 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     console.log('🧮 Testing current calculation for:', name);
     console.log('📋 Current mapa:', mapa);
     
-    // Run debug tests
+    // Run comprehensive test
+    const currentTest = testCurrentCalculation(name);
+    const jessicaValidation = validateJessicaCalculation();
+    
+    // Also run legacy tests
     testJessicaCalculations();
     testCalculations();
   }, [name, mapa]);
