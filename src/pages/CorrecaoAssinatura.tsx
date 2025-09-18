@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, PenTool } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setActiveProfile, gerarMapaNumerologico } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 
 const CorrecaoAssinatura = () => {
   const { user } = useAuth();
@@ -18,6 +20,11 @@ const CorrecaoAssinatura = () => {
   const [objective, setObjective] = useState('');
   const [observations, setObservations] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set consistent numerology profile
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -46,14 +53,24 @@ const CorrecaoAssinatura = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement signature correction analysis
+      const parseDate = (dateStr: string) => {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+      
+      const date = parseDate(birthDate);
+      const fullNameMap = gerarMapaNumerologico(fullName, date);
+      const signatureMap = gerarMapaNumerologico(currentSignature, date);
+      
       console.log('Signature analysis:', { 
         fullName, 
         currentSignature, 
         birthDate, 
         profession, 
         objective, 
-        observations 
+        observations,
+        fullNameNumerology: fullNameMap,
+        signatureNumerology: signatureMap
       });
     }
   };

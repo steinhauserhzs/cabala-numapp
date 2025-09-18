@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Building, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setActiveProfile, gerarMapaNumerologico } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 
 const MapaEmpresarial = () => {
   const { user } = useAuth();
@@ -13,6 +15,11 @@ const MapaEmpresarial = () => {
   const [foundingDate, setFoundingDate] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [errors, setErrors] = useState<{ companyName?: string; foundingDate?: string; cnpj?: string }>({});
+
+  // Set consistent numerology profile
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const validateForm = () => {
     const newErrors: { companyName?: string; foundingDate?: string; cnpj?: string } = {};
@@ -37,8 +44,20 @@ const MapaEmpresarial = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement business numerology calculation
-      console.log('Business analysis:', { companyName, foundingDate, cnpj });
+      const parseDate = (dateStr: string) => {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+      
+      const date = parseDate(foundingDate);
+      const mapa = gerarMapaNumerologico(companyName, date);
+      
+      console.log('Business numerological analysis:', {
+        company: companyName,
+        date: foundingDate,
+        cnpj,
+        numerology: mapa
+      });
     }
   };
 

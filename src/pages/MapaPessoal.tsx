@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { NumerologyForm } from '@/components/NumerologyForm';
 import { NumerologyResult } from '@/components/NumerologyResult';
-import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology';
+import { gerarMapaNumerologico, type MapaNumerologico, setActiveProfile } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
@@ -13,6 +14,11 @@ const MapaPessoal = () => {
   const [numerologyMap, setNumerologyMap] = useState<MapaNumerologico | null>(null);
   const [userName, setUserName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<Date | null>(null);
+
+  // Set active profile to PERFIL_CONECTA on component mount
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const handleFormSubmit = (name: string, birthDate: Date) => {
     const mapa = gerarMapaNumerologico(name, birthDate);

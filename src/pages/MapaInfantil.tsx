@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Baby } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setActiveProfile, gerarMapaNumerologico } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 
 const MapaInfantil = () => {
   const { user } = useAuth();
@@ -15,6 +17,11 @@ const MapaInfantil = () => {
   const [gender, setGender] = useState('');
   const [parentName, setParentName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set consistent numerology profile
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -46,8 +53,21 @@ const MapaInfantil = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement child numerology calculation
-      console.log('Child analysis:', { childName, birthDate, gender, parentName });
+      const parseDate = (dateStr: string) => {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+      
+      const date = parseDate(birthDate);
+      const mapa = gerarMapaNumerologico(childName, date);
+      
+      console.log('Child numerological analysis:', {
+        child: childName,
+        birthDate,
+        gender,
+        parent: parentName,
+        numerology: mapa
+      });
     }
   };
 

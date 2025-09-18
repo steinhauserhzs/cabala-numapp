@@ -15,6 +15,7 @@ import { enableDebugMode, getAuditLogs, clearAuditLogs } from '@/utils/numerolog
 import { AuditModal } from '@/components/AuditModal';
 import { testCalculations, testJessicaCalculations } from '@/utils/debug-test';
 import { testCurrentCalculation, validateJessicaCalculation } from '@/utils/calculation-test';
+import { validateHairãCalculation } from '@/utils/hairã-validation';
 
 interface NumerologyResultProps {
   mapa: MapaNumerologico;
@@ -52,6 +53,18 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
   React.useEffect(() => {
     // Always run validation to test calculations
     enableDebugMode(true); // Enable audit logging
+    
+    // Critical: Validate Hairã reference calculation
+    console.log('🎯 Running Hairã validation...');
+    const hairãValidation = validateHairãCalculation();
+    if (hairãValidation.isValid) {
+      console.log('✅ HAIRÃ VALIDATION PASSED - All calculations correct!');
+    } else {
+      console.error('❌ HAIRÃ VALIDATION FAILED:', hairãValidation.errors);
+      console.log('Expected:', hairãValidation.expected);
+      console.log('Actual:', hairãValidation.actual);
+    }
+    
     validateNumerologyCalculations().then(result => {
       if (result.passed) {
         console.log('✅ Validação passou! Todos os cálculos corretos.');

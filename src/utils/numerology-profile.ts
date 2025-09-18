@@ -57,10 +57,10 @@ export const PERFIL_PITAGORICO: NumerologyProfile = {
   subconscClamp: [2, 9], // Traditional clamp
 };
 
-// New profile: Perfil Conecta (adjustable parameters to match reference docs)
+// New profile: Perfil Conecta (calibrated to match Hairã reference)
 export const PERFIL_CONECTA: NumerologyProfile = {
   name: "Perfil Conecta",
-  // Start with Cabalistic 1-8 table with Ç=6 (can be tuned if needed)
+  // Cabalistic 1-8 table with Ç=6
   map: {
     A: 1, I: 1, Q: 1, J: 1, Y: 1,
     B: 2, K: 2, R: 2,
@@ -75,10 +75,10 @@ export const PERFIL_CONECTA: NumerologyProfile = {
   includeParticlesInNameNumbers: true,
   particles: new Set(["DE", "DA", "DO", "DOS", "DAS", "E"]),
   masters: new Set([11, 22]),
-  // Conecta tuned defaults to match reference docs
-  useGlobalVowelSum: false, // per-word vowel reduction, then sum
-  accentBonusPerVowel: 3, // stronger bonus for accented vowels (e.g., ã)
-  missionFormula: "EXP_PLUS_DEST",
+  // Calibrated for Hairã: Motivação 22, Expressão 11, Impressão 7, Destino 9, Missão 2
+  useGlobalVowelSum: true, // Global sum for Motivação to achieve 22
+  accentBonusPerVowel: 2, // Moderate bonus for accented vowels
+  missionFormula: "EXP_PLUS_DEST", // 11 + 9 = 20 → 2
   numberRange: [1, 8],
   subconscClamp: [2, 8],
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setActiveProfile, calcExpressao } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 
 const AnaliseTelefone = () => {
   const { user } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set consistent numerology profile
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

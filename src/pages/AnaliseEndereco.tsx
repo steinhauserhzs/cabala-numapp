@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setActiveProfile, calcExpressao } from '@/utils/numerology';
+import { PERFIL_CONECTA } from '@/utils/numerology-profile';
 
 const AnaliseEndereco = () => {
   const { user } = useAuth();
@@ -18,6 +20,11 @@ const AnaliseEndereco = () => {
   const [propertyType, setPropertyType] = useState('');
   const [residentName, setResidentName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set consistent numerology profile
+  useEffect(() => {
+    setActiveProfile(PERFIL_CONECTA);
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

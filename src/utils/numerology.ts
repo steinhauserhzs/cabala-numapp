@@ -38,25 +38,14 @@ export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './nume
 export const clean = stripButKeepCedilla;
 export const letterValue = (ch: string): number => {
   const letter = ch.toUpperCase();
-  // Use active profile mapping
-  const { map } = require('./numerology-core');
-  // Fallback to official map if dynamic import fails
-  try {
-    const { getActiveProfile } = require('./numerology-core');
-    return getActiveProfile().map[letter] || 0;
-  } catch {
-    return PERFIL_OFICIAL_JF.map[letter] || 0;
-  }
+  const profile = getActiveProfile();
+  return profile.map[letter] || 0;
 };
 export { reduceKeepMasters };
 
 export const isVowel = (ch: string): boolean => {
-  try {
-    const { getActiveProfile } = require('./numerology-core');
-    return getActiveProfile().vowels.has(ch.toUpperCase());
-  } catch {
-    return PERFIL_OFICIAL_JF.vowels.has(ch.toUpperCase());
-  }
+  const profile = getActiveProfile();
+  return profile.vowels.has(ch.toUpperCase());
 };
 
 export const mapNameToValues = (nome: string): number[] => {
