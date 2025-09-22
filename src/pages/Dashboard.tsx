@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { AreasAtuacaoModal } from '@/components/AreasAtuacaoModal';
 import { 
   Sparkles, 
   Heart, 
@@ -13,11 +14,13 @@ import {
   Car, 
   PenTool,
   History,
-  Plus
+  Plus,
+  Briefcase
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const [isAreasModalOpen, setIsAreasModalOpen] = useState(false);
 
   const calculatorOptions = [
     { title: 'Mapa Pessoal', description: 'Análise numerológica completa', icon: Sparkles, path: '/mapa-pessoal', color: 'bg-gradient-to-br from-primary to-primary/70' },
@@ -28,6 +31,7 @@ const Dashboard = () => {
     { title: 'Análise de Endereço', description: 'Energia da residência', icon: MapPin, path: '/analise-endereco', color: 'bg-gradient-to-br from-orange-500 to-orange-600' },
     { title: 'Análise de Placa', description: 'Compatibilidade veicular', icon: Car, path: '/analise-placa', color: 'bg-gradient-to-br from-red-500 to-red-600' },
     { title: 'Correção de Assinatura', description: 'Otimização da assinatura', icon: PenTool, path: '/correcao-assinatura', color: 'bg-gradient-to-br from-teal-500 to-teal-600' },
+    { title: 'Áreas de Atuação', description: 'Explore profissões compatíveis', icon: Briefcase, path: '#', color: 'bg-gradient-to-br from-indigo-500 to-indigo-600', onClick: () => setIsAreasModalOpen(true) },
   ];
 
   return (
@@ -58,8 +62,12 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {calculatorOptions.map((option) => (
-            <Link key={option.path} to={option.path}>
-              <Card className="h-full hover:shadow-mystical transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+            option.onClick ? (
+              <Card 
+                key={option.title} 
+                className="h-full hover:shadow-mystical transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                onClick={option.onClick}
+              >
                 <CardHeader className="pb-4">
                   <div className={`w-12 h-12 rounded-xl ${option.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
                     <option.icon className="w-6 h-6 text-white" />
@@ -70,7 +78,21 @@ const Dashboard = () => {
                   </CardDescription>
                 </CardHeader>
               </Card>
-            </Link>
+            ) : (
+              <Link key={option.path} to={option.path}>
+                <Card className="h-full hover:shadow-mystical transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                  <CardHeader className="pb-4">
+                    <div className={`w-12 h-12 rounded-xl ${option.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                      <option.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <CardTitle className="text-lg">{option.title}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {option.description}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            )
           ))}
         </div>
 
@@ -121,6 +143,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+        
+        <AreasAtuacaoModal 
+          isOpen={isAreasModalOpen} 
+          onClose={() => setIsAreasModalOpen(false)} 
+        />
       </main>
     </div>
   );
