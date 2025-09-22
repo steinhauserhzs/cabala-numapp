@@ -1,49 +1,59 @@
-// Numerology calculation utilities - UNIFIED ENGINE
+// Numerology calculation utilities - NEW DETERMINISTIC CABALISTIC ENGINE
 import { 
-  calcExpressao, 
-  calcMotivacao, 
-  calcImpressao,
-  calcDestino,
-  calcPsiquico,
-  calcMissao,
-  calcRespostaSubconsciente,
-  calcLicoesCarmicas,
-  calcTendenciasOcultas,
+  computeFullMap,
+  stripAccentsKeepCedilla,
+  letterValue as cabalisticLetterValue,
   reduceKeepMasters,
-  reduceToDigitAllowZero,
-  stripButKeepCedilla,
-  type AuditLog,
-  enableDebugMode,
-  getAuditLogs,
-  clearAuditLogs
-} from './numerology-core-fixed';
-import { calcAnjoGuardaFromSupabase } from './angelParser';
-import { gerarMapaNumerologicoPuro } from './numerology-pure';
+  type Options,
+  type HarmonicsTable,
+  type ConjugalTable,
+  type ColorsTable,
+  type AngelsTable
+} from './numerology-cabalistic';
+import { ANGELS_BASE, HARMONICS_BASE, COLORS_BASE, CONJUGAL_BASE } from '../data/angels-base';
 
-// Re-export audit functionality
-export { 
-  enableDebugMode, 
-  getAuditLogs,
-  clearAuditLogs,
-  type AuditLog 
-};
-
-// Profile management re-exports
-export { setActiveProfile, getAvailableProfiles, getActiveProfile } from './profile-singleton';
-
-// Helper functions
-import { getActiveProfile } from './profile-singleton';
-export const clean = stripButKeepCedilla;
-export const letterValue = (ch: string): number => {
-  const letter = ch.toUpperCase();
-  const profile = getActiveProfile();
-  return profile.map[letter] || 0;
-};
+// New deterministic engine - single source of truth
+export const clean = stripAccentsKeepCedilla;
+export const letterValue = cabalisticLetterValue;
 export { reduceKeepMasters };
 
+// Debug and audit functions (stubs for compatibility)
+export const enableDebugMode = (enable: boolean) => {
+  console.log(`Debug mode ${enable ? 'enabled' : 'disabled'} - using new deterministic engine`);
+};
+
+export const getAuditLogs = () => {
+  return []; // New engine doesn't use audit logs
+};
+
+export const clearAuditLogs = () => {
+  // No-op for new engine
+};
+
+// Profile management stubs (new engine doesn't use profiles)
+export const setActiveProfile = (profile: any) => {
+  console.log('Profile setting ignored - using deterministic cabalistic engine');
+};
+
+export const getAvailableProfiles = () => {
+  return ['CABALISTIC_DETERMINISTIC'];
+};
+
+export const getActiveProfile = () => {
+  return { name: 'CABALISTIC_DETERMINISTIC' };
+};
+
+// Utility function for legacy compatibility
+export const reduceToDigitAllowZero = (n: number): number => {
+  let x = n;
+  while (x >= 10) {
+    x = x.toString().split('').reduce((a, b) => a + Number(b), 0);
+  }
+  return x;
+};
+
 export const isVowel = (ch: string): boolean => {
-  const profile = getActiveProfile();
-  return profile.vowels.has(ch.toUpperCase());
+  return ['A','E','I','O','U','Y'].includes(ch.toUpperCase());
 };
 
 export const mapNameToValues = (nome: string): number[] => {
@@ -53,22 +63,58 @@ export const mapNameToValues = (nome: string): number[] => {
     .map(ch => letterValue(ch));
 };
 
-// Core numerology calculations (using new profile-based system)
-export { calcMotivacao, calcImpressao, calcExpressao, calcDestino, calcMissao };
-
-export const calcNumeroPsiquico = (dob: Date): number => {
-  return calcPsiquico(dob.getDate());
+// Core numerology calculations using new deterministic engine
+export const calcMotivacao = (nome: string): number => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.numeros.Motivacao.numero;
 };
 
-export { calcRespostaSubconsciente, calcLicoesCarmicas, calcTendenciasOcultas };
+export const calcImpressao = (nome: string): number => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.numeros.Impressao.numero;
+};
 
-// Import and use conservative karmic debts detection
-import { detectKarmicDebtsConservative } from './karmic-debts-conservative';
+export const calcExpressao = (nome: string): number => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.numeros.Expressao.numero;
+};
 
-// Detect karmic debts in name (using conservative algorithm)
+export const calcDestino = (d: number, m: number, y: number): number => {
+  const dateStr = `${d.toString().padStart(2,'0')}/${m.toString().padStart(2,'0')}/${y}`;
+  const result = computeFullMap("TESTE", dateStr);
+  return result.numeros.Destino.numero;
+};
+
+export const calcMissao = (nome: string, d: number, m: number, y: number): number => {
+  const dateStr = `${d.toString().padStart(2,'0')}/${m.toString().padStart(2,'0')}/${y}`;
+  const result = computeFullMap(nome, dateStr);
+  return result.numeros.Missao.numero;
+};
+
+export const calcNumeroPsiquico = (dob: Date): number => {
+  const dateStr = `${dob.getDate().toString().padStart(2,'0')}/${(dob.getMonth()+1).toString().padStart(2,'0')}/${dob.getFullYear()}`;
+  const result = computeFullMap("TESTE", dateStr);
+  return result.numeros.NumeroPsiquico.numero;
+};
+
+export const calcRespostaSubconsciente = (nome: string): number => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.carmicos.resposta_subconsciente;
+};
+
+export const calcLicoesCarmicas = (nome: string): number[] => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.carmicos.licoes;
+};
+
+export const calcTendenciasOcultas = (nome: string): number[] => {
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.carmicos.tendencias_ocultas;
+};
+
 export const detectarDividasCarmicas = (nome: string): number[] => {
-  const profile = getActiveProfile();
-  return detectKarmicDebtsConservative(nome, profile);
+  const result = computeFullMap(nome, "01/01/2000");
+  return result.carmicos.dividas;
 };
 
 // Life cycle calculations
@@ -174,17 +220,56 @@ export interface MapaNumerologico {
   anjoGuarda: string;
 }
 
-// Main function to generate complete numerological map - now using pure functions
+// Main function to generate complete numerological map using new deterministic engine
 export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
-  const profile = getActiveProfile();
-  const mapaBase = gerarMapaNumerologicoPuro(nome, dataNascimento, profile);
+  const day = dataNascimento.getDate();
+  const month = dataNascimento.getMonth() + 1;
+  const year = dataNascimento.getFullYear();
+  const dateStr = `${day.toString().padStart(2,'0')}/${month.toString().padStart(2,'0')}/${year}`;
   
-  // Guardian angel (will be filled by caller from Supabase)
-  const anjoGuarda = ""; // Placeholder - filled by external function
+  // Setup options with base lookup tables
+  const options: Options = {
+    angels: ANGELS_BASE,
+    harmonics: HARMONICS_BASE,
+    colors: COLORS_BASE,
+    conjugal: CONJUGAL_BASE,
+    currentDate: new Date()
+  };
   
+  const result = computeFullMap(nome, dateStr, options);
+  
+  // Map to legacy interface
   return {
-    ...mapaBase,
-    anjoGuarda
+    motivacao: result.numeros.Motivacao.numero,
+    impressao: result.numeros.Impressao.numero,
+    expressao: result.numeros.Expressao.numero,
+    destino: result.numeros.Destino.numero,
+    missao: result.numeros.Missao.numero,
+    numeroPsiquico: result.numeros.NumeroPsiquico.numero,
+    respostaSubconsciente: result.carmicos.resposta_subconsciente,
+    licoesCarmicas: result.carmicos.licoes,
+    tendenciasOcultas: result.carmicos.tendencias_ocultas,
+    dividasCarmicas: result.carmicos.dividas,
+    desafios: {
+      primeiro: result.ciclos.desafios[0],
+      segundo: result.ciclos.desafios[1],
+      principal: result.ciclos.principal,
+    },
+    momentosDecisivos: {
+      primeiro: result.ciclos.momentos_decisivos[0],
+      segundo: result.ciclos.momentos_decisivos[1],
+      terceiro: result.ciclos.momentos_decisivos[2],
+      quarto: result.ciclos.momentos_decisivos[3],
+    },
+    ciclosVida: {
+      primeiro: result.ciclos.vida[0],
+      segundo: result.ciclos.vida[1],
+      terceiro: result.ciclos.vida[2],
+    },
+    anoPersonal: result.pessoais.ano,
+    mesPersonal: result.pessoais.mes,
+    diaPersonal: result.pessoais.dia,
+    anjoGuarda: result.numeros.Anjo.nome || ""
   };
 }
 
