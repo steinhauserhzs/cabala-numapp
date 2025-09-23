@@ -6,6 +6,7 @@ import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft } from 'lucide-react';
+import { testHairaDebug } from '@/utils/haira-debug-test';
 
 const MapaPessoal = () => {
   const { user } = useAuth();
@@ -19,6 +20,12 @@ const MapaPessoal = () => {
   const handleFormSubmit = async (name: string, birthDate: Date) => {
     try {
       console.log('[MapaPessoal] Submitting form with:', { name, birthDate });
+      
+      // Execute Hairã debug test if this is Hairã
+      if (name.toLowerCase().includes("hairã") || name.toLowerCase().includes("haira")) {
+        console.log("🔧 Executando teste de debug para Hairã...");
+        testHairaDebug();
+      }
       
       const mapa = gerarMapaNumerologico(name, birthDate);
       setNumerologyMap(mapa);

@@ -117,10 +117,15 @@ function letterValue(ch: string): number {
 }
 
 function reduceKeepMasters(n: number): number {
+  // Check if the original number is a master
   if (MASTERS.has(n)) return n;
+  
   let x = n;
   while (x >= 10) {
-    const s = x.toString().split("").reduce((a,b)=>a+Number(b),0);
+    const digits = x.toString().split("").map(d => parseInt(d));
+    const s = digits.reduce((a, b) => a + b, 0);
+    
+    // Check if the sum is a master number
     if (MASTERS.has(s)) return s;
     x = s;
   }
@@ -130,12 +135,31 @@ function reduceKeepMasters(n: number): number {
 function sumByPredicate(name: string, pred: (ch: string)=>boolean) {
   const cleanName = normalizeNameKeepingCedilla(name);
   let total = 0;
+  const debugLetters: string[] = [];
+  
   for (const ch of cleanName) {
     if ((ch >= "A" && ch <= "Z") || ch === "Ç") {
-      if (pred(ch)) total += letterValue(ch);
+      if (pred(ch)) {
+        const value = letterValue(ch);
+        total += value;
+        debugLetters.push(`${ch}=${value}`);
+      }
     }
   }
-  return { bruto: total, numero: reduceKeepMasters(total) };
+  
+  const reduced = reduceKeepMasters(total);
+  
+  // Debug log for Hairã specifically
+  if (cleanName.includes("HAIRA") || cleanName.includes("HAIRU") || cleanName.includes("HAIR")) {
+    const predType = pred.toString().includes("VOWELS") ? "VOGAIS" : 
+                     pred.toString().includes("CONSONANTS") ? "CONSOANTES" : "TODAS";
+    console.log(`🔍 DEBUG ${predType} - Nome: "${cleanName}"`);
+    console.log(`   Letras: ${debugLetters.join(", ")}`);
+    console.log(`   Total bruto: ${total}`);
+    console.log(`   Reduzido: ${reduced}`);
+  }
+  
+  return { bruto: total, numero: reduced };
 }
 
 function digitsSumOfDateString(dd: number, mm: number, yyyy: number): number {
@@ -152,6 +176,13 @@ export function computeFullMap(fullName: string, birth: string, options: Options
   // birth "DD/MM/AAAA"
   const [DD,MM,YYYY] = birth.split("/").map(Number);
   const normalized = normalizeNameKeepingCedilla(fullName);
+
+  // Debug log for Hairã
+  if (fullName.toLowerCase().includes("hairã") || fullName.toLowerCase().includes("haira")) {
+    console.log(`🎯 COMPUTE FULL MAP DEBUG para "${fullName}"`);
+    console.log(`   Nome normalizado: "${normalized}"`);
+    console.log(`   Data: ${DD}/${MM}/${YYYY}`);
+  }
 
   // vogais/consoantes
   const isVowel = (ch: string)=> VOWELS.has(ch);
