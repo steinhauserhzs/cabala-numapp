@@ -2,13 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remove all animations - Static layout */
+/* Remove animations but preserve static visual elements */
 *, *::before, *::after {
   animation-duration: 0s !important;
   animation-delay: 0s !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
-  transform: none !important;
 }
 
 /* Override all Radix UI animations */
@@ -16,9 +15,19 @@
   animation: none !important;
 }
 
-/* Static states for interactive elements */
+/* Allow static transforms for icons and layout */
 .group:hover * {
-  transform: none !important;
+  transition: none !important;
+}
+
+/* Preserve SVG and icon rendering */
+svg {
+  transform: initial !important;
+}
+
+/* Allow static gradients and visual elements */
+[class*="gradient"], [class*="bg-gradient"] {
+  background: initial !important;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
