@@ -74,7 +74,179 @@ export function InteractiveNumerologyDashboard({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex flex-col lg:flex-row h-screen">
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        {/* Mobile Header */}
+        <header className="bg-background border-b border-border p-4 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={onBack}
+                className="p-2"
+              >
+                <ArrowLeft size={20} />
+              </Button>
+              
+              <div>
+                <h1 className="text-lg font-bold text-foreground truncate max-w-40">
+                  {name}
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(birthDate)}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="secondary"
+              onClick={handleGeneratePDF}
+              disabled={isGeneratingPDF}
+              size="sm"
+              className="p-2"
+            >
+              {isGeneratingPDF ? (
+                <Loader2 size={16} />
+              ) : (
+                <Download size={16} />
+              )}
+            </Button>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="mt-3">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile Content */}
+        <div className="pb-20">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="p-4">
+              <TabsContent value="overview" className="mt-0">
+                <OverviewDashboard 
+                  mapa={mapa}
+                  name={name}
+                  birthDate={birthDate}
+                  viewMode="grid"
+                  searchQuery={searchQuery}
+                  onBookmark={toggleBookmark}
+                  bookmarkedSections={bookmarkedSections}
+                />
+              </TabsContent>
+
+              <TabsContent value="karmic" className="mt-0">
+                <KarmicAspectsTab 
+                  mapa={mapa}
+                  viewMode="grid"
+                  searchQuery={searchQuery}
+                  onBookmark={toggleBookmark}
+                  bookmarkedSections={bookmarkedSections}
+                />
+              </TabsContent>
+
+              <TabsContent value="temporal" className="mt-0">
+                <TemporalCyclesTab 
+                  mapa={mapa}
+                  viewMode="grid"
+                  searchQuery={searchQuery}
+                  onBookmark={toggleBookmark}
+                  bookmarkedSections={bookmarkedSections}
+                />
+              </TabsContent>
+
+              <TabsContent value="challenges" className="mt-0">
+                <ChallengesMomentsTab 
+                  mapa={mapa}
+                  viewMode="grid"
+                  searchQuery={searchQuery}
+                  onBookmark={toggleBookmark}
+                  bookmarkedSections={bookmarkedSections}
+                />
+              </TabsContent>
+
+              <TabsContent value="additional" className="mt-0">
+                <AdditionalInfoTab 
+                  mapa={mapa}
+                  name={name}
+                  birthDate={birthDate}
+                  viewMode="grid"
+                  searchQuery={searchQuery}
+                  onBookmark={toggleBookmark}
+                  bookmarkedSections={bookmarkedSections}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-20">
+          <div className="grid grid-cols-5 h-16">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex flex-col items-center justify-center space-y-1 text-xs transition-colors ${
+                activeTab === 'overview' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-current" />
+              <span>Geral</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('karmic')}
+              className={`flex flex-col items-center justify-center space-y-1 text-xs transition-colors ${
+                activeTab === 'karmic' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-current" />
+              <span>Cármico</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('temporal')}
+              className={`flex flex-col items-center justify-center space-y-1 text-xs transition-colors ${
+                activeTab === 'temporal' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-current" />
+              <span>Ciclos</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('challenges')}
+              className={`flex flex-col items-center justify-center space-y-1 text-xs transition-colors ${
+                activeTab === 'challenges' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-current" />
+              <span>Desafios</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('additional')}
+              className={`flex flex-col items-center justify-center space-y-1 text-xs transition-colors ${
+                activeTab === 'additional' ? 'text-primary bg-primary/5' : 'text-muted-foreground'
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-current" />
+              <span>Mais</span>
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex flex-row h-screen">
         {/* Navigation Sidebar */}
         <NavigationSidebar 
           activeTab={activeTab}
@@ -86,42 +258,42 @@ export function InteractiveNumerologyDashboard({
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <header className="bg-background border-b border-border p-2 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+          <header className="bg-background border-b border-border p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center space-x-4 min-w-0">
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={onBack}
-                  className="flex items-center space-x-1 sm:space-x-2 shrink-0"
+                  className="flex items-center space-x-2 shrink-0"
                 >
                   <ArrowLeft size={16} />
-                  <span className="hidden sm:inline">Voltar</span>
+                  <span>Voltar</span>
                 </Button>
                 
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                  <h1 className="text-xl font-bold text-foreground truncate">
                     {name}
                   </h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {formatDate(birthDate)}
                   </p>
                 </div>
               </div>
 
               {/* Search and Actions */}
-              <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-none">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Buscar..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-full sm:w-48 lg:w-64"
+                    className="pl-10 w-64"
                   />
                 </div>
 
-                <div className="hidden sm:flex items-center space-x-1 bg-muted rounded-md p-1">
+                <div className="flex items-center space-x-1 bg-muted rounded-md p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
@@ -142,7 +314,7 @@ export function InteractiveNumerologyDashboard({
                   variant="secondary"
                   onClick={handleGeneratePDF}
                   disabled={isGeneratingPDF}
-                  className="flex items-center space-x-1 sm:space-x-2 shrink-0"
+                  className="flex items-center space-x-2 shrink-0"
                   size="sm"
                 >
                   {isGeneratingPDF ? (
@@ -150,7 +322,7 @@ export function InteractiveNumerologyDashboard({
                   ) : (
                     <Download size={16} />
                   )}
-                  <span className="hidden sm:inline">{isGeneratingPDF ? 'Gerando...' : 'PDF'}</span>
+                  <span>{isGeneratingPDF ? 'Gerando...' : 'PDF'}</span>
                 </Button>
               </div>
             </div>
@@ -159,38 +331,34 @@ export function InteractiveNumerologyDashboard({
           {/* Main Dashboard Content */}
           <div className="flex-1 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-              <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 overflow-x-auto">
+              <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0">
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0 text-xs sm:text-sm"
+                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
                 >
-                  <span className="hidden sm:inline">Visão Geral</span>
-                  <span className="sm:hidden">Geral</span>
+                  Visão Geral
                 </TabsTrigger>
                 <TabsTrigger 
                   value="karmic" 
-                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0 text-xs sm:text-sm"
+                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
                 >
-                  <span className="hidden sm:inline">Aspectos Cármicos</span>
-                  <span className="sm:hidden">Cármico</span>
+                  Aspectos Cármicos
                 </TabsTrigger>
                 <TabsTrigger 
                   value="temporal" 
-                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0 text-xs sm:text-sm"
+                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
                 >
-                  <span className="hidden sm:inline">Ciclos Temporais</span>
-                  <span className="sm:hidden">Ciclos</span>
+                  Ciclos Temporais
                 </TabsTrigger>
                 <TabsTrigger 
                   value="challenges" 
-                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0 text-xs sm:text-sm"
+                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
                 >
-                  <span className="hidden sm:inline">Desafios & Momentos</span>
-                  <span className="sm:hidden">Desafios</span>
+                  Desafios & Momentos
                 </TabsTrigger>
                 <TabsTrigger 
                   value="additional" 
-                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shrink-0 text-xs sm:text-sm"
+                  className="data-[state=active]:bg-background data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
                 >
                   Informações Complementares
                 </TabsTrigger>
