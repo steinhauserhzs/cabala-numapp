@@ -27,7 +27,14 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+    // Salva a preferência no localStorage para lembrar na próxima visita
+    if (rememberMe) {
+      localStorage.setItem('remember-login', 'true');
+    } else {
+      localStorage.removeItem('remember-login');
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
