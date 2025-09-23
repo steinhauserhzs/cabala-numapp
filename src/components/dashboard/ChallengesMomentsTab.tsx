@@ -111,7 +111,7 @@ export function ChallengesMomentsTab({
     searchQuery === '' || 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.phase?.toLowerCase().includes(searchQuery.toLowerCase())
+    ('phase' in item && item.phase?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const isBookmarked = (id: string) => bookmarkedSections.includes(id);
@@ -254,9 +254,11 @@ export function ChallengesMomentsTab({
                 <Badge variant="outline" className="text-xs">
                   {challenge.timeframe}
                 </Badge>
-                <div className="text-xs text-muted-foreground">
-                  {challenge.phase}
-                </div>
+                {'phase' in challenge && (
+                  <div className="text-xs text-muted-foreground">
+                    {challenge.phase}
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -106,7 +106,7 @@ export function OverviewDashboard({
       description: "Energia do ano atual",
       categoria: "ano_pessoal",
       icon: <Calendar size={20} />,
-      priority: 'medium'
+      priority: 'medium' as const
     },
     {
       id: 'mes-pessoal',
@@ -115,7 +115,7 @@ export function OverviewDashboard({
       description: "Energia do mês atual",
       categoria: "mes_pessoal",
       icon: <Clock size={20} />,
-      priority: 'medium'
+      priority: 'medium' as const
     },
     {
       id: 'dia-pessoal',
@@ -124,7 +124,7 @@ export function OverviewDashboard({
       description: "Energia do dia atual", 
       categoria: "dia_pessoal",
       icon: <Sun size={20} />,
-      priority: 'low'
+      priority: 'low' as const
     }
   ];
 
