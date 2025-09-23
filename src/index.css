@@ -137,16 +137,7 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
-  }
-  
-  @keyframes glow {
-    from {
-      text-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary)), 0 0 15px hsl(var(--primary));
-    }
-    to {
-      text-shadow: 0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary));
-    }
+  .static-focus {
+    transition: none;
   }
 }

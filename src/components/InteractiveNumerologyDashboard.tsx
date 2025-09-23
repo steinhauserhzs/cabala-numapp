@@ -73,7 +73,7 @@ export function InteractiveNumerologyDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-mystical">
+    <div className="min-h-screen bg-background">
       <div className="flex h-screen">
         {/* Navigation Sidebar */}
         <NavigationSidebar 
@@ -86,7 +86,7 @@ export function InteractiveNumerologyDashboard({
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <header className="bg-background/95 backdrop-blur-sm border-b border-border p-4 shadow-sm">
+          <header className="bg-background border-b border-border p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Button 
@@ -99,9 +99,9 @@ export function InteractiveNumerologyDashboard({
                   <span>Voltar</span>
                 </Button>
                 
-                <div className="text-center">
-                  <h1 className="text-xl font-bold bg-gradient-cosmic bg-clip-text text-transparent">
-                    Mapa Numerológico: {name}
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">
+                    {name}
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(birthDate)}
@@ -145,7 +145,7 @@ export function InteractiveNumerologyDashboard({
                   className="flex items-center space-x-2"
                 >
                   {isGeneratingPDF ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={16} />
                   ) : (
                     <Download size={16} />
                   )}
