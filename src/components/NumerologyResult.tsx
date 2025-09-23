@@ -115,11 +115,11 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
     };
     
     return (
-      <Card className="group hover:scale-105 transition-all duration-300 h-full">
+      <Card className="group h-full border border-border rounded-lg bg-card shadow-card">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
                 {icon}
               </div>
               <div>
@@ -137,12 +137,12 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           <button
             type="button"
             onClick={handleToggle}
-            className="w-full text-left text-sm py-2 px-2 flex items-center justify-between font-medium hover:underline hover:bg-muted/50 rounded transition-colors cursor-pointer z-10 relative"
+            className="w-full text-left text-sm py-2 px-2 flex items-center justify-between font-medium rounded cursor-pointer z-10 relative"
             aria-expanded={open}
           >
             Ver interpretação
             <svg 
-              className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} 
+              className={`h-4 w-4 ${open ? 'rotate-180' : ''}`} 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -383,7 +383,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
               className="flex items-center space-x-2"
             >
               {isGeneratingPDF ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} />
               ) : (
                 <Download size={16} />
               )}
@@ -425,7 +425,7 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {karmaNumbers.map((item) => (
-              <Card key={item.title} className="text-center hover:shadow-lg transition-shadow h-full">
+              <Card key={item.title} className="text-center shadow-card h-full border border-border rounded-lg bg-card p-4">
                 <CardHeader>
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <div className="p-2 rounded-full bg-primary/10 text-primary">

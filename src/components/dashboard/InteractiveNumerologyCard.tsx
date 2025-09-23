@@ -36,7 +36,7 @@ export function InteractiveNumerologyCard({
 
   const getNumberStyle = () => {
     if (isMasterNumber) {
-      return "text-3xl font-bold text-secondary animate-glow";
+      return "text-3xl font-bold text-secondary";
     }
     return "text-3xl font-bold text-primary";
   };
@@ -51,7 +51,7 @@ export function InteractiveNumerologyCard({
   };
 
   const cardClasses = `
-    group transition-all duration-300 hover:scale-[1.02] hover:shadow-lg
+    group border border-border rounded-lg p-4 sm:p-6 bg-card shadow-card
     ${isHighlighted ? 'ring-2 ring-primary shadow-lg scale-105' : ''}
     ${getPriorityColor()}
     ${viewMode === 'list' ? 'flex flex-row' : 'h-full'}
@@ -63,7 +63,7 @@ export function InteractiveNumerologyCard({
         <div className="flex items-center w-full p-4">
           {/* Icon and Number */}
           <div className="flex items-center space-x-4 min-w-[200px]">
-            <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
               {icon}
             </div>
             <div>
@@ -150,7 +150,7 @@ export function InteractiveNumerologyCard({
 
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center space-x-3">
-            <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
               {icon}
             </div>
             <div>
@@ -168,7 +168,7 @@ export function InteractiveNumerologyCard({
         <Button
           variant="ghost"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-3 hover:bg-muted/50 rounded transition-colors"
+          className="w-full flex items-center justify-between p-3 rounded"
         >
           <span className="font-medium">Ver interpretação</span>
           {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

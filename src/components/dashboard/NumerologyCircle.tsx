@@ -83,10 +83,9 @@ export function NumerologyCircle({ mapa, onNumberClick }: NumerologyCircleProps)
           >
             <div
               className={`
-                relative cursor-pointer group transition-all duration-300 hover:scale-110
+                relative cursor-pointer group
                 bg-background/95 backdrop-blur-sm border-2 rounded-xl p-4 shadow-lg
                 ${number.color}
-                ${isMasterNumber(number.value) ? 'animate-pulse' : ''}
               `}
               onClick={() => onNumberClick?.(number.value, number.category)}
             >
@@ -101,7 +100,7 @@ export function NumerologyCircle({ mapa, onNumberClick }: NumerologyCircleProps)
               )}
 
               <div className="text-center min-w-[80px]">
-                <Icon size={20} className="mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                <Icon size={20} className="mx-auto mb-2" />
                 <div className="text-xs font-medium mb-1">{number.label}</div>
                 <div className={`text-2xl font-bold ${isMasterNumber(number.value) ? 'text-secondary' : ''}`}>
                   {number.value}
@@ -133,7 +132,7 @@ export function NumerologyCircle({ mapa, onNumberClick }: NumerologyCircleProps)
           stroke="url(#connectionGradient)"
           strokeWidth="2"
           strokeDasharray="5,5"
-          className="animate-pulse"
+          className=""
         />
       </svg>
     </div>
