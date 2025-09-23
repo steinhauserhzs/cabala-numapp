@@ -2,12 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remove all animations */
+/* Remove all animations - Static layout */
 *, *::before, *::after {
   animation-duration: 0s !important;
   animation-delay: 0s !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
+  transform: none !important;
+}
+
+/* Override all Radix UI animations */
+[data-state="open"], [data-state="closed"] {
+  animation: none !important;
+}
+
+/* Static states for interactive elements */
+.group:hover * {
+  transform: none !important;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 

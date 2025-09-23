@@ -119,22 +119,22 @@ export const UserMapsSection: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
             {maps.map((map) => (
               <div
                 key={map.id}
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                className="border rounded-lg p-3 sm:p-4 bg-card"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-medium">{map.name}</h4>
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                      <h4 className="font-medium truncate">{map.name}</h4>
                       {getVisibilityBadge(map.visibility)}
                     </div>
                     
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-3">
                       <div className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar className="h-3 w-3 shrink-0" />
                         <span>
                           {map.birth_date ? 
                             format(new Date(map.birth_date), 'dd/MM/yyyy', { locale: ptBR }) :
@@ -142,7 +142,7 @@ export const UserMapsSection: React.FC = () => {
                           }
                         </span>
                       </div>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>
                         Criado em {format(new Date(map.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </span>
@@ -153,12 +153,12 @@ export const UserMapsSection: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2 ml-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:space-x-2 sm:ml-4 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewMap(map.slug, map.share_token)}
-                      className="flex items-center space-x-1"
+                      className="flex items-center space-x-1 w-full sm:w-auto"
                     >
                       <ExternalLink className="h-3 w-3" />
                       <span>Ver</span>
@@ -168,7 +168,7 @@ export const UserMapsSection: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopyLink(map.slug, map.share_token, map.visibility)}
-                      className="flex items-center space-x-1"
+                      className="flex items-center space-x-1 w-full sm:w-auto"
                     >
                       <Copy className="h-3 w-3" />
                       <span>Copiar</span>

@@ -76,30 +76,30 @@ export function NavigationSidebar({
   ];
 
   return (
-    <div className="w-80 bg-background/95 backdrop-blur-sm border-r border-border shadow-lg">
+    <div className="w-full lg:w-80 bg-background/95 backdrop-blur-sm border-r border-border shadow-lg">
       <ScrollArea className="h-full">
-        <div className="p-4 space-y-6">
+        <div className="p-2 lg:p-4 space-y-4 lg:space-y-6">
           {/* Main Navigation */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
-              <LayoutDashboard size={16} className="mr-2" />
-              Navegação Principal
+            <h3 className="text-xs lg:text-sm font-semibold text-muted-foreground mb-2 lg:mb-3 flex items-center">
+              <LayoutDashboard size={14} className="mr-2" />
+              <span className="hidden lg:inline">Navegação Principal</span>
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-1 lg:space-y-2">
               {mainTabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? 'default' : 'ghost'}
-                    className="w-full justify-start text-left p-3 h-auto"
+                    className="w-full justify-start text-left p-2 lg:p-3 h-auto"
                     onClick={() => onTabChange(tab.id)}
                   >
-                    <div className="flex items-start space-x-3">
-                      <Icon size={18} className="mt-0.5 shrink-0" />
-                      <div>
-                        <div className="font-medium">{tab.label}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                    <div className="flex items-start space-x-2 lg:space-x-3">
+                      <Icon size={16} className="mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-xs lg:text-sm truncate">{tab.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1 hidden lg:block">
                           {tab.description}
                         </div>
                       </div>
