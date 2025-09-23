@@ -330,5 +330,8 @@ export {
   MASTERS 
 };
 
+// Backward compatibility export
+export const stripAccentsKeepCedilla = normalizeNameKeepingCedilla;
+
 // Export types
 export type { Options, HarmonicsTable, ConjugalTable, ColorsTable, AngelsTable };
