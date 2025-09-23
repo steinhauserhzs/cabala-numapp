@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { NumerologyForm } from '@/components/NumerologyForm';
-import { NumerologyResult } from '@/components/NumerologyResult';
+import { InteractiveNumerologyDashboard } from '@/components/InteractiveNumerologyDashboard';
 import { gerarMapaNumerologico, type MapaNumerologico } from '@/utils/numerology';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -68,7 +68,7 @@ const MapaPessoal = () => {
           </div>
         </div>
         
-        <NumerologyResult 
+        <InteractiveNumerologyDashboard 
           mapa={numerologyMap}
           name={userName}
           birthDate={userBirthDate}
