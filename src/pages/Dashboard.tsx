@@ -47,9 +47,10 @@ const Dashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Olá, {user?.user_metadata?.full_name || user?.email}
-            </span>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">Olá,</div>
+              <div className="text-sm font-medium">{user?.user_metadata?.full_name || user?.email}</div>
+            </div>
             <Button variant="outline" onClick={signOut}>
               Sair
             </Button>
