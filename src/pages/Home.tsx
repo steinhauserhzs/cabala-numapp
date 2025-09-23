@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import ClientPortalSection from '@/components/ClientPortalSection';
 import { 
   Sparkles, 
   Heart, 
@@ -150,6 +151,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Client Portal Section */}
+      <ClientPortalSection />
 
       {/* Features Section */}
       <section className="container mx-auto px-4 py-16">

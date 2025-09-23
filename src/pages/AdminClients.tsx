@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import AdminHeader from '@/components/AdminHeader';
 import { 
   Dialog, 
   DialogContent, 
@@ -88,19 +89,14 @@ const AdminClients = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AdminHeader 
+        title="Gestão de Clientes" 
+        description="Gerencie seus clientes e mapas numerológicos"
+      />
+      
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center">
-              <Users className="h-8 w-8 mr-3" />
-              Gestão de Clientes
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie seus clientes e mapas numerológicos
-            </p>
-          </div>
-          
+        {/* Header Actions */}
+        <div className="flex justify-end mb-8">
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button>
