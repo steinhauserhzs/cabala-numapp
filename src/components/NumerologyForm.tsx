@@ -7,9 +7,10 @@ import { Sparkles, Stars, Moon } from 'lucide-react';
 
 interface NumerologyFormProps {
   onSubmit: (name: string, birthDate: Date) => void;
+  isLoading?: boolean;
 }
 
-export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
+export function NumerologyForm({ onSubmit, isLoading = false }: NumerologyFormProps) {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [errors, setErrors] = useState<{ name?: string; birthDate?: string }>({});
@@ -128,9 +129,10 @@ export function NumerologyForm({ onSubmit }: NumerologyFormProps) {
                 variant="mystical" 
                 size="lg" 
                 className="w-full mt-8 text-lg font-semibold py-6"
+                disabled={isLoading}
               >
                 <Sparkles className="mr-2 h-5 w-5" />
-                Gerar Mapa Numerológico
+                {isLoading ? "🔮 Gerando mapa..." : "Gerar Mapa Numerológico"}
               </Button>
             </form>
           </CardContent>

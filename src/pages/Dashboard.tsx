@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { AreasAtuacaoModal } from '@/components/AreasAtuacaoModal';
+import { UserMapsSection } from '@/components/dashboard/UserMapsSection';
 import { 
   Sparkles, 
   Heart, 
@@ -148,6 +149,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Mapas Criados Section */}
+        <div className="mt-8">
+          <UserMapsSection />
         </div>
         
         <AreasAtuacaoModal 
