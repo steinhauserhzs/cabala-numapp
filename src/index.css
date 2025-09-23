@@ -25,10 +25,8 @@ svg {
   transform: initial !important;
 }
 
-/* Allow static gradients and visual elements */
-[class*="gradient"], [class*="bg-gradient"] {
-  background: initial !important;
-}
+/* Preserve gradients and visual elements - Remove the destructive rule */
+/* Gradients should work normally */
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.

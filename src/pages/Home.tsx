@@ -72,15 +72,15 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-mystical">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/30">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-full bg-gradient-cosmic">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-mystical">
+              <Sparkles className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-cosmic bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-primary-glow to-primary bg-clip-text text-transparent">
               Numapp
             </h1>
           </div>
@@ -88,19 +88,19 @@ const Home = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <Link to="/dashboard">
-                <Button variant="outline" className="border-primary/20">
+                <Button variant="outline" className="border-primary/30 hover:bg-primary/5">
                   Dashboard
                 </Button>
               </Link>
             ) : (
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <Link to="/auth">
-                  <Button variant="outline" className="border-primary/20">
+                  <Button variant="outline" className="border-primary/30 hover:bg-primary/5">
                     Entrar
                   </Button>
                 </Link>
                 <Link to="/auth">
-                  <Button className="bg-gradient-cosmic hover:shadow-glow">
+                  <Button className="bg-gradient-to-r from-primary to-primary-glow shadow-mystical hover:shadow-glow">
                     Cadastrar
                   </Button>
                 </Link>
@@ -112,19 +112,19 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <div className="inline-flex items-center space-x-2 bg-secondary/50 px-4 py-2 rounded-full mb-6">
-              <Star className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Numerologia Cabalística</span>
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-12">
+            <div className="inline-flex items-center space-x-3 bg-gradient-to-r from-secondary to-accent px-6 py-3 rounded-full mb-8 shadow-mystical border border-primary/20">
+              <Star className="h-5 w-5 text-primary" />
+              <span className="text-base font-semibold text-primary">Numerologia Cabalística Autêntica</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              <span className="bg-gradient-cosmic bg-clip-text text-transparent">
+            <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-tight">
+              <span className="bg-gradient-to-r from-primary via-primary-glow to-primary bg-clip-text text-transparent">
                 Descubra os
               </span>
               <br />
-              <span className="text-foreground">
+              <span className="text-foreground drop-shadow-sm">
                 Segredos dos Números
               </span>
             </h1>
@@ -135,16 +135,16 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">
             <Link to="/mapa-pessoal">
-              <Button size="lg" className="bg-gradient-cosmic hover:shadow-glow text-lg px-8 py-6">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Criar Meu Mapa
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="bg-gradient-to-r from-primary to-primary-glow shadow-mystical hover:shadow-glow text-xl px-12 py-8 rounded-xl">
+                <Sparkles className="mr-3 h-6 w-6" />
+                Criar Meu Mapa Agora
+                <ArrowRight className="ml-3 h-6 w-6" />
               </Button>
             </Link>
             <Link to="#calculators">
-              <Button variant="outline" size="lg" className="border-primary/20 text-lg px-8 py-6">
+              <Button variant="outline" size="lg" className="border-primary/30 hover:bg-primary/5 text-xl px-12 py-8 rounded-xl">
                 Ver Todas as Análises
               </Button>
             </Link>
@@ -156,18 +156,22 @@ const Home = () => {
       <ClientPortalSection />
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4 text-foreground">Por que Escolher o Numapp?</h2>
+          <p className="text-xl text-muted-foreground">Tecnologia e tradição em perfeita harmonia</p>
+        </div>
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center shadow-card border-primary/10 hover:shadow-mystical transition-all duration-300">
-              <CardHeader>
-                <div className="mx-auto p-3 rounded-full bg-gradient-celestial w-fit">
-                  <feature.icon className="h-8 w-8 text-primary" />
+            <Card key={index} className="text-center shadow-mystical border-primary/20 hover:shadow-glow bg-gradient-to-br from-card to-secondary/20">
+              <CardHeader className="pb-4">
+                <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-glow w-fit shadow-mystical">
+                  <feature.icon className="h-10 w-10 text-primary-foreground" />
                 </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardTitle className="text-2xl text-foreground mt-4">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-base">
+                <CardDescription className="text-lg text-muted-foreground">
                   {feature.description}
                 </CardDescription>
               </CardContent>
@@ -189,20 +193,20 @@ const Home = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
           {calculators.map((calc, index) => (
             <Link key={index} to={calc.path}>
-              <Card className="group cursor-pointer shadow-card hover:shadow-mystical transition-all duration-300 border-primary/10 hover:border-primary/20">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-gradient-to-r ${calc.color}`}>
-                      <calc.icon className="h-6 w-6 text-white" />
+              <Card className="group cursor-pointer shadow-mystical hover:shadow-glow border-primary/20 hover:border-primary/40 bg-gradient-to-br from-card to-secondary/10">
+                <CardHeader className="p-8">
+                  <div className="flex items-center space-x-6">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${calc.color} shadow-mystical`}>
+                      <calc.icon className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="group-hover:text-primary transition-colors">
+                      <CardTitle className="text-2xl group-hover:text-primary">
                         {calc.title}
                       </CardTitle>
-                      <CardDescription>{calc.description}</CardDescription>
+                      <CardDescription className="text-lg mt-2">{calc.description}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -212,17 +216,19 @@ const Home = () => {
         </div>
 
         {/* Additional Calculators */}
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-4 gap-6">
           {[
-            { title: "Análise de Telefone", icon: Phone, path: "/analise-telefone" },
-            { title: "Análise de Endereço", icon: HomeIcon, path: "/analise-endereco" },
-            { title: "Análise de Placa", icon: Car, path: "/analise-placa" },
-            { title: "Correção de Assinatura", icon: PenTool, path: "/correcao-assinatura" }
+            { title: "Análise de Telefone", icon: Phone, path: "/analise-telefone", color: "from-purple-400 to-violet-400" },
+            { title: "Análise de Endereço", icon: HomeIcon, path: "/analise-endereco", color: "from-orange-400 to-amber-400" },
+            { title: "Análise de Placa", icon: Car, path: "/analise-placa", color: "from-indigo-400 to-blue-400" },
+            { title: "Correção de Assinatura", icon: PenTool, path: "/correcao-assinatura", color: "from-teal-400 to-cyan-400" }
           ].map((calc, index) => (
             <Link key={index} to={calc.path}>
-              <Card className="group cursor-pointer text-center p-6 shadow-card hover:shadow-mystical transition-all duration-300 border-primary/10 hover:border-primary/20">
-                <calc.icon className="h-8 w-8 mx-auto mb-3 text-primary group-hover:scale-110 transition-transform" />
-                <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">
+              <Card className="group cursor-pointer text-center p-8 shadow-mystical hover:shadow-glow border-primary/20 hover:border-primary/40 bg-gradient-to-br from-card to-secondary/10">
+                <div className={`p-4 rounded-2xl bg-gradient-to-r ${calc.color} w-fit mx-auto mb-4 shadow-mystical`}>
+                  <calc.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="font-semibold text-lg group-hover:text-primary">
                   {calc.title}
                 </h3>
               </Card>
@@ -233,19 +239,21 @@ const Home = () => {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20">
-        <Card className="bg-gradient-cosmic text-primary-foreground shadow-glow border-0">
-          <CardContent className="text-center py-16">
-            <h2 className="text-3xl font-bold mb-4">
+        <Card className="bg-gradient-to-br from-primary via-primary-glow to-primary text-primary-foreground shadow-glow border-0 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-white/10"></div>
+          <CardContent className="text-center py-20 relative z-10">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Comece Sua Jornada de Autoconhecimento
             </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
+            <p className="text-xl mb-10 opacity-95 max-w-3xl mx-auto leading-relaxed">
               Milhares de pessoas já descobriram seu propósito através dos nossos mapas numerológicos.
               Que tal ser a próxima?
             </p>
             <Link to="/mapa-pessoal">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
-                <Sparkles className="mr-2 h-5 w-5" />
+              <Button size="lg" variant="secondary" className="text-xl px-12 py-8 rounded-xl shadow-mystical">
+                <Sparkles className="mr-3 h-6 w-6" />
                 Criar Meu Mapa Agora
+                <ArrowRight className="ml-3 h-6 w-6" />
               </Button>
             </Link>
           </CardContent>
@@ -253,17 +261,17 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-12 text-center border-t border-primary/10">
-        <div className="flex items-center justify-center space-x-2 mb-4">
-          <div className="p-2 rounded-full bg-gradient-cosmic">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
+      <footer className="container mx-auto px-4 py-16 text-center border-t border-primary/20 bg-gradient-to-r from-secondary/30 to-accent/30">
+        <div className="flex items-center justify-center space-x-3 mb-6">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-primary-glow shadow-mystical">
+            <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-bold bg-gradient-cosmic bg-clip-text text-transparent">
+          <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
             Numapp
           </span>
         </div>
-        <p className="text-sm text-muted-foreground">
-          © 2024 Numapp. Todos os direitos reservados. • Numerologia Cabalística
+        <p className="text-base text-muted-foreground">
+          © 2024 Numapp. Todos os direitos reservados. • Numerologia Cabalística Autêntica
         </p>
       </footer>
     </div>
