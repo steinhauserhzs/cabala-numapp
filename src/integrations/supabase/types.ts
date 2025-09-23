@@ -69,32 +69,44 @@ export type Database = {
         Row: {
           birth_date: string | null
           created_at: string
+          expires_at: string | null
           id: string
           map_data: Json
           map_type: string
           name: string
+          share_token: string | null
+          slug: string | null
           updated_at: string
           user_id: string
+          visibility: string | null
         }
         Insert: {
           birth_date?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           map_data: Json
           map_type?: string
           name: string
+          share_token?: string | null
+          slug?: string | null
           updated_at?: string
           user_id: string
+          visibility?: string | null
         }
         Update: {
           birth_date?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           map_data?: Json
           map_type?: string
           name?: string
+          share_token?: string | null
+          slug?: string | null
           updated_at?: string
           user_id?: string
+          visibility?: string | null
         }
         Relationships: []
       }
@@ -127,7 +139,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_unique_slug: {
+        Args: { base_slug: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
