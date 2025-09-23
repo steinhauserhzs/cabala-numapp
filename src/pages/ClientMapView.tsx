@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useClientMapById } from '@/hooks/useClientPortal';
 import { InteractiveNumerologyDashboard } from '@/components/InteractiveNumerologyDashboard';
+import { MapaNumerologico } from '@/utils/numerology';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
@@ -113,7 +114,7 @@ const ClientMapView = () => {
 
       {/* Map Content */}
       <InteractiveNumerologyDashboard
-        mapa={mapData.map_data}
+        mapa={mapData.map_data as unknown as MapaNumerologico}
         name={mapData.clients?.full_name || ''}
         birthDate={birthDate}
         onBack={handleBack}
