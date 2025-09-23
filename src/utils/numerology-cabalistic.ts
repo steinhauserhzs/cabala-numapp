@@ -33,34 +33,87 @@ type Options = {
   currentDate?: Date; // para Ano/Mês/Dia pessoal; default = hoje
 };
 
-const MAP: Record<string, number> = {
-  A:1,I:1,J:1,Q:1,Y:1,
-  B:2,K:2,R:2,
-  C:3,G:3,L:3,S:3,
-  D:4,M:4,T:4,
-  E:5,H:5,N:5,
-  U:6,V:6,W:6,X:6, "Ç":6,
-  O:7,Z:7,
-  F:8,P:8,
+// Letras mapeadas para valores 1-8 com Ç=6 e Y como vogal
+const LETTER_MAP: Record<string, number> = {
+  A:1, I:1, Q:1, J:1, Y:1,
+  B:2, K:2, R:2,
+  C:3, G:3, L:3, S:3,
+  D:4, M:4, T:4,
+  E:5, H:5, N:5,
+  U:6, V:6, W:6, X:6, 'Ç':6,
+  O:7, Z:7,
+  F:8, P:8
 };
 
-const VOWELS = new Set(["A","E","I","O","U","Y"]);
-const MASTERS = new Set([11,22,33]);
+// Vogais para cálculo da Motivação (Y é vogal)
+const VOWELS = new Set(['A','E','I','O','U','Y']);
+
+// Consoantes (inclui Ç) para cálculo da Impressão
+const CONSONANTS = new Set(
+  Object.keys(LETTER_MAP).filter(l => l !== 'Ç' && !VOWELS.has(l)).concat('Ç')
+);
+
+// Números mestres que não devem ser reduzidos
+const MASTERS = new Set([11, 22, 33]);
 
 // ---- util ----
-function stripAccentsKeepCedilla(input: string): string {
-  const sentinel = "§";
-  let s = input.replace(/ç/gi, sentinel);
-  // remove diacríticos
-  s = s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  s = s.toUpperCase().replace(new RegExp(sentinel, "g"), "Ç");
-  // mantém apenas A-Z, Ç e espaço
-  s = s.replace(/[^A-ZÇ ]+/g, "");
+/**
+ * Normaliza nome para cálculo:
+ * - preserva cedilha (Ç)
+ * - remove TODOS os diacríticos
+ * - upper-case
+ * - mantém apenas [A-Z, Ç] e espaços simples
+ */
+function normalizeNameKeepingCedilla(input: string): string {
+  if (!input) return '';
+
+  // 1) Marca cedilha antes de decompor
+  // Usamos dois placeholders distintos para diferenciar maiúscula e minúscula,
+  // mas no final vamos para UPPER de qualquer forma.
+  let s = input.replace(/ç/g, '§').replace(/Ç/g, '¤');
+
+  // 2) Remove diacríticos (NFD → remove \p{M})
+  s = s.normalize('NFD').replace(/\p{M}+/gu, '');
+
+  // 3) Restaura cedilha
+  s = s.replace(/§/g, 'ç').replace(/¤/g, 'Ç');
+
+  // 4) Uppercase
+  s = s.toUpperCase();
+
+  // 5) Mantém apenas A-Z, Ç e espaços; colapsa espaços
+  s = s.replace(/[^A-ZÇ\s]+/g, ' ').replace(/\s+/g, ' ').trim();
+
   return s;
 }
 
+/** Soma valores de letras válidas segundo a tabela */
+function sumByTable(s: string): number {
+  let sum = 0;
+  for (const ch of s) {
+    const v = LETTER_MAP[ch as keyof typeof LETTER_MAP];
+    if (v) sum += v;
+  }
+  return sum;
+}
+
+/** Divide string em apenas letras (sem espaços) para somas globais */
+function onlyLetters(s: string): string {
+  return s.replace(/\s+/g, '');
+}
+
+/** Vogais para Motivação */
+function onlyVowels(s: string): string {
+  return [...s].filter(ch => VOWELS.has(ch)).join('');
+}
+
+/** Consoantes (inclui Ç) para Impressão */
+function onlyConsonants(s: string): string {
+  return [...s].filter(ch => CONSONANTS.has(ch)).join('');
+}
+
 function letterValue(ch: string): number {
-  return MAP[ch] ?? 0;
+  return LETTER_MAP[ch] ?? 0;
 }
 
 function reduceKeepMasters(n: number): number {
@@ -75,8 +128,9 @@ function reduceKeepMasters(n: number): number {
 }
 
 function sumByPredicate(name: string, pred: (ch: string)=>boolean) {
+  const cleanName = normalizeNameKeepingCedilla(name);
   let total = 0;
-  for (const ch of name) {
+  for (const ch of cleanName) {
     if ((ch >= "A" && ch <= "Z") || ch === "Ç") {
       if (pred(ch)) total += letterValue(ch);
     }
@@ -97,7 +151,7 @@ function onlyDigits(n: number) {
 export function computeFullMap(fullName: string, birth: string, options: Options = {}) {
   // birth "DD/MM/AAAA"
   const [DD,MM,YYYY] = birth.split("/").map(Number);
-  const normalized = stripAccentsKeepCedilla(fullName);
+  const normalized = normalizeNameKeepingCedilla(fullName);
 
   // vogais/consoantes
   const isVowel = (ch: string)=> VOWELS.has(ch);
@@ -263,7 +317,18 @@ function arcanoNameByNumber(n: number): string {
 }
 
 // Export additional utilities for compatibility
-export { stripAccentsKeepCedilla, letterValue, reduceKeepMasters, VOWELS, MASTERS };
+export { 
+  normalizeNameKeepingCedilla, 
+  letterValue, 
+  reduceKeepMasters, 
+  sumByTable,
+  onlyLetters,
+  onlyVowels,
+  onlyConsonants,
+  VOWELS, 
+  CONSONANTS,
+  MASTERS 
+};
 
 // Export types
 export type { Options, HarmonicsTable, ConjugalTable, ColorsTable, AngelsTable };

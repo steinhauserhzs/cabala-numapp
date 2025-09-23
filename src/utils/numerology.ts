@@ -1,7 +1,7 @@
 // Numerology calculation utilities - NEW DETERMINISTIC CABALISTIC ENGINE
 import { 
   computeFullMap,
-  stripAccentsKeepCedilla,
+  normalizeNameKeepingCedilla,
   letterValue as cabalisticLetterValue,
   reduceKeepMasters,
   type Options,
@@ -13,7 +13,7 @@ import {
 import { ANGELS_BASE, HARMONICS_BASE, COLORS_BASE, CONJUGAL_BASE } from '../data/angels-base';
 
 // New deterministic engine - single source of truth
-export const clean = stripAccentsKeepCedilla;
+export const clean = normalizeNameKeepingCedilla;
 export const letterValue = cabalisticLetterValue;
 export { reduceKeepMasters };
 
