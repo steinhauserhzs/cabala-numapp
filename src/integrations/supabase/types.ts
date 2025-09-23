@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_maps: {
+        Row: {
+          birth_date: string | null
+          client_id: string
+          created_at: string
+          id: string
+          map_data: Json
+          map_type: string
+          professional_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          map_data: Json
+          map_type?: string
+          professional_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          map_data?: Json
+          map_type?: string
+          professional_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_maps_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          last_access: string | null
+          phone: string | null
+          professional_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          last_access?: string | null
+          phone?: string | null
+          professional_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          last_access?: string | null
+          phone?: string | null
+          professional_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conteudos_numerologia: {
         Row: {
           conteudo: Json
@@ -139,6 +219,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_client_slug: {
+        Args: { client_name: string }
+        Returns: string
+      }
       generate_unique_slug: {
         Args: { base_slug: string }
         Returns: string
