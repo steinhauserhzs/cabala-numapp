@@ -54,7 +54,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ title, description }) => {
   
   return (
     <header className="bg-background border-b border-border">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-4 border-b border-border">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
           {/* Logo e Navegação Principal */}
