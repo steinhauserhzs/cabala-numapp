@@ -222,4 +222,11 @@ const topicAliases: Record<string, string[]> = {
   'destino': ['numero_destino', 'número_destino'],
   'missao': ['numero_missao', 'número_missão'],
   'anjos': ['anjo_guardiao', 'anjo_da_guarda', 'guardian_angel'],
+  'ciclos_vida': ['ciclo_vida_1', 'ciclo_vida_2', 'ciclo_vida_3', 'ciclos_de_vida'],
+  'desafios': ['desafio_1', 'desafio_2', 'desafio_3', 'desafio_4'],
+  'momentos_decisivos': ['momento_decisivo_1', 'momento_decisivo_2', 'momento_decisivo_3', 'momento_decisivo_4'],
+  'tempos_pessoais': ['tempo_pessoal_atual', 'ano_pessoal', 'mes_pessoal'],
+  'cores_pessoais': ['cor_pessoal', 'cores_harmoniosas'],
+  'pedras_pessoais': ['pedra_pessoal', 'cristais_pessoais'],
+  'numeros_harmonicos': ['numero_harmonico', 'harmonia_conjugal'],
 };
