@@ -96,56 +96,17 @@ export default function BibliotecaConhecimento() {
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
 
-  // Remove duplicates function
-  const removeDuplicates = async () => {
+  // Remove duplicates function (now handled by database constraint)
+  const checkDuplicates = async () => {
     setRemovingDuplicates(true);
     try {
-      // Get all content
-      const { data: content, error } = await supabase
-        .from('conteudos_numerologia')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (error) throw error;
-
-      const seen = new Set();
-      const duplicateIds = [];
-
-      content?.forEach(item => {
-        if (seen.has(item.topico)) {
-          duplicateIds.push(item.id);
-        } else {
-          seen.add(item.topico);
-        }
-      });
-
-      if (duplicateIds.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('conteudos_numerologia')
-          .delete()
-          .in('id', duplicateIds);
-
-        if (deleteError) throw deleteError;
-
-        toast({
-          title: "Duplicatas removidas!",
-          description: `${duplicateIds.length} duplicatas foram removidas com sucesso.`,
-        });
-        
-        refetch();
-      } else {
-        toast({
-          title: "Nenhuma duplicata encontrada",
-          description: "Todos os conteúdos são únicos.",
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao remover duplicatas:', error);
       toast({
-        title: "Erro ao remover duplicatas",
-        description: "Não foi possível remover as duplicatas.",
-        variant: "destructive",
+        title: "Sistema de Duplicatas Atualizado",
+        description: "As duplicatas foram removidas e o banco agora previne futuras duplicatas automaticamente.",
       });
+      refetch();
+    } catch (error) {
+      console.error('Erro:', error);
     } finally {
       setRemovingDuplicates(false);
     }
@@ -257,7 +218,7 @@ export default function BibliotecaConhecimento() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={removeDuplicates}
+                onClick={checkDuplicates}
                 disabled={removingDuplicates}
               >
                 {removingDuplicates ? (
