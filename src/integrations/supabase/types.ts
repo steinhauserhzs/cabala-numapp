@@ -214,6 +214,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -226,6 +250,10 @@ export type Database = {
       generate_unique_slug: {
         Args: { base_slug: string }
         Returns: string
+      }
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
       }
     }
     Enums: {

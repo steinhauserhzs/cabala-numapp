@@ -72,3 +72,34 @@ export const useAuth = () => {
     signOut,
   };
 };
+
+export const useUserRole = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const checkRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        if (error) throw error;
+        setIsAdmin(data || false);
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkRole();
+  }, [user]);
+
+  return { isAdmin, loading };
+};

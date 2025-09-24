@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, BookOpen, Search, Edit, Save, X, Eye, History } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, useUserRole } from '@/hooks/useAuth';
 import { useNumerologyContent } from '@/hooks/useNumerologyContent';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -54,6 +54,7 @@ const categories: ContentCategory[] = [
 
 export default function BibliotecaConhecimento() {
   const { user } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const { data: allContent, isLoading, refetch } = useNumerologyContent();
   

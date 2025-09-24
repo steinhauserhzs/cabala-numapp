@@ -216,12 +216,13 @@ const Home = () => {
         </div>
 
         {/* Additional Calculators */}
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-5 gap-6">
           {[
             { title: "Análise de Telefone", icon: Phone, path: "/analise-telefone", color: "from-purple-400 to-violet-400" },
             { title: "Análise de Endereço", icon: HomeIcon, path: "/analise-endereco", color: "from-orange-400 to-amber-400" },
             { title: "Análise de Placa", icon: Car, path: "/analise-placa", color: "from-indigo-400 to-blue-400" },
-            { title: "Correção de Assinatura", icon: PenTool, path: "/correcao-assinatura", color: "from-teal-400 to-cyan-400" }
+            { title: "Correção de Assinatura", icon: PenTool, path: "/correcao-assinatura", color: "from-teal-400 to-cyan-400" },
+            { title: "Áreas de Atuação", icon: Building, path: "/areas-atuacao", color: "from-emerald-400 to-green-400" }
           ].map((calc, index) => (
             <Link key={index} to={calc.path}>
               <Card className="group cursor-pointer text-center p-8 shadow-mystical hover:shadow-glow border-primary/20 hover:border-primary/40 bg-gradient-to-br from-card to-secondary/10">
