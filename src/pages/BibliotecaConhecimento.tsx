@@ -12,6 +12,7 @@ import { ArrowLeft, BookOpen, Search, Edit, Save, X, Eye, History } from 'lucide
 import { useAuth, useUserRole } from '@/hooks/useAuth';
 import { useNumerologyContent } from '@/hooks/useNumerologyContent';
 import { supabase } from '@/integrations/supabase/client';
+import { SimplifiedContentEditor } from '@/components/SimplifiedContentEditor';
 
 interface ContentCategory {
   name: string;
@@ -62,9 +63,6 @@ export default function BibliotecaConhecimento() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState<string>('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
 
   // Filtrar conteúdo por categoria e busca
   const filteredContent = allContent?.filter(item => {
@@ -97,49 +95,8 @@ export default function BibliotecaConhecimento() {
     ? allContent?.find(item => item.topico === `${selectedTopic}_${selectedNumber}`)
     : null;
 
-  const handleEdit = () => {
-    if (currentContent) {
-      setEditingContent(typeof currentContent.conteudo === 'string' 
-        ? currentContent.conteudo 
-        : JSON.stringify(currentContent.conteudo, null, 2)
-      );
-      setIsEditing(true);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!currentContent || !user) return;
-
-    try {
-      const { error } = await supabase
-        .from('conteudos_numerologia')
-        .update({ 
-          conteudo: editingContent 
-        })
-        .eq('id', currentContent.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Conteúdo salvo com sucesso!",
-        description: "As alterações foram aplicadas permanentemente.",
-      });
-
-      setIsEditing(false);
-      refetch();
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setEditingContent('');
+  const handleContentSave = () => {
+    refetch();
   };
 
   const getTopicNumbers = (topicBase: string) => {
@@ -307,106 +264,14 @@ export default function BibliotecaConhecimento() {
             </Card>
           </div>
 
-          {/* Editor de Conteúdo */}
+          {/* Editor de Conteúdo Simplificado */}
           <div className="lg:col-span-2">
             <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-sm">
-                      {currentContent ? `${selectedTopic}_${selectedNumber}` : 'Selecione um conteúdo'}
-                    </CardTitle>
-                    <CardDescription>
-                      {currentContent ? 'Edite o conteúdo abaixo' : 'Escolha um tópico na lista ao lado'}
-                    </CardDescription>
-                  </div>
-                  
-                  {currentContent && (
-                    <div className="flex space-x-2">
-                      {!isEditing && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setIsPreview(!isPreview)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            {isPreview ? 'Fonte' : 'Preview'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleEdit}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </Button>
-                        </>
-                      )}
-                      
-                      {isEditing && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCancel}
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Cancelar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleSave}
-                          >
-                            <Save className="h-4 w-4 mr-2" />
-                            Salvar
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                {currentContent ? (
-                  <div className="h-[500px]">
-                    {isEditing ? (
-                      <Textarea
-                        value={editingContent}
-                        onChange={(e) => setEditingContent(e.target.value)}
-                        className="h-full resize-none font-mono text-sm"
-                        placeholder="Digite o conteúdo aqui..."
-                      />
-                    ) : (
-                      <ScrollArea className="h-full">
-                        <div className="prose max-w-none">
-                          {isPreview ? (
-                            <div className="whitespace-pre-wrap">
-                              {typeof currentContent.conteudo === 'string' 
-                                ? currentContent.conteudo 
-                                : JSON.stringify(currentContent.conteudo, null, 2)
-                              }
-                            </div>
-                          ) : (
-                            <pre className="text-sm bg-muted/50 p-4 rounded-lg overflow-auto">
-                              {typeof currentContent.conteudo === 'string' 
-                                ? currentContent.conteudo 
-                                : JSON.stringify(currentContent.conteudo, null, 2)
-                              }
-                            </pre>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    )}
-                  </div>
-                ) : (
-                  <div className="h-[500px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Selecione um conteúdo para visualizar e editar</p>
-                    </div>
-                  </div>
-                )}
+              <CardContent className="p-6">
+                <SimplifiedContentEditor 
+                  currentContent={currentContent}
+                  onSave={handleContentSave}
+                />
               </CardContent>
             </Card>
           </div>
