@@ -51,28 +51,13 @@ export function OnePageNumberCard({
   return (
     <Card className={`${bgColor} ${borderColor} border-2 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]`}>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg bg-background/50 ${color}`}>
-              <Icon size={20} />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-              <p className="text-sm text-muted-foreground">{description}</p>
-            </div>
+        <div className="flex items-center space-x-3">
+          <div className={`p-2 rounded-lg bg-background/50 ${color}`}>
+            <Icon size={20} />
           </div>
-          
-          <div className="text-right">
-            <div className={`text-3xl font-bold ${color} ${
-              isMasterNumber(value) ? 'bg-gradient-cosmic bg-clip-text text-transparent' : ''
-            }`}>
-              {formatValue(value)}
-            </div>
-            {isMasterNumber(value) && (
-              <Badge variant="secondary" className="text-xs mt-1">
-                Mestre
-              </Badge>
-            )}
+          <div>
+            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <p className="text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
       </CardHeader>
@@ -96,11 +81,26 @@ export function OnePageNumberCard({
                 }}
               />
             </div>
-          ) : (
+           ) : (
             <p className="text-sm text-muted-foreground italic">
               Interpretação não disponível para este número.
             </p>
-          )}
+           )}
+           
+           <div className="flex items-center justify-center pt-3 mt-3 border-t border-border">
+             <div className="text-center">
+               <div className={`text-3xl font-bold ${color} ${
+                 isMasterNumber(value) ? 'bg-gradient-cosmic bg-clip-text text-transparent' : ''
+               }`}>
+                 {formatValue(value)}
+               </div>
+               {isMasterNumber(value) && (
+                 <Badge variant="secondary" className="text-xs mt-1">
+                   Mestre
+                 </Badge>
+               )}
+             </div>
+           </div>
         </div>
       </CardContent>
     </Card>
