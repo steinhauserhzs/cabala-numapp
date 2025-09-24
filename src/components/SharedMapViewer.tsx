@@ -1,5 +1,5 @@
 import React from 'react';
-import { InteractiveNumerologyDashboard } from '@/components/InteractiveNumerologyDashboard';
+import { OnePageNumerologyReport } from '@/components/OnePageNumerologyReport';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Share2, Copy, CheckCircle, Download } from 'lucide-react';
@@ -115,11 +115,12 @@ export const SharedMapViewer: React.FC<SharedMapViewerProps> = ({
         </div>
 
         {/* Map Content */}
-        <InteractiveNumerologyDashboard 
+        <OnePageNumerologyReport 
           mapa={mapa}
           name={name}
           birthDate={birthDate}
-          onBack={() => window.history.back()}
+          onGeneratePDF={() => {}}
+          onShare={handleCopyLink}
         />
       </div>
     );
@@ -141,12 +142,10 @@ export const SharedMapViewer: React.FC<SharedMapViewerProps> = ({
       </div>
 
       {/* Map Content */}
-      <InteractiveNumerologyDashboard 
+      <OnePageNumerologyReport 
         mapa={mapa}
         name={name}
         birthDate={birthDate}
-        onBack={() => {}}
-        
       />
     </div>
   );
