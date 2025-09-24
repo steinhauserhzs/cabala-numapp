@@ -370,7 +370,7 @@ export function OnePageNumerologyReport({
                 <div className="text-sm text-muted-foreground">Números Mestres</div>
               </div>
               <div className="p-4 bg-background/50 rounded-lg">
-                <div className="text-2xl font-bold text-secondary">
+                <div className="text-2xl font-bold text-foreground">
                   {coreNumbers.length}
                 </div>
                 <div className="text-sm text-muted-foreground">Aspectos Principais</div>
