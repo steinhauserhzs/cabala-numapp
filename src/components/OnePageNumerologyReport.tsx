@@ -51,24 +51,29 @@ export function OnePageNumerologyReport({
   const [pedrasPessoais, setPedrasPessoais] = useState<any>({});
 
   useEffect(() => {
-    // Calcular anjo da guarda
-    if (birthDate) {
-      calcularAnjoGuarda(birthDate).then(setAngelInfo);
-    }
+    const fetchAdditionalInfo = async () => {
+      // Calcular anjo da guarda
+      if (birthDate) {
+        const angel = await calcularAnjoGuarda(birthDate);
+        setAngelInfo(angel);
+      }
 
-    // Calcular cores e pedras pessoais
-    const numerosCore = {
-      motivacao: mapa.motivacao,
-      impressao: mapa.impressao,
-      expressao: mapa.expressao,
-      destino: mapa.destino
+      // Calcular cores e pedras pessoais (agora async)
+      const numerosCore = {
+        motivacao: mapa.motivacao,
+        impressao: mapa.impressao,
+        expressao: mapa.expressao,
+        destino: mapa.destino
+      };
+
+      const cores = await calcularCoresParaNumeros(numerosCore);
+      const pedras = await calcularPedrasParaNumeros(numerosCore);
+      
+      setCoresPessoais(cores);
+      setPedrasPessoais(pedras);
     };
 
-    const cores = calcularCoresParaNumeros(numerosCore);
-    const pedras = calcularPedrasParaNumeros(numerosCore);
-    
-    setCoresPessoais(cores);
-    setPedrasPessoais(pedras);
+    fetchAdditionalInfo();
   }, [mapa, birthDate]);
 
   const formatDate = (date: Date) => {
@@ -249,7 +254,7 @@ export function OnePageNumerologyReport({
       title: "1º Desafio",
       value: mapa.desafios?.primeiro || 0,
       description: "Primeiro terço da vida",
-      categoria: "desafios",
+      categoria: `desafios_${(mapa.desafios?.primeiro || 0).toString().padStart(2, '0')}`,
       icon: AlertTriangle,
       color: "text-orange-600"
     },
@@ -258,7 +263,7 @@ export function OnePageNumerologyReport({
       title: "2º Desafio",
       value: mapa.desafios?.segundo || 0,
       description: "Segundo terço da vida",
-      categoria: "desafios",
+      categoria: `desafios_${(mapa.desafios?.segundo || 0).toString().padStart(2, '0')}`,
       icon: Mountain,
       color: "text-red-600"
     },
@@ -267,7 +272,7 @@ export function OnePageNumerologyReport({
       title: "Desafio Principal",
       value: mapa.desafios?.principal || 0,
       description: "Desafio central da vida",
-      categoria: "desafios",
+      categoria: `desafios_${(mapa.desafios?.principal || 0).toString().padStart(2, '0')}`,
       icon: Shield,
       color: "text-red-700"
     }
@@ -279,7 +284,7 @@ export function OnePageNumerologyReport({
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos?.primeiro || 0,
       description: "Primeira realização importante",
-      categoria: "momentos_decisivos",
+      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.primeiro || 0).toString().padStart(2, '0')}`,
       icon: Star,
       color: "text-yellow-600"
     },
@@ -288,7 +293,7 @@ export function OnePageNumerologyReport({
       title: "2º Momento Decisivo",
       value: mapa.momentosDecisivos?.segundo || 0,
       description: "Segunda realização importante",
-      categoria: "momentos_decisivos",
+      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.segundo || 0).toString().padStart(2, '0')}`,
       icon: Star,
       color: "text-yellow-700"
     },
@@ -297,7 +302,7 @@ export function OnePageNumerologyReport({
       title: "3º Momento Decisivo", 
       value: mapa.momentosDecisivos?.terceiro || 0,
       description: "Terceira realização importante",
-      categoria: "momentos_decisivos",
+      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.terceiro || 0).toString().padStart(2, '0')}`,
       icon: Star,
       color: "text-amber-600"
     },
@@ -306,7 +311,7 @@ export function OnePageNumerologyReport({
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos?.quarto || 0,
       description: "Realização final",
-      categoria: "momentos_decisivos",
+      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.quarto || 0).toString().padStart(2, '0')}`,
       icon: Crown,
       color: "text-amber-700"
     }

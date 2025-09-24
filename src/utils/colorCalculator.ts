@@ -1,86 +1,101 @@
-// Calculadora de cores pessoais baseada nos números numerológicos
+import { supabase } from '@/integrations/supabase/client';
+
+// Interface para cores pessoais
 export interface CoresPessoais {
   principal: string;
   harmoniosas: string[];
   significado: string;
 }
 
-// Mapeamento de números para cores
-const CORES_NUMEROLOGICAS: Record<number, CoresPessoais> = {
-  1: {
-    principal: "Vermelho",
-    harmoniosas: ["Laranja", "Dourado", "Amarelo"],
-    significado: "Cor da liderança, energia e pioneirismo. Estimula a ação e a coragem."
-  },
-  2: {
-    principal: "Azul",
-    harmoniosas: ["Prateado", "Branco", "Rosa"],
-    significado: "Cor da cooperação, paz e intuição. Promove harmonia e diplomacia."
-  },
-  3: {
-    principal: "Amarelo",
-    harmoniosas: ["Laranja", "Verde-claro", "Dourado"],
-    significado: "Cor da criatividade, comunicação e alegria. Estimula a expressão artística."
-  },
-  4: {
-    principal: "Verde",
-    harmoniosas: ["Marrom", "Azul-escuro", "Cinza"],
-    significado: "Cor da estabilidade, trabalho e construção. Promove organização e disciplina."
-  },
-  5: {
-    principal: "Turquesa",
-    harmoniosas: ["Azul-claro", "Prata", "Lilás"],
-    significado: "Cor da liberdade, aventura e comunicação. Estimula mudanças e viagens."
-  },
-  6: {
-    principal: "Rosa",
-    harmoniosas: ["Verde-claro", "Azul-pastel", "Dourado"],
-    significado: "Cor do amor, família e responsabilidade. Promove cuidado e harmonia doméstica."
-  },
-  7: {
-    principal: "Violeta",
-    harmoniosas: ["Púrpura", "Prateado", "Branco"],
-    significado: "Cor da espiritualidade, mistério e análise. Estimula a introspecção e sabedoria."
-  },
-  8: {
-    principal: "Marrom",
-    harmoniosas: ["Dourado", "Preto", "Vermelho-escuro"],
-    significado: "Cor do sucesso material, autoridade e ambição. Promove realização e poder."
-  },
-  9: {
-    principal: "Dourado",
-    harmoniosas: ["Laranja", "Vermelho", "Amarelo"],
-    significado: "Cor da sabedoria universal, compaixão e liderança espiritual."
-  },
-  11: {
-    principal: "Prateado",
-    harmoniosas: ["Branco", "Azul-claro", "Violeta"],
-    significado: "Cor da intuição superior, inspiração e iluminação espiritual."
-  },
-  22: {
-    principal: "Coral",
-    harmoniosas: ["Dourado", "Verde", "Azul"],
-    significado: "Cor do construtor de sonhos, realizações grandiosas e visão global."
-  },
-  33: {
-    principal: "Cristal",
-    harmoniosas: ["Todas as cores", "Branco puro", "Dourado"],
-    significado: "Cor da mestria espiritual, cura universal e amor incondicional."
-  }
-};
+// Cache para evitar múltiplas consultas
+const coresCache = new Map<number, CoresPessoais>();
 
-export function calcularCoresPessoais(numero: number): CoresPessoais {
-  return CORES_NUMEROLOGICAS[numero] || CORES_NUMEROLOGICAS[1];
+export async function calcularCoresPessoais(numero: number): Promise<CoresPessoais | null> {
+  // Verificar cache primeiro
+  if (coresCache.has(numero)) {
+    return coresCache.get(numero)!;
+  }
+
+  try {
+    // Buscar cores favoráveis no Supabase
+    const topico = `cores-favoraveis_${numero.toString().padStart(2, '0')}`;
+    const { data, error } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .eq('topico', topico)
+      .maybeSingle();
+
+    if (error || !data?.conteudo) {
+      console.warn(`Não foi possível buscar cores para o número ${numero}:`, error);
+      return null;
+    }
+
+    const content = typeof data.conteudo === 'string' ? data.conteudo : JSON.stringify(data.conteudo);
+    
+    // Parse básico do conteúdo para extrair informações de cores
+    const coresPessoais: CoresPessoais = {
+      principal: extractMainColor(content) || "Não disponível",
+      harmoniosas: extractHarmoniousColors(content) || [],
+      significado: content.substring(0, 200) + "..." // Primeiros 200 caracteres como significado
+    };
+
+    // Armazenar no cache
+    coresCache.set(numero, coresPessoais);
+    
+    return coresPessoais;
+  } catch (error) {
+    console.error(`Erro ao buscar cores para o número ${numero}:`, error);
+    return null;
+  }
 }
 
-export function calcularCoresParaNumeros(numeros: Record<string, number>): Record<string, CoresPessoais> {
+export async function calcularCoresParaNumeros(numeros: Record<string, number>): Promise<Record<string, CoresPessoais>> {
   const result: Record<string, CoresPessoais> = {};
   
-  Object.entries(numeros).forEach(([chave, numero]) => {
+  // Buscar cores para cada número
+  const promises = Object.entries(numeros).map(async ([chave, numero]) => {
     if (numero && numero > 0) {
-      result[chave] = calcularCoresPessoais(numero);
+      const cores = await calcularCoresPessoais(numero);
+      if (cores) {
+        result[chave] = cores;
+      }
     }
   });
-  
+
+  await Promise.all(promises);
   return result;
+}
+
+// Função auxiliar para extrair cor principal do conteúdo
+function extractMainColor(content: string): string | null {
+  // Buscar padrões comuns de cores no texto
+  const colorPatterns = [
+    /cor principal[:\s]*([a-záêôõç\s-]+)/i,
+    /cor[:\s]*([a-záêôõç\s-]+)/i,
+    /(vermelho|azul|verde|amarelo|laranja|violeta|rosa|marrom|dourado|prateado|turquesa|coral|cristal)/i
+  ];
+
+  for (const pattern of colorPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+}
+
+// Função auxiliar para extrair cores harmoniosas do conteúdo
+function extractHarmoniousColors(content: string): string[] {
+  const colors: string[] = [];
+  const colorPattern = /(vermelho|azul|verde|amarelo|laranja|violeta|rosa|marrom|dourado|prateado|turquesa|coral|cristal|branco|preto|cinza|lilás|púrpura)/gi;
+  
+  const matches = content.match(colorPattern);
+  if (matches) {
+    // Remover duplicatas e limitar a 4 cores
+    const uniqueColors = [...new Set(matches.map(color => color.toLowerCase()))];
+    return uniqueColors.slice(0, 4);
+  }
+
+  return [];
 }
