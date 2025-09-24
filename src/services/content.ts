@@ -105,46 +105,73 @@ export async function fetchConteudo(topico: string): Promise<string> {
 }
 
 export async function getInterpretacao(topico: string, numero: number | string): Promise<string | null> {
-  const numeroStr = String(numero);
-  const cacheKey = `${topico}:${numeroStr}`;
+  // Criar chave de busca direta: topico_numero (ex: "motivacao_07")
+  const searchKey = `${topico}_${String(numero).padStart(2, '0')}`;
+  const cacheKey = `${topico}_${numero}`;
   
   if (interpretationCache.has(cacheKey)) {
     return interpretationCache.get(cacheKey)!;
   }
 
-  // Try original topic first
-  const raw = await fetchConteudo(topico);
-  if (raw.trim()) {
-    const result = parseContent(raw, numeroStr);
-    if (result) {
-      interpretationCache.set(cacheKey, result);
-      return result;
-    }
-  }
+  console.log(`🔍 Buscando interpretação direta para: ${searchKey}`);
+  
+  try {
+    // Buscar diretamente pela chave topico_numero
+    const { data, error } = await supabase
+      .from('conteudos_numerologia')
+      .select('conteudo')
+      .eq('topico', searchKey)
+      .maybeSingle();
 
-  // Try aliases
-  const aliases = topicAliases[topico] || [];
-  for (const alias of aliases) {
-    const aliasRaw = await fetchConteudo(alias);
-    if (aliasRaw.trim()) {
-      const result = parseContent(aliasRaw, numeroStr);
-      if (result) {
-        interpretationCache.set(cacheKey, result);
-        return result;
+    if (error) {
+      console.error(`Erro ao buscar ${searchKey}:`, error);
+    }
+
+    if (data?.conteudo) {
+      // Extrair o texto do conteúdo JSON
+      const interpretacao = extractText(data.conteudo);
+      if (interpretacao) {
+        interpretationCache.set(cacheKey, interpretacao);
+        console.log(`✅ Interpretação encontrada para: ${searchKey}`);
+        return interpretacao;
       }
     }
-  }
 
-  // Local fallback
-  const fallback = getLocalInterpretacao(topico, Number(numeroStr));
-  if (fallback) {
-    interpretationCache.set(cacheKey, fallback);
-    return fallback;
-  }
+    // Fallback: tentar aliases se não encontrou diretamente
+    const aliases = topicAliases[topico] || [];
+    for (const alias of aliases) {
+      const aliasKey = `${alias}_${String(numero).padStart(2, '0')}`;
+      const { data: aliasData } = await supabase
+        .from('conteudos_numerologia')
+        .select('conteudo')
+        .eq('topico', aliasKey)
+        .maybeSingle();
 
-  interpretationCache.set(cacheKey, null);
-  return null;
-}
+      if (aliasData?.conteudo) {
+        const interpretacao = extractText(aliasData.conteudo);
+        if (interpretacao) {
+          interpretationCache.set(cacheKey, interpretacao);
+          console.log(`✅ Interpretação encontrada via alias: ${aliasKey}`);
+          return interpretacao;
+        }
+      }
+    }
+
+    // Fallback final para interpretação local
+    const localInterpretacao = getLocalInterpretacao(topico, Number(numero));
+    if (localInterpretacao) {
+      interpretationCache.set(cacheKey, localInterpretacao);
+      return localInterpretacao;
+    }
+
+    console.log(`❌ Nenhuma interpretação encontrada para: ${searchKey}`);
+    return null;
+
+  } catch (error) {
+    console.error(`Erro ao buscar interpretação para ${searchKey}:`, error);
+    return null;
+  }
+};
 
 function parseContent(raw: string, numeroStr: string): string | null {
   // Normalize hidden spaces and line breaks
@@ -216,17 +243,22 @@ export async function getTextoTopico(topico: string): Promise<string | null> {
 }
 
 const topicAliases: Record<string, string[]> = {
-  'motivacao': ['numero_motivacao', 'número_motivação'],
-  'impressao': ['numero_impressao', 'número_impressão'],
-  'expressao': ['numero_expressao', 'número_expressão'],
-  'destino': ['numero_destino', 'número_destino'],
-  'missao': ['numero_missao', 'número_missão'],
-  'anjos': ['anjo_guardiao', 'anjo_da_guarda', 'guardian_angel'],
-  'ciclos_vida': ['ciclo_vida_1', 'ciclo_vida_2', 'ciclo_vida_3', 'ciclos_de_vida'],
-  'desafios': ['desafio_1', 'desafio_2', 'desafio_3', 'desafio_4'],
-  'momentos_decisivos': ['momento_decisivo_1', 'momento_decisivo_2', 'momento_decisivo_3', 'momento_decisivo_4'],
-  'tempos_pessoais': ['tempo_pessoal_atual', 'ano_pessoal', 'mes_pessoal'],
-  'cores_pessoais': ['cor_pessoal', 'cores_harmoniosas'],
-  'pedras_pessoais': ['pedra_pessoal', 'cristais_pessoais'],
-  'numeros_harmonicos': ['numero_harmonico', 'harmonia_conjugal'],
+  'motivacao': ['motivação', 'desejo_coracao', 'desejo_do_coracao'],
+  'expressao': ['expressão', 'talento_natural', 'personalidade'],
+  'impressao': ['impressão', 'primeira_impressao', 'aparencia'],
+  'destino': ['missao', 'missão', 'caminho_vida', 'caminho_da_vida'],
+  'licoes_carmicas': ['lições_cármicas', 'licoes_karmicas', 'karmic_lessons'],
+  'dividas_carmicas': ['dívidas_cármicas', 'dividas_karmicas', 'karmic_debts'],
+  'tendencias_ocultas': ['tendências_ocultas', 'subconsciente'],
+  'resposta_subconsciente': ['resposta_subconsciente', 'reacao_subconsciente'],
+  'periodo_1': ['primeiro_periodo', 'ciclo_1', 'ciclo_juventude'],
+  'periodo_2': ['segundo_periodo', 'ciclo_2', 'ciclo_maturidade'],
+  'periodo_3': ['terceiro_periodo', 'ciclo_3', 'ciclo_sabedoria'],
+  'desafio_1': ['primeiro_desafio', 'desafio_juventude'],
+  'desafio_2': ['segundo_desafio', 'desafio_principal'],
+  'desafio_3': ['terceiro_desafio', 'desafio_maturidade'],
+  'desafio_4': ['quarto_desafio', 'desafio_sabedoria'],
+  'anjo_guarda': ['anjo_da_guarda', 'guardian_angel'],
+  'cores_pessoais': ['cores_numerologicas', 'personal_colors'],
+  'pedras_pessoais': ['pedras_numerologicas', 'cristais_pessoais', 'personal_stones']
 };

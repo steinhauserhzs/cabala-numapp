@@ -29,6 +29,14 @@ export function OnePageNumberCard({
   borderColor = "border-primary/30"
 }: OnePageNumberCardProps) {
   const { interpretacao, isLoading } = useInterpretacao(categoria, value);
+  
+  // Debug logging
+  console.log(`🃏 OnePageNumberCard: ${title} (${categoria}: ${value})`);
+  if (interpretacao) {
+    console.log(`✅ Interpretação carregada para ${categoria}_${value}: ${interpretacao.substring(0, 100)}...`);
+  } else if (!isLoading) {
+    console.log(`❌ Nenhuma interpretação para ${categoria}_${value}`);
+  }
 
   const isMasterNumber = (num: number | string) => {
     const n = typeof num === 'string' ? parseInt(num) : num;

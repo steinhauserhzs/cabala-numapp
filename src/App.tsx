@@ -21,6 +21,7 @@ import ClientMapView from "./pages/ClientMapView";
 import AdminClients from "./pages/AdminClients";
 import CreateMapForClient from "./pages/CreateMapForClient";
 import NotFound from "./pages/NotFound";
+import TestUpload from "./pages/TestUpload";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
             </ProtectedRoute>
           } />
           
+          <Route path="/test-upload" element={<TestUpload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
