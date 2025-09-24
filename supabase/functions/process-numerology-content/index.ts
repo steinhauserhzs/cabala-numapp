@@ -91,7 +91,7 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing ${filename}:`, error);
-        errors.push(`File ${filename}: ${error.message}`);
+        errors.push(`File ${filename}: ${(error as Error).message}`);
       }
     }
 
@@ -115,7 +115,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message,
+      error: (error as Error).message,
       message: 'Failed to process numerology content'
     }), {
       status: 500,
