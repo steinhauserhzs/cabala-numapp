@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, PenTool } from 'lucide-react';
+import { ArrowLeft, PenTool, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { setActiveProfile, gerarMapaNumerologico } from '@/utils/numerology';
-import { PERFIL_CONECTA } from '@/utils/numerology-profile';
+import { AnalysisResult } from '@/components/AnalysisResult';
 
 const CorrecaoAssinatura = () => {
   const { user } = useAuth();
@@ -46,31 +45,58 @@ const CorrecaoAssinatura = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      const parseDate = (dateStr: string) => {
-        const [y, m, d] = dateStr.split('-').map(Number);
-        return new Date(y, m - 1, d);
-      };
-      
-      const date = parseDate(birthDate);
-      const fullNameMap = gerarMapaNumerologico(fullName, date);
-      const signatureMap = gerarMapaNumerologico(currentSignature, date);
-      
-      console.log('Signature analysis:', { 
-        fullName, 
-        currentSignature, 
-        birthDate, 
-        profession, 
-        objective, 
-        observations,
-        fullNameNumerology: fullNameMap,
-        signatureNumerology: signatureMap
-      });
+      setIsAnalyzing(true);
+      try {
+        const { calculateSignatureCorrection, saveAnalysis } = await import('@/utils/analysisCalculators');
+        
+        const parseDate = (dateStr: string) => {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          return new Date(y, m - 1, d);
+        };
+        
+        const analysis = await calculateSignatureCorrection(
+          fullName,
+          currentSignature,
+          parseDate(birthDate),
+          objective
+        );
+        
+        if (user) {
+          await saveAnalysis(analysis, user.id);
+        }
+        
+        setResult(analysis);
+      } catch (error) {
+        console.error('Erro na análise:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
+
+  if (result) {
+    return (
+      <AnalysisResult 
+        result={result} 
+        onNewAnalysis={() => {
+          setResult(null);
+          setFullName('');
+          setCurrentSignature('');
+          setBirthDate('');
+          setProfession('');
+          setObjective('');
+          setObservations('');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-mystical flex items-center justify-center p-4">
@@ -127,6 +153,7 @@ const CorrecaoAssinatura = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className={errors.fullName ? 'border-destructive' : ''}
+                  disabled={isAnalyzing}
                 />
                 {errors.fullName && (
                   <p className="text-sm text-destructive">{errors.fullName}</p>
@@ -144,6 +171,7 @@ const CorrecaoAssinatura = () => {
                   value={currentSignature}
                   onChange={(e) => setCurrentSignature(e.target.value)}
                   className={errors.currentSignature ? 'border-destructive' : ''}
+                  disabled={isAnalyzing}
                 />
                 {errors.currentSignature && (
                   <p className="text-sm text-destructive">{errors.currentSignature}</p>
@@ -163,6 +191,7 @@ const CorrecaoAssinatura = () => {
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
                   className={errors.birthDate ? 'border-destructive' : ''}
+                  disabled={isAnalyzing}
                 />
                 {errors.birthDate && (
                   <p className="text-sm text-destructive">{errors.birthDate}</p>
@@ -179,6 +208,7 @@ const CorrecaoAssinatura = () => {
                   placeholder="Ex: Advogado, Empresário, Artista"
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
+                  disabled={isAnalyzing}
                 />
               </div>
 
@@ -186,7 +216,7 @@ const CorrecaoAssinatura = () => {
                 <Label htmlFor="objective" className="text-foreground font-medium">
                   Objetivo da Correção
                 </Label>
-                <Select value={objective} onValueChange={setObjective}>
+                <Select value={objective} onValueChange={setObjective} disabled={isAnalyzing}>
                   <SelectTrigger className={errors.objective ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Selecione o objetivo" />
                   </SelectTrigger>
@@ -216,6 +246,7 @@ const CorrecaoAssinatura = () => {
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
                   rows={3}
+                  disabled={isAnalyzing}
                 />
               </div>
 
@@ -233,9 +264,19 @@ const CorrecaoAssinatura = () => {
                 type="submit" 
                 size="lg" 
                 className="w-full mt-8 text-lg font-semibold py-6 bg-gradient-to-r from-indigo-400 to-purple-400 hover:shadow-glow"
+                disabled={isAnalyzing}
               >
-                <PenTool className="mr-2 h-5 w-5" />
-                Analisar Assinatura
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Analisando...
+                  </>
+                ) : (
+                  <>
+                    <PenTool className="mr-2 h-5 w-5" />
+                    Analisar Assinatura
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>

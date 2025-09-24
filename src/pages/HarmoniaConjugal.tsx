@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Heart, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { setActiveProfile, gerarMapaNumerologico } from '@/utils/numerology';
-import { PERFIL_CONECTA } from '@/utils/numerology-profile';
+import { AnalysisResult } from '@/components/AnalysisResult';
 
 const HarmoniaConjugal = () => {
   const { user } = useAuth();
@@ -42,14 +41,56 @@ const HarmoniaConjugal = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement compatibility calculation
-      console.log('Compatibility analysis:', { partner1Name, partner1Date, partner2Name, partner2Date });
+      setIsAnalyzing(true);
+      try {
+        const { calculateCouplCompatibility, saveAnalysis } = await import('@/utils/analysisCalculators');
+        
+        const parseDate = (dateStr: string) => {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          return new Date(y, m - 1, d);
+        };
+        
+        const analysis = await calculateCouplCompatibility(
+          partner1Name,
+          parseDate(partner1Date),
+          partner2Name,
+          parseDate(partner2Date)
+        );
+        
+        if (user) {
+          await saveAnalysis(analysis, user.id);
+        }
+        
+        setResult(analysis);
+      } catch (error) {
+        console.error('Erro na análise:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
+
+  if (result) {
+    return (
+      <AnalysisResult 
+        result={result} 
+        onNewAnalysis={() => {
+          setResult(null);
+          setPartner1Name('');
+          setPartner1Date('');
+          setPartner2Name('');
+          setPartner2Date('');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-mystical flex items-center justify-center p-4">
@@ -109,6 +150,7 @@ const HarmoniaConjugal = () => {
                     value={partner1Name}
                     onChange={(e) => setPartner1Name(e.target.value)}
                     className={errors.partner1Name ? 'border-destructive' : ''}
+                    disabled={isAnalyzing}
                   />
                   {errors.partner1Name && (
                     <p className="text-sm text-destructive">{errors.partner1Name}</p>
@@ -125,6 +167,7 @@ const HarmoniaConjugal = () => {
                     value={partner1Date}
                     onChange={(e) => setPartner1Date(e.target.value)}
                     className={errors.partner1Date ? 'border-destructive' : ''}
+                    disabled={isAnalyzing}
                   />
                   {errors.partner1Date && (
                     <p className="text-sm text-destructive">{errors.partner1Date}</p>
@@ -146,6 +189,7 @@ const HarmoniaConjugal = () => {
                     value={partner2Name}
                     onChange={(e) => setPartner2Name(e.target.value)}
                     className={errors.partner2Name ? 'border-destructive' : ''}
+                    disabled={isAnalyzing}
                   />
                   {errors.partner2Name && (
                     <p className="text-sm text-destructive">{errors.partner2Name}</p>
@@ -162,6 +206,7 @@ const HarmoniaConjugal = () => {
                     value={partner2Date}
                     onChange={(e) => setPartner2Date(e.target.value)}
                     className={errors.partner2Date ? 'border-destructive' : ''}
+                    disabled={isAnalyzing}
                   />
                   {errors.partner2Date && (
                     <p className="text-sm text-destructive">{errors.partner2Date}</p>
@@ -173,9 +218,19 @@ const HarmoniaConjugal = () => {
                 type="submit" 
                 size="lg" 
                 className="w-full mt-8 text-lg font-semibold py-6 bg-gradient-to-r from-pink-400 to-rose-400 hover:shadow-glow"
+                disabled={isAnalyzing}
               >
-                <Heart className="mr-2 h-5 w-5" />
-                Analisar Compatibilidade
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Analisando...
+                  </>
+                ) : (
+                  <>
+                    <Heart className="mr-2 h-5 w-5" />
+                    Analisar Compatibilidade
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>

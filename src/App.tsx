@@ -13,6 +13,8 @@ import AnaliseTelefone from "./pages/AnaliseTelefone";
 import AnaliseEndereco from "./pages/AnaliseEndereco";
 import AnalisePlaca from "./pages/AnalisePlaca";
 import CorrecaoAssinatura from "./pages/CorrecaoAssinatura";
+import AreasAtuacao from "./pages/AreasAtuacao";
+import BibliotecaConhecimento from "./pages/BibliotecaConhecimento";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -48,6 +50,12 @@ const App = () => (
           <Route path="/analise-endereco" element={<AnaliseEndereco />} />
           <Route path="/analise-placa" element={<AnalisePlaca />} />
           <Route path="/analise-telefone" element={<AnaliseTelefone />} />
+          <Route path="/areas-atuacao" element={<AreasAtuacao />} />
+          <Route path="/biblioteca-conhecimento" element={
+            <ProtectedRoute>
+              <BibliotecaConhecimento />
+            </ProtectedRoute>
+          } />
           <Route path="/mapa/:slug" element={<MapaCompartilhado />} />
           
           {/* Client Portal Routes */}

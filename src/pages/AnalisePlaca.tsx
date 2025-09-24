@@ -40,12 +40,33 @@ const AnalisePlaca = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement plate numerology calculation
-      console.log('Plate analysis:', { plateNumber, vehicleType, ownerName, purchaseDate });
+      setIsAnalyzing(true);
+      try {
+        const { calculatePlateAnalysis, saveAnalysis } = await import('@/utils/analysisCalculators');
+        
+        const analysis = await calculatePlateAnalysis(
+          plateNumber,
+          ownerName,
+          vehicleType
+        );
+        
+        if (user) {
+          await saveAnalysis(analysis, user.id);
+        }
+        
+        setResult(analysis);
+      } catch (error) {
+        console.error('Erro na análise:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 

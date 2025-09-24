@@ -5,10 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { setActiveProfile, calcExpressao } from '@/utils/numerology';
-import { PERFIL_CONECTA } from '@/utils/numerology-profile';
+import { AnalysisResult } from '@/components/AnalysisResult';
 
 const AnaliseEndereco = () => {
   const { user } = useAuth();
@@ -50,12 +49,35 @@ const AnaliseEndereco = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // TODO: Implement address numerology calculation
-      console.log('Address analysis:', { street, number, complement, neighborhood, city, propertyType, residentName });
+      setIsAnalyzing(true);
+      try {
+        const { calculateAddressAnalysis, saveAnalysis } = await import('@/utils/analysisCalculators');
+        
+        const analysis = await calculateAddressAnalysis(
+          street,
+          number,
+          neighborhood,
+          city,
+          residentName
+        );
+        
+        if (user) {
+          await saveAnalysis(analysis, user.id);
+        }
+        
+        setResult(analysis);
+      } catch (error) {
+        console.error('Erro na análise:', error);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 

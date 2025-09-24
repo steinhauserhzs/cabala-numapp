@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,7 +18,8 @@ import {
   Eye,
   Target,
   Compass,
-  Brain
+  Brain,
+  Settings
 } from 'lucide-react';
 
 interface NavigationSidebarProps {
@@ -171,6 +173,27 @@ export function NavigationSidebar({
               </div>
             </>
           )}
+
+          {/* Admin Options */}
+          <Separator />
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
+              <Settings size={16} className="mr-2" />
+              Administração
+            </h3>
+            <div className="space-y-1">
+              <Link to="/biblioteca-conhecimento">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-left"
+                >
+                  <BookOpen size={16} className="mr-2" />
+                  Biblioteca de Conhecimento
+                </Button>
+              </Link>
+            </div>
+          </div>
 
           {/* Status Indicators */}
           <div className="p-3 bg-muted/50 rounded-lg">
