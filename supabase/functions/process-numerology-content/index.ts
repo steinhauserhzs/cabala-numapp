@@ -66,19 +66,18 @@ serve(async (req) => {
         // Parse JSON
         const jsonData: NumerologyContent = JSON.parse(content);
         
-        // Validate that it has a 'topico' field
-        if (!jsonData.topico) {
-          errors.push(`File ${filename}: Missing 'topico' field`);
-          continue;
-        }
+        // Extract topic from filename (e.g., "motivacao/motivacao_01.json" -> "motivacao_01")
+        const pathParts = filename.split('/');
+        const filenamePart = pathParts[pathParts.length - 1]; // Get just the filename
+        const topico = filenamePart.replace('.json', ''); // Remove .json extension
+        
+        console.log(`Auto-generated topic: ${topico} for file: ${filename}`);
 
-        console.log(`Inserting content for topic: ${jsonData.topico}`);
-
-        // Insert into Supabase
+        // Insert into Supabase with auto-generated topic
         const { error: insertError } = await supabase
           .from('conteudos_numerologia')
           .insert({
-            topico: jsonData.topico,
+            topico: topico,
             conteudo: jsonData
           });
 
@@ -87,7 +86,7 @@ serve(async (req) => {
           errors.push(`File ${filename}: ${insertError.message}`);
         } else {
           processedFiles.push(filename);
-          console.log(`Successfully processed: ${filename}`);
+          console.log(`Successfully processed: ${filename} as topic: ${topico}`);
         }
 
       } catch (error) {
