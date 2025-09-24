@@ -20,12 +20,15 @@ import {
   Eye,
   Edit3,
   RefreshCw,
-  Trash2
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { useAuth, useUserRole } from '@/hooks/useAuth';
 import { useNumerologyContent } from '@/hooks/useNumerologyContent';
 import { supabase } from '@/integrations/supabase/client';
 import { SimplifiedMobileEditor } from '@/components/SimplifiedMobileEditor';
+import { ContentCreationWizard } from '@/components/ContentCreationWizard';
+import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
 
 interface ContentCategory {
   name: string;
@@ -95,6 +98,7 @@ export default function BibliotecaConhecimento() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
+  const [showCreationWizard, setShowCreationWizard] = useState(false);
 
   // Remove duplicates function (now handled by database constraint)
   const checkDuplicates = async () => {
@@ -110,6 +114,36 @@ export default function BibliotecaConhecimento() {
     } finally {
       setRemovingDuplicates(false);
     }
+  };
+
+  // Function to get real topic count for a category
+  const getCategoryTopicCount = (category: ContentCategory) => {
+    if (!allContent) return 0;
+    
+    const categoryTopics = new Set<string>();
+    
+    allContent.forEach(item => {
+      // Check if this topic belongs to this category
+      const topicBase = item.topico.replace(/_\d+$/, '').replace(/-\d+$/, '');
+      
+      // Map topic variations to category topics
+      const isInCategory = category.topics.some(categoryTopic => {
+        const variations = [
+          categoryTopic,
+          categoryTopic.replace(/-/g, '_'),
+          categoryTopic.replace(/_/g, '-'),
+          categoryTopic.replace(/numero_/g, 'numero-'),
+          categoryTopic.replace(/numero-/g, 'numero_')
+        ];
+        return variations.includes(topicBase);
+      });
+      
+      if (isInCategory) {
+        categoryTopics.add(topicBase);
+      }
+    });
+    
+    return categoryTopics.size;
   };
 
   // Filter content based on selected category and search
@@ -300,12 +334,15 @@ export default function BibliotecaConhecimento() {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <Badge variant="outline" className="text-xs">
-                      {category.topics.length} tópicos
+                      {getCategoryTopicCount(category)} tópicos
                     </Badge>
                   </CardContent>
                 </Card>
-              ))}
+                ))}
             </div>
+            
+            {/* Uncategorized Topics Panel */}
+            <UncategorizedTopicsPanel categories={categories} />
           </div>
         )}
 
@@ -376,6 +413,26 @@ export default function BibliotecaConhecimento() {
           <SimplifiedMobileEditor 
             currentContent={currentContent}
             onSave={handleContentSave}
+          />
+        )}
+
+        {/* Floating Add Button */}
+        <button
+          onClick={() => setShowCreationWizard(true)}
+          className="fixed bottom-6 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-mystical hover:shadow-glow transition-all duration-300 z-50"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+
+        {/* Content Creation Wizard */}
+        {showCreationWizard && (
+          <ContentCreationWizard
+            onClose={() => setShowCreationWizard(false)}
+            onContentCreated={() => {
+              refetch();
+              setShowCreationWizard(false);
+            }}
+            categories={categories}
           />
         )}
       </div>
