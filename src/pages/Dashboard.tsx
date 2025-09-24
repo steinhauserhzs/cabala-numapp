@@ -6,6 +6,8 @@ import { Link } from 'react-router-dom';
 import { AreasAtuacaoModal } from '@/components/AreasAtuacaoModal';
 import { UserMapsSection } from '@/components/dashboard/UserMapsSection';
 import { useNavigate } from 'react-router-dom';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { 
   User, 
   Building2, 
@@ -20,7 +22,8 @@ import {
   BarChart3,
   Clock,
   UserPlus,
-  Users
+  Users,
+  Menu
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -111,31 +114,38 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">N</span>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="h-16 border-b bg-card flex items-center px-4">
+            <div className="flex items-center gap-4 flex-1">
+              <SidebarTrigger className="lg:hidden">
+                <Menu className="h-4 w-4" />
+              </SidebarTrigger>
+              <div className="flex items-center gap-3 lg:hidden">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">N</span>
+                </div>
+                <h1 className="text-xl font-bold text-primary">
+                  Numapp
+                </h1>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-primary">
-              Numapp
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <div className="text-sm text-muted-foreground">Olá,</div>
-              <div className="text-sm font-medium">{user?.user_metadata?.full_name || user?.email}</div>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm text-muted-foreground">Olá,</div>
+                <div className="text-sm font-medium">{user?.user_metadata?.full_name || user?.email}</div>
+              </div>
+              <Button variant="outline" onClick={signOut}>
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
             </div>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Sair</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+          </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <main className="flex-1 p-6 overflow-auto">
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">Dashboard</h2>
           <p className="text-muted-foreground">
@@ -254,12 +264,14 @@ const Dashboard = () => {
           <UserMapsSection />
         </div>
         
-        <AreasAtuacaoModal 
-          isOpen={isAreasModalOpen} 
-          onClose={() => setIsAreasModalOpen(false)} 
-        />
-      </main>
-    </div>
+            <AreasAtuacaoModal 
+              isOpen={isAreasModalOpen} 
+              onClose={() => setIsAreasModalOpen(false)} 
+            />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
