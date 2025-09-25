@@ -41,7 +41,7 @@ interface ContentCategory {
 const categories: ContentCategory[] = [
   {
     name: 'Números Pessoais',
-    topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'resposta-subconsciente'],
+    topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'numero_psiquico', 'resposta-subconsciente'],
     description: 'Números fundamentais da personalidade',
     icon: <Grid3X3 className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
@@ -62,7 +62,7 @@ const categories: ContentCategory[] = [
   },
   {
     name: 'Ciclos Temporais',
-    topics: ['ano-pessoal', 'mes-pessoal', 'dia-pessoal', 'ciclo-vida'],
+    topics: ['ano-pessoal', 'mes-pessoal', 'dia-pessoal', 'ciclo-vida', 'ciclos_de_vida'],
     description: 'Períodos e fases da vida',
     icon: <RefreshCw className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
@@ -75,8 +75,22 @@ const categories: ContentCategory[] = [
     color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
   },
   {
+    name: 'Arcanos e Símbolos',
+    topics: ['arcano'],
+    description: 'Significados dos arcanos e símbolos místicos',
+    icon: <BookOpen className="h-5 w-5" />,
+    color: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20'
+  },
+  {
+    name: 'Áreas de Atuação',
+    topics: ['areas_de_atuacao', 'areas-atuacao'],
+    description: 'Campos profissionais e vocacionais',
+    icon: <Eye className="h-5 w-5" />,
+    color: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20'
+  },
+  {
     name: 'Análises Especiais',
-    topics: ['harmonia-conjugal', 'correcao-assinatura', 'endereco', 'placa', 'telefone', 'areas-atuacao'],
+    topics: ['harmonia-conjugal', 'correcao-assinatura', 'endereco', 'placa', 'telefone'],
     description: 'Análises específicas para diferentes aspectos da vida',
     icon: <Eye className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20'
@@ -100,6 +114,50 @@ export default function BibliotecaConhecimento() {
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
   const [showCreationWizard, setShowCreationWizard] = useState(false);
 
+  // Add a category for uncategorized topics
+  const uncategorizedCategory: ContentCategory = {
+    name: 'Outros Tópicos',
+    topics: [],
+    description: 'Tópicos não categorizados do banco de dados',
+    icon: <List className="h-5 w-5" />,
+    color: 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20'
+  };
+
+  // Get uncategorized topics dynamically
+  const getUncategorizedTopics = () => {
+    if (!allContent) return [];
+    
+    const categorizedTopics = new Set<string>();
+    categories.forEach(category => {
+      category.topics.forEach(topic => {
+        categorizedTopics.add(topic);
+        categorizedTopics.add(topic.replace(/-/g, '_'));
+        categorizedTopics.add(topic.replace(/_/g, '-'));
+        categorizedTopics.add(topic.replace(/numero_/g, 'numero-'));
+        categorizedTopics.add(topic.replace(/numero-/g, 'numero_'));
+      });
+    });
+
+    const uncategorizedTopics = new Set<string>();
+    allContent.forEach(item => {
+      const topicBase = item.topico.replace(/_\d+$/, '').replace(/-\d+$/, '');
+      if (!categorizedTopics.has(topicBase)) {
+        uncategorizedTopics.add(topicBase);
+      }
+    });
+
+    return Array.from(uncategorizedTopics);
+  };
+
+  // Update uncategorized category with dynamic topics
+  uncategorizedCategory.topics = getUncategorizedTopics();
+
+  // Combine regular categories with uncategorized category
+  const allCategories = [...categories];
+  if (uncategorizedCategory.topics.length > 0) {
+    allCategories.push(uncategorizedCategory);
+  }
+
   // Remove duplicates function (now handled by database constraint)
   const checkDuplicates = async () => {
     setRemovingDuplicates(true);
@@ -119,6 +177,11 @@ export default function BibliotecaConhecimento() {
   // Function to get real topic count for a category
   const getCategoryTopicCount = (category: ContentCategory) => {
     if (!allContent) return 0;
+    
+    // Special handling for uncategorized category
+    if (category.name === 'Outros Tópicos') {
+      return category.topics.length;
+    }
     
     const categoryTopics = new Set<string>();
     
@@ -149,7 +212,24 @@ export default function BibliotecaConhecimento() {
   // Filter content based on selected category and search
   const filteredContent = allContent?.filter(item => {
     if (selectedCategory) {
-      if (!selectedCategory.topics.some(topic => item.topico.includes(topic))) {
+      const topicBase = item.topico.replace(/_\d+$/, '').replace(/-\d+$/, '');
+      
+      // Check if this topic belongs to this category with better matching
+      const isInCategory = selectedCategory.topics.some(categoryTopic => {
+        const variations = [
+          categoryTopic,
+          categoryTopic.replace(/-/g, '_'),
+          categoryTopic.replace(/_/g, '-'),
+          categoryTopic.replace(/numero_/g, 'numero-'),
+          categoryTopic.replace(/numero-/g, 'numero_'),
+          topicBase,
+          topicBase.replace(/-/g, '_'),
+          topicBase.replace(/_/g, '-')
+        ];
+        return variations.includes(topicBase) || variations.includes(categoryTopic);
+      });
+      
+      if (!isInCategory) {
         return false;
       }
     }
@@ -211,6 +291,22 @@ export default function BibliotecaConhecimento() {
       setSelectedCategory(null);
     }
   };
+
+  // Listen for uncategorized topic navigation events
+  useEffect(() => {
+    const handleUncategorizedNavigation = (event: CustomEvent) => {
+      const { topic, number } = event.detail;
+      setSelectedTopic(topic);
+      setSelectedNumber(number);
+      setCurrentStep('editor');
+    };
+
+    window.addEventListener('navigateToUncategorizedTopic', handleUncategorizedNavigation as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigateToUncategorizedTopic', handleUncategorizedNavigation as EventListener);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -304,7 +400,7 @@ export default function BibliotecaConhecimento() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {categories
+              {allCategories
                 .filter(category => 
                   !searchTerm || 
                   category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -341,8 +437,6 @@ export default function BibliotecaConhecimento() {
                 ))}
             </div>
             
-            {/* Uncategorized Topics Panel */}
-            <UncategorizedTopicsPanel categories={categories} />
           </div>
         )}
 
