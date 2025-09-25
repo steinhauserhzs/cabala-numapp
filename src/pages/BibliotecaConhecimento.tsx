@@ -41,35 +41,35 @@ interface ContentCategory {
 const categories: ContentCategory[] = [
   {
     name: 'Números Pessoais',
-    topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'numero_psiquico', 'resposta-subconsciente'],
+    topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'numero_psiquico', 'resposta_subconsciente'],
     description: 'Números fundamentais da personalidade',
     icon: <Grid3X3 className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
   },
   {
     name: 'Aspectos Cármicos',
-    topics: ['licoes-carmicas', 'dividas-carmicas', 'tendencias-ocultas'],
+    topics: ['licoes_carmicas', 'dividas_carmicas', 'tendencias_ocultas'],
     description: 'Lições e padrões espirituais',
     icon: <RefreshCw className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20'
   },
   {
     name: 'Elementos Místicos',
-    topics: ['anjo', 'cores-favoraveis', 'pedras', 'incensos', 'metais', 'perfumes'],
+    topics: ['anjo', 'seu_anjo', 'anjo_guarda', 'cores_favoraveis', 'pedras_favoraveis', 'incensos', 'metais', 'perfumes'],
     description: 'Anjos, cores, pedras e elementos de apoio',
     icon: <BookOpen className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
   },
   {
     name: 'Ciclos Temporais',
-    topics: ['ano-pessoal', 'mes-pessoal', 'dia-pessoal', 'ciclo-vida', 'ciclos_de_vida'],
+    topics: ['ano_pessoal', 'mes_pessoal', 'dia_pessoal', 'ciclo_vida', 'ciclos_de_vida', 'momentos_decisivos'],
     description: 'Períodos e fases da vida',
     icon: <RefreshCw className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
   },
   {
-    name: 'Desafios',
-    topics: ['desafios', 'momentos-decisivos'],
+    name: 'Desafios e Obstáculos',
+    topics: ['desafio_principal', 'primeiro_desafio', 'segundo_desafio', 'terceiro_desafio', 'quarto_desafio'],
     description: 'Obstáculos e pontos de transformação',
     icon: <List className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
@@ -83,14 +83,14 @@ const categories: ContentCategory[] = [
   },
   {
     name: 'Áreas de Atuação',
-    topics: ['areas_de_atuacao', 'areas-atuacao'],
+    topics: ['areas_de_atuacao'],
     description: 'Campos profissionais e vocacionais',
     icon: <Eye className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20'
   },
   {
     name: 'Análises Especiais',
-    topics: ['harmonia-conjugal', 'correcao-assinatura', 'endereco', 'placa', 'telefone'],
+    topics: ['harmonia_conjugal', 'correcao_assinatura', 'analise_endereco', 'analise_placa', 'analise_telefone'],
     description: 'Análises específicas para diferentes aspectos da vida',
     icon: <Eye className="h-5 w-5" />,
     color: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20'
