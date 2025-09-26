@@ -6,7 +6,7 @@ import { useInterpretacao } from '@/hooks/useInterpretacao';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Download, Sparkles, Heart, Eye, Star, Target, Compass, Brain, Calendar, Clock, Sun, BookOpen, AlertTriangle, Zap, Mountain, Palette, Users, Triangle, Loader2 } from 'lucide-react';
-import { TopicCard } from './TopicCard';
+import { LegacyTopicCard } from './LegacyTopicCard';
 import { generatePDF } from '@/utils/pdf';
 import { useToast } from '@/hooks/use-toast';
 import { GuardianAngelCard } from './GuardianAngelCard';
@@ -518,48 +518,48 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Informações Complementares</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <TopicCard
-              icon={<Star className="h-5 w-5 text-yellow-500" />}
-              title="Pedras Preciosas"
-              description="Pedras que potencializam sua energia"
-              topico="pedras_preciosas"
-            />
-            <TopicCard
-              icon={<Palette className="h-5 w-5 text-blue-500" />}
-              title="Cores Pessoais"
-              description="Cores que harmonizam com sua energia"
-              topico="cores_do_dia"
-            />
-            <TopicCard
-              icon={<Calendar className="h-5 w-5 text-green-500" />}
-              title="Dias Favoráveis"
-              description="Os melhores dias para suas atividades"
-              topico="dias_favoraveis"
-            />
-            <TopicCard
-              icon={<Zap className="h-5 w-5 text-purple-500" />}
-              title="Números Harmônicos"
-              description="Números que vibram em sua frequência"
-              topico="numeros_harmonicos"
-            />
-            <TopicCard
-              icon={<Users className="h-5 w-5 text-pink-500" />}
-              title="Harmonia Conjugal"
-              description="Compatibilidade nos relacionamentos"
-              topico="harmonia_conjugal"
-            />
-            <TopicCard
-              icon={<Triangle className="h-5 w-5 text-orange-500" />}
-              title="Triângulo Invertido da Vida"
-              description="Aspectos profundos de sua jornada"
-              topico="triangulo_invertido"
-            />
-            <TopicCard
-              icon={<Zap className="h-5 w-5 text-purple-500" />}
-              title="Arcanos"
-              description="Significados dos arcanos em sua vida"
-              topico="arcanos"
-            />
+             <LegacyTopicCard
+               icon={<Star className="h-5 w-5 text-yellow-500" />}
+               title="Pedras Preciosas"
+               description="Pedras que potencializam sua energia"
+               topico="pedras_preciosas"
+             />
+             <LegacyTopicCard
+               icon={<Palette className="h-5 w-5 text-blue-500" />}
+               title="Cores Pessoais"
+               description="Cores que harmonizam com sua energia"
+               topico="cores_do_dia"
+             />
+             <LegacyTopicCard
+               icon={<Calendar className="h-5 w-5 text-green-500" />}
+               title="Dias Favoráveis"
+               description="Os melhores dias para suas atividades"
+               topico="dias_favoraveis"
+             />
+             <LegacyTopicCard
+               icon={<Zap className="h-5 w-5 text-purple-500" />}
+               title="Números Harmônicos"
+               description="Números que vibram em sua frequência"
+               topico="numeros_harmonicos"
+             />
+             <LegacyTopicCard
+               icon={<Users className="h-5 w-5 text-pink-500" />}
+               title="Harmonia Conjugal"
+               description="Compatibilidade nos relacionamentos"
+               topico="harmonia_conjugal"
+             />
+             <LegacyTopicCard
+               icon={<Triangle className="h-5 w-5 text-orange-500" />}
+               title="Triângulo Invertido da Vida"
+               description="Aspectos profundos de sua jornada"
+               topico="triangulo_invertido"
+             />
+             <LegacyTopicCard
+               icon={<Zap className="h-5 w-5 text-purple-500" />}
+               title="Arcanos"
+               description="Significados dos arcanos em sua vida"
+               topico="arcanos"
+             />
           </div>
         </div>
 
@@ -567,12 +567,12 @@ export function NumerologyResult({ mapa, name, birthDate, onBack }: NumerologyRe
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Conclusão</h2>
           <div className="max-w-4xl mx-auto">
-            <TopicCard
-              icon={<BookOpen className="h-5 w-5 text-indigo-500" />}
-              title="Síntese do Mapa"
-              description="Conclusão e orientações finais"
-              topico="conclusao"
-            />
+             <LegacyTopicCard
+               icon={<BookOpen className="h-5 w-5 text-indigo-500" />}
+               title="Síntese do Mapa"
+               description="Conclusão e orientações finais"
+               topico="conclusao"
+             />
           </div>
         </div>
 
