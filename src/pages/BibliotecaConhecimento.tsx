@@ -4,6 +4,7 @@ import { useContentCreation } from '@/hooks/useContentCreation';
 import { TopicCard } from '@/components/TopicCard';
 import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
 import { ContentCreationWizard } from '@/components/ContentCreationWizard';
+import { ContentEnrichmentWizard } from '@/components/ContentEnrichmentWizard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -142,13 +143,16 @@ export default function BibliotecaConhecimento() {
             </p>
           </div>
           
-          <Button 
-            onClick={() => setShowWizard(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Conteúdo
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowWizard(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Conteúdo
+            </Button>
+            <ContentEnrichmentWizard />
+          </div>
         </div>
 
         {/* Search */}
