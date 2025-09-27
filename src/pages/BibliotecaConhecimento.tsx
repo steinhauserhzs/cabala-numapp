@@ -1,34 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNumerologyContent } from '@/hooks/useNumerologyContent';
+import { useContentCreation } from '@/hooks/useContentCreation';
+import { TopicCard } from '@/components/TopicCard';
+import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
+import { ContentCreationWizard } from '@/components/ContentCreationWizard';
+import { ContentEnrichmentWizard } from '@/components/ContentEnrichmentWizard';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus, Search, Grid3X3, BookOpen, RefreshCw, List, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  Search, 
-  ChevronDown, 
-  ChevronRight,
-  Grid3X3,
-  List,
-  Eye,
-  Edit3,
-  RefreshCw,
-  Trash2,
-  Plus
-} from 'lucide-react';
-import { useAuth, useUserRole } from '@/hooks/useAuth';
-import { useNumerologyContent } from '@/hooks/useNumerologyContent';
-import { supabase } from '@/integrations/supabase/client';
-import { SimplifiedMobileEditor } from '@/components/SimplifiedMobileEditor';
-import { ContentCreationWizard } from '@/components/ContentCreationWizard';
-import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
+import type { NumerologyContent } from '@/hooks/useNumerologyContent';
 
 interface ContentCategory {
   name: string;
@@ -38,404 +21,287 @@ interface ContentCategory {
   color: string;
 }
 
-const categories: ContentCategory[] = [
-  {
-    name: 'Números Pessoais',
-    topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'resposta-subconsciente'],
-    description: 'Números fundamentais da personalidade',
-    icon: <Grid3X3 className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
-  },
-  {
-    name: 'Aspectos Cármicos',
-    topics: ['licoes-carmicas', 'dividas-carmicas', 'tendencias-ocultas'],
-    description: 'Lições e padrões espirituais',
-    icon: <RefreshCw className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20'
-  },
-  {
-    name: 'Elementos Místicos',
-    topics: ['anjo', 'cores-favoraveis', 'pedras', 'incensos', 'metais', 'perfumes'],
-    description: 'Anjos, cores, pedras e elementos de apoio',
-    icon: <BookOpen className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
-  },
-  {
-    name: 'Ciclos Temporais',
-    topics: ['ano-pessoal', 'mes-pessoal', 'dia-pessoal', 'ciclo-vida'],
-    description: 'Períodos e fases da vida',
-    icon: <RefreshCw className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
-  },
-  {
-    name: 'Desafios',
-    topics: ['desafios', 'momentos-decisivos'],
-    description: 'Obstáculos e pontos de transformação',
-    icon: <List className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
-  },
-  {
-    name: 'Análises Especiais',
-    topics: ['harmonia-conjugal', 'correcao-assinatura', 'endereco', 'placa', 'telefone', 'areas-atuacao'],
-    description: 'Análises específicas para diferentes aspectos da vida',
-    icon: <Eye className="h-5 w-5" />,
-    color: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20'
-  }
-];
-
 export default function BibliotecaConhecimento() {
-  const { user } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const [showWizard, setShowWizard] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<NumerologyContent | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [uncategorizedTopics, setUncategorizedTopics] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+
   const { data: allContent, isLoading, refetch } = useNumerologyContent();
-  
-  // State for 3-step wizard navigation
-  const [currentStep, setCurrentStep] = useState<'categories' | 'topics' | 'editor'>('categories');
-  const [selectedCategory, setSelectedCategory] = useState<ContentCategory | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
-  const [removingDuplicates, setRemovingDuplicates] = useState(false);
-  const [showCreationWizard, setShowCreationWizard] = useState(false);
+  const { createContent } = useContentCreation();
 
-  // Remove duplicates function (now handled by database constraint)
-  const checkDuplicates = async () => {
-    setRemovingDuplicates(true);
-    try {
-      toast({
-        title: "Sistema de Duplicatas Atualizado",
-        description: "As duplicatas foram removidas e o banco agora previne futuras duplicatas automaticamente.",
-      });
-      refetch();
-    } catch (error) {
-      console.error('Erro:', error);
-    } finally {
-      setRemovingDuplicates(false);
-    }
-  };
-
-  // Function to get real topic count for a category
-  const getCategoryTopicCount = (category: ContentCategory) => {
-    if (!allContent) return 0;
+  // Filter content based on search query
+  const filteredContent = useMemo(() => {
+    if (!allContent || !searchQuery.trim()) return allContent;
     
-    const categoryTopics = new Set<string>();
-    
-    allContent.forEach(item => {
-      // Check if this topic belongs to this category
-      const topicBase = item.topico.replace(/_\d+$/, '').replace(/-\d+$/, '');
-      
-      // Map topic variations to category topics
-      const isInCategory = category.topics.some(categoryTopic => {
-        const variations = [
-          categoryTopic,
-          categoryTopic.replace(/-/g, '_'),
-          categoryTopic.replace(/_/g, '-'),
-          categoryTopic.replace(/numero_/g, 'numero-'),
-          categoryTopic.replace(/numero-/g, 'numero_')
-        ];
-        return variations.includes(topicBase);
-      });
-      
-      if (isInCategory) {
-        categoryTopics.add(topicBase);
-      }
-    });
-    
-    return categoryTopics.size;
-  };
-
-  // Filter content based on selected category and search
-  const filteredContent = allContent?.filter(item => {
-    if (selectedCategory) {
-      if (!selectedCategory.topics.some(topic => item.topico.includes(topic))) {
-        return false;
-      }
-    }
-    
-    if (searchTerm) {
-      return item.topico.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-    
-    return true;
-  }) || [];
-
-  // Group content by topic base
-  const groupedTopics = filteredContent.reduce((acc, item) => {
-    const topicBase = item.topico.replace(/_\d+$/, '');
-    if (!acc[topicBase]) {
-      acc[topicBase] = [];
-    }
-    acc[topicBase].push(item);
-    return acc;
-  }, {} as Record<string, typeof filteredContent>);
-
-  // Get current content
-  const currentContent = selectedTopic && selectedNumber 
-    ? allContent?.find(item => item.topico === `${selectedTopic}_${selectedNumber}`)
-    : null;
-
-  const handleContentSave = () => {
-    refetch();
-  };
-
-  const getTopicNumbers = (topicBase: string) => {
-    return groupedTopics[topicBase]?.map(item => {
-      const match = item.topico.match(/_(\d+)$/);
-      return match ? match[1] : '01';
-    }).sort() || [];
-  };
-
-  const toggleTopic = (topicBase: string) => {
-    const newExpanded = new Set(expandedTopics);
-    if (newExpanded.has(topicBase)) {
-      newExpanded.delete(topicBase);
-    } else {
-      newExpanded.add(topicBase);
-    }
-    setExpandedTopics(newExpanded);
-  };
-
-  const navigateToEditor = (topic: string, number: string) => {
-    setSelectedTopic(topic);
-    setSelectedNumber(number);
-    setCurrentStep('editor');
-  };
-
-  const goBack = () => {
-    if (currentStep === 'editor') {
-      setCurrentStep('topics');
-    } else if (currentStep === 'topics') {
-      setCurrentStep('categories');
-      setSelectedCategory(null);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-mystical flex items-center justify-center p-4">
-        <div className="text-center">
-          <BookOpen className="h-12 w-12 mx-auto mb-4 animate-pulse text-primary" />
-          <p className="text-lg">Carregando biblioteca...</p>
-        </div>
-      </div>
+    return allContent.filter(content => 
+      content.topico.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      content.categoria?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }
+  }, [allContent, searchQuery]);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchQuery) {
+      setIsSearching(true);
+      const timer = setTimeout(() => setIsSearching(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery]);
+
+  const categories: ContentCategory[] = [
+    {
+      name: 'Números Pessoais',
+      topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'numero_psiquico', 'resposta_subconsciente'],
+      description: 'Números fundamentais da personalidade',
+      icon: <Grid3X3 className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
+    },
+    {
+      name: 'Aspectos Cármicos',
+      topics: ['licoes_carmicas', 'dividas_carmicas', 'tendencias_ocultas'],
+      description: 'Lições e padrões espirituais',
+      icon: <RefreshCw className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20'
+    },
+    {
+      name: 'Elementos Místicos',
+      topics: ['anjo', 'seu_anjo', 'anjo_guarda', 'cores_favoraveis', 'pedras_favoraveis', 'incensos', 'metais', 'perfumes'],
+      description: 'Anjos, cores, pedras e elementos de apoio',
+      icon: <BookOpen className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
+    },
+    {
+      name: 'Ciclos Temporais',
+      topics: ['ano_pessoal', 'mes_pessoal', 'dia_pessoal', 'ciclo_vida', 'ciclos_de_vida', 'momentos_decisivos'],
+      description: 'Períodos e fases da vida',
+      icon: <RefreshCw className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
+    },
+    {
+      name: 'Desafios e Obstáculos',
+      topics: ['desafio_principal', 'primeiro_desafio', 'segundo_desafio', 'terceiro_desafio', 'quarto_desafio'],
+      description: 'Obstáculos e pontos de transformação',
+      icon: <List className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
+    },
+    {
+      name: 'Arcanos e Símbolos',
+      topics: ['arcano'],
+      description: 'Significados dos arcanos e símbolos místicos',
+      icon: <BookOpen className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20'
+    },
+    {
+      name: 'Áreas de Atuação',
+      topics: ['areas_de_atuacao'],
+      description: 'Campos profissionais e vocacionais',
+      icon: <Eye className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20'
+    },
+    {
+      name: 'Análises Especiais',
+      topics: ['harmonia_conjugal', 'correcao_assinatura', 'analise_endereco', 'analise_placa', 'analise_telefone'],
+      description: 'Análises específicas para diferentes aspectos da vida',
+      icon: <Eye className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20'
+    }
+  ];
+
+  useEffect(() => {
+    if (allContent) {
+      const categorizedTopics = new Set<string>();
+      categories.forEach(category => {
+        category.topics.forEach(topic => categorizedTopics.add(topic));
+      });
+
+      const uncategorized = allContent
+        .map(content => content.topico)
+        .filter(topic => !categorizedTopics.has(topic))
+        .filter((topic, index, self) => self.indexOf(topic) === index);
+
+      setUncategorizedTopics(uncategorized);
+    }
+  }, [allContent]);
+
+  const handleContentCreated = () => {
+    refetch();
+    setShowWizard(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-mystical">
-      {/* Mobile-First Header */}
-      <div className="bg-background/95 backdrop-blur border-b border-border sticky top-0 z-50">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              {currentStep !== 'categories' ? (
-                <Button variant="ghost" size="sm" onClick={goBack}>
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Link to="/dashboard">
-                  <Button variant="ghost" size="sm">
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-              <BookOpen className="h-5 w-5 text-primary" />
-              <h1 className="text-lg font-bold">Biblioteca</h1>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="text-xs">
-                {allContent?.length || 0}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={checkDuplicates}
-                disabled={removingDuplicates}
-              >
-                {removingDuplicates ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-6 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Biblioteca de Conhecimento</h1>
+            <p className="text-muted-foreground">
+              Gerencie todos os conteúdos numerológicos do sistema
+            </p>
           </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowWizard(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Conteúdo
+            </Button>
+            <ContentEnrichmentWizard />
+          </div>
+        </div>
 
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span className={currentStep === 'categories' ? 'text-primary font-medium' : ''}>
-              Categorias
-            </span>
-            {selectedCategory && (
-              <>
-                <ChevronRight className="h-3 w-3" />
-                <span className={currentStep === 'topics' ? 'text-primary font-medium' : ''}>
-                  {selectedCategory.name}
-                </span>
-              </>
-            )}
-            {selectedTopic && (
-              <>
-                <ChevronRight className="h-3 w-3" />
-                <span className={currentStep === 'editor' ? 'text-primary font-medium' : ''}>
-                  {selectedTopic.replace(/-/g, ' ')} #{selectedNumber}
-                </span>
-              </>
-            )}
-          </div>
+        {/* Search */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar por tópico, número ou categoria..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <LoadingSpinner size="sm" />
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="p-4 max-w-4xl mx-auto">
-        {/* Step 1: Categories */}
-        {currentStep === 'categories' && (
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar categoria..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {categories
-                .filter(category => 
-                  !searchTerm || 
-                  category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  category.description.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((category) => (
-                <Card 
-                  key={category.name} 
-                  className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${category.color}`}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setCurrentStep('topics');
-                  }}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-primary">
-                        {category.icon}
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">{category.name}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {category.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <Badge variant="outline" className="text-xs">
-                      {getCategoryTopicCount(category)} tópicos
-                    </Badge>
-                  </CardContent>
-                </Card>
-                ))}
-            </div>
-            
-            {/* Uncategorized Topics Panel */}
-            <UncategorizedTopicsPanel categories={categories} />
+      {/* Content Grid */}
+      {isLoading ? (
+        <div className="text-center py-12">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando conteúdos...</p>
+        </div>
+      ) : searchQuery ? (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">
+              Resultados da busca "{searchQuery}"
+            </h2>
+            <Badge variant="secondary">
+              {filteredContent?.length || 0} resultado(s)
+            </Badge>
           </div>
-        )}
+          
+          {filteredContent && filteredContent.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredContent.map((content) => (
+                <TopicCard
+                  key={`${content.topico}-${content.id}`}
+                  content={content}
+                  onClick={() => setSelectedContent(content)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Nenhum conteúdo encontrado para "{searchQuery}"
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category) => {
+            const categoryContent = allContent?.filter(content => 
+              category.topics.includes(content.topico)
+            ) || [];
 
-        {/* Step 2: Topics List */}
-        {currentStep === 'topics' && selectedCategory && (
-          <div className="space-y-4">
-            <ScrollArea className="h-[calc(100vh-200px)]">
-              <div className="space-y-2">
-                {Object.keys(groupedTopics).map((topicBase) => (
-                  <Card key={topicBase}>
-                    <Collapsible
-                      open={expandedTopics.has(topicBase)}
-                      onOpenChange={() => toggleTopic(topicBase)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-base capitalize">
-                                {topicBase.replace(/-/g, ' ')}
-                              </CardTitle>
-                              <CardDescription>
-                                {groupedTopics[topicBase].length} números disponíveis
-                              </CardDescription>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="secondary">
-                                {groupedTopics[topicBase].length}
-                              </Badge>
-                              <ChevronDown className={`h-4 w-4 transition-transform ${
-                                expandedTopics.has(topicBase) ? 'rotate-180' : ''
-                              }`} />
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-                      
-                      <CollapsibleContent>
-                        <CardContent className="pt-0">
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                            {getTopicNumbers(topicBase).map((number) => (
-                              <Button
-                                key={number}
-                                variant="outline"
-                                size="sm"
-                                className="h-auto py-3 flex flex-col items-center space-y-1"
-                                onClick={() => navigateToEditor(topicBase, number)}
-                              >
-                                <span className="text-lg font-bold">#{number}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  Editar
-                                </span>
-                              </Button>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </Card>
-                ))}
+            if (categoryContent.length === 0) return null;
+
+            return (
+              <div key={category.name} className={`rounded-lg p-6 ${category.color} border transition-all duration-200 hover:shadow-md`}>
+                <div className="flex items-center gap-3 mb-4">
+                  {category.icon}
+                  <div>
+                    <h3 className="font-semibold text-foreground">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground">{category.description}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  {categoryContent.map((content) => (
+                    <TopicCard
+                      key={`${content.topico}-${content.id}`}
+                      content={content}
+                      onClick={() => setSelectedContent(content)}
+                    />
+                  ))}
+                </div>
               </div>
-            </ScrollArea>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Uncategorized Topics Panel */}
+      {uncategorizedTopics.length > 0 && !searchQuery && (
+        <div className="rounded-lg p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border">
+          <h3 className="font-semibold text-foreground mb-4">Tópicos Não Categorizados</h3>
+          <div className="space-y-2">
+            {uncategorizedTopics.map((topic) => {
+              const topicContent = allContent?.filter(content => content.topico === topic) || [];
+              return topicContent.map((content) => (
+                <TopicCard
+                  key={`${content.topico}-${content.id}`}
+                  content={content}
+                  onClick={() => setSelectedContent(content)}
+                />
+              ));
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Step 3: Editor */}
-        {currentStep === 'editor' && (
-          <SimplifiedMobileEditor 
-            currentContent={currentContent}
-            onSave={handleContentSave}
-          />
-        )}
+      {/* Content Creation Wizard */}
+      {showWizard && (
+        <ContentCreationWizard
+          onClose={() => setShowWizard(false)}
+          onContentCreated={handleContentCreated}
+          categories={categories}
+        />
+      )}
 
-        {/* Floating Add Button */}
-        <button
-          onClick={() => setShowCreationWizard(true)}
-          className="fixed bottom-6 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-mystical hover:shadow-glow transition-all duration-300 z-50"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-
-        {/* Content Creation Wizard */}
-        {showCreationWizard && (
-          <ContentCreationWizard
-            onClose={() => setShowCreationWizard(false)}
-            onContentCreated={() => {
-              refetch();
-              setShowCreationWizard(false);
-            }}
-            categories={categories}
-          />
-        )}
-      </div>
+      {/* Content Details Dialog */}
+      {selectedContent && (
+        <Dialog open={!!selectedContent} onOpenChange={() => setSelectedContent(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedContent.topico.replace(/_/g, ' ')}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Tópico:</span> {selectedContent.topico}
+                </div>
+                <div>
+                  <span className="font-medium">Categoria:</span> {selectedContent.categoria || 'Não categorizado'}
+                </div>
+                <div>
+                  <span className="font-medium">ID:</span> {selectedContent.id}
+                </div>
+              </div>
+              <div>
+                <span className="font-medium">Conteúdo:</span>
+                <div className="mt-2 p-4 bg-muted rounded-lg max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {JSON.stringify(selectedContent.conteudo, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
