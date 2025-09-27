@@ -12,9 +12,7 @@ function extractText(input: any): string {
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(extractText).filter(Boolean).join('\n\n');
   if (typeof input === 'object') {
-    // Direct text fields - check all possible text field names
-    if (typeof (input as any).text === 'string') return (input as any).text;
-    if (typeof (input as any).content === 'string') return (input as any).content;
+    // Direct text fields
     if (typeof (input as any).conteudo === 'string') return (input as any).conteudo;
     if (typeof (input as any).texto_integral === 'string') return (input as any).texto_integral;
     if (typeof (input as any).descricao === 'string') return (input as any).descricao;

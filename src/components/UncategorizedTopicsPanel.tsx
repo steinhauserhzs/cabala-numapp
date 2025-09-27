@@ -76,30 +76,15 @@ export const UncategorizedTopicsPanel = ({ categories }: UncategorizedTopicsPane
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {uncategorizedArray.map((topic) => (
-                <Button
+                <div 
                   key={topic}
-                  variant="outline"
-                  className="p-3 h-auto justify-between bg-white dark:bg-background border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-900/30"
-                  onClick={() => {
-                    // Find available numbers for this topic
-                    const topicContent = content?.filter(item => item.topico.startsWith(topic)) || [];
-                    const firstItem = topicContent[0];
-                    if (firstItem) {
-                      const match = firstItem.topico.match(/_(\d+)$/);
-                      const number = match ? match[1] : '01';
-                      
-                      // Dispatch a custom event to navigate to this topic
-                      window.dispatchEvent(new CustomEvent('navigateToUncategorizedTopic', {
-                        detail: { topic, number }
-                      }));
-                    }
-                  }}
+                  className="p-2 bg-white dark:bg-background rounded border border-orange-200 dark:border-orange-800"
                 >
                   <span className="text-sm font-medium">{topic.replace(/_/g, ' ').replace(/-/g, ' ')}</span>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="ml-2 text-xs">
                     {content?.filter(item => item.topico.startsWith(topic)).length}
                   </Badge>
-                </Button>
+                </div>
               ))}
             </div>
             <div className="mt-3 p-3 bg-orange-100 dark:bg-orange-900/30 rounded text-xs text-orange-700 dark:text-orange-300">
