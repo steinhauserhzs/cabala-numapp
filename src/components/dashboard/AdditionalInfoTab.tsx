@@ -3,7 +3,7 @@ import { MapaNumerologico } from '@/utils/numerology';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GuardianAngelCard } from '../GuardianAngelCard';
-import { LegacyTopicCard } from '../LegacyTopicCard';
+import { TopicCard } from '../TopicCard';
 import { Badge } from '@/components/ui/badge';
 import { Bookmark, BookmarkCheck, Sparkles, BookOpen, Users, Palette } from 'lucide-react';
 
@@ -214,7 +214,7 @@ export function AdditionalInfoTab({
                         </div>
                       </div>
                       <div className="flex-1 px-4">
-                        <LegacyTopicCard 
+                        <TopicCard 
                           topico={topic}
                           icon={topicInfo.icon}
                           title={topicInfo.title}
@@ -232,7 +232,7 @@ export function AdditionalInfoTab({
                         <p className="text-sm text-muted-foreground">{topicInfo.description}</p>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <LegacyTopicCard 
+                        <TopicCard 
                           topico={topic}
                           icon={topicInfo.icon}
                           title={topicInfo.title}
