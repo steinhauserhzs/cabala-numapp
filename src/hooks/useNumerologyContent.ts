@@ -6,6 +6,7 @@ export interface NumerologyContent {
   topico: string;
   conteudo: any;
   created_at: string;
+  categoria?: string;
 }
 
 export const useNumerologyContent = () => {
