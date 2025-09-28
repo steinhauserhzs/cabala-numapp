@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { extractText } from '@/services/content';
 
 // Interface para pedras pessoais
 export interface PedrasPessoais {
@@ -31,13 +32,13 @@ export async function calcularPedrasPessoais(numero: number): Promise<PedrasPess
       return null;
     }
 
-    const content = typeof data.conteudo === 'string' ? data.conteudo : JSON.stringify(data.conteudo);
+    const content = extractText(data.conteudo);
     
     // Parse básico do conteúdo para extrair informações de pedras
     const pedrasPessoais: PedrasPessoais = {
       principal: extractMainStone(content) || "Não disponível",
       alternativas: extractAlternativeStones(content) || [],
-      propriedades: extractProperties(content) || content.substring(0, 150) + "...",
+      propriedades: extractProperties(content) || content.substring(0, 150) + (content.length > 150 ? "..." : ""),
       como_usar: extractUsage(content) || "Use conforme sua intuição e necessidade."
     };
 

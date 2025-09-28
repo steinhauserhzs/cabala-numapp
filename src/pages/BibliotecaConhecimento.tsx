@@ -5,6 +5,7 @@ import { TopicCard } from '@/components/TopicCard';
 import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
 import { ContentCreationWizard } from '@/components/ContentCreationWizard';
 import { ContentEnrichmentWizard } from '@/components/ContentEnrichmentWizard';
+import { SimplifiedContentEditor } from '@/components/SimplifiedContentEditor';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,38 +54,47 @@ export default function BibliotecaConhecimento() {
 
   // Function to categorize topics automatically
   const categorizeTopic = (topico: string): string => {
-    const topicLower = topico.toLowerCase();
+    // Normalizar string para busca (remover acentos, converter para minúsculas, etc.)
+    const normalizar = (str: string) => str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '');
     
-    // Números pessoais e interpretações específicas
-    if (topicLower.includes('motivacao') || topicLower.startsWith('motivacao_')) return 'Números Pessoais';
-    if (topicLower.includes('expressao') || topicLower.startsWith('expressao_')) return 'Números Pessoais';
-    if (topicLower.includes('impressao') || topicLower.startsWith('impressao_')) return 'Números Pessoais';
-    if (topicLower.includes('destino') || topicLower.startsWith('destino_')) return 'Números Pessoais';
-    if (topicLower.includes('missao') || topicLower.includes('psiquico') || topicLower.includes('resposta_subconsciente')) return 'Números Pessoais';
+    const topicoNorm = normalizar(topico);
     
-    // Anjos
-    if (topicLower.includes('anjo') || topicLower.startsWith('anjo_')) return 'Anjos da Guarda';
+    // Números Principais
+    if (['motivacao', 'destino', 'expressao', 'impressao', 'missao', 'psiquico'].some(term => topicoNorm.includes(term))) {
+      return 'Números Principais';
+    }
     
-    // Aspectos cármicos
-    if (topicLower.includes('carmicas') || topicLower.includes('dividas') || topicLower.includes('tendencias_ocultas')) return 'Aspectos Cármicos';
+    // Anjos da Guarda
+    if (topicoNorm.includes('anjo')) return 'Anjos da Guarda';
     
-    // Elementos místicos
-    if (topicLower.includes('cores') || topicLower.includes('pedras') || topicLower.includes('incensos') || topicLower.includes('metais') || topicLower.includes('perfumes')) return 'Elementos Místicos';
+    // Cores e Pedras  
+    if (['cor', 'pedra', 'favorav'].some(term => topicoNorm.includes(term))) {
+      return 'Cores e Pedras';
+    }
     
-    // Ciclos temporais
-    if (topicLower.includes('ano_pessoal') || topicLower.includes('mes_pessoal') || topicLower.includes('dia_pessoal') || topicLower.includes('ciclo')) return 'Ciclos Temporais';
+    // Ciclos e Tempos
+    if (['ciclo', 'ano', 'mes', 'dia', 'pessoal', 'periodo'].some(term => topicoNorm.includes(term))) {
+      return 'Ciclos e Tempos';
+    }
     
-    // Desafios
-    if (topicLower.includes('desafio')) return 'Desafios e Obstáculos';
+    // Aspectos Cármicos
+    if (['carmic', 'licao', 'divida', 'tendencia', 'oculta', 'subconsciente'].some(term => topicoNorm.includes(term))) {
+      return 'Aspectos Cármicos';
+    }
     
-    // Arcanos
-    if (topicLower.includes('arcano')) return 'Arcanos e Símbolos';
+    // Desafios e Momentos
+    if (['desafio', 'momento', 'decisivo', 'realizacao'].some(term => topicoNorm.includes(term))) {
+      return 'Desafios e Momentos';
+    }
     
-    // Áreas de atuação
-    if (topicLower.includes('areas_de_atuacao')) return 'Áreas de Atuação';
-    
-    // Análises especiais
-    if (topicLower.includes('harmonia') || topicLower.includes('correcao') || topicLower.includes('analise_')) return 'Análises Especiais';
+    // Análises Especiais
+    if (['harmonia', 'conjugal', 'correcao', 'assinatura', 'endereco', 'placa', 'telefone', 'empresarial', 'infantil'].some(term => topicoNorm.includes(term))) {
+      return 'Análises Especiais';
+    }
     
     return 'Sem categoria';
   };
@@ -335,15 +345,14 @@ export default function BibliotecaConhecimento() {
                   <span className="font-medium">ID:</span> {selectedContent.id}
                 </div>
               </div>
-              <div>
-                <span className="font-medium">Conteúdo:</span>
-                <div className="mt-2 p-4 bg-muted rounded-lg max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm">
-                    {JSON.stringify(selectedContent.conteudo, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            </div>
+               <SimplifiedContentEditor 
+                 currentContent={selectedContent.conteudo}
+                 onSave={() => {
+                   refetch();
+                   setSelectedContent(null);
+                 }}
+               />
+             </div>
           </DialogContent>
         </Dialog>
       )}

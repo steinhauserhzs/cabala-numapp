@@ -21,7 +21,7 @@ export const useInterpretacao = (categoria: string, numero: number | string, opt
   });
 
   return {
-    interpretacao: data && String(data).trim().length > 0 ? data : null,
+    interpretacao: data && String(data).trim().length > 0 ? String(data).trim() : null,
     isLoading,
     error: error as Error | null,
   };

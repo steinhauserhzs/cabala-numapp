@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { extractText } from '@/services/content';
 
 // Interface para cores pessoais
 export interface CoresPessoais {
@@ -30,13 +31,13 @@ export async function calcularCoresPessoais(numero: number): Promise<CoresPessoa
       return null;
     }
 
-    const content = typeof data.conteudo === 'string' ? data.conteudo : JSON.stringify(data.conteudo);
+    const content = extractText(data.conteudo);
     
     // Parse básico do conteúdo para extrair informações de cores
     const coresPessoais: CoresPessoais = {
       principal: extractMainColor(content) || "Não disponível",
       harmoniosas: extractHarmoniousColors(content) || [],
-      significado: content.substring(0, 200) + "..." // Primeiros 200 caracteres como significado
+      significado: content.substring(0, 200) + (content.length > 200 ? "..." : "")
     };
 
     // Armazenar no cache

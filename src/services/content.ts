@@ -7,7 +7,7 @@ const contentCache = new Map<string, string>();
 const interpretationCache = new Map<string, string | null>();
 
 // Helper: extract readable text from various JSON shapes
-function extractText(input: any): string {
+export function extractText(input: any): string {
   if (input == null) return '';
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(extractText).filter(Boolean).join('\n\n');
@@ -131,73 +131,107 @@ export async function fetchConteudo(topico: string): Promise<string> {
   }
 }
 
+// Helper para normalizar strings para busca
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+    .replace(/[\s-]+/g, '_') // Troca espaços e hífens por underscore
+    .trim();
+}
+
 export async function getInterpretacao(topico: string, numero: number | string): Promise<string | null> {
-  // Criar chave de busca direta: topico_numero (ex: "motivacao_07")
-  const searchKey = `${topico}_${String(numero).padStart(2, '0')}`;
-  const cacheKey = `${topico}_${numero}`;
+  const numeroStr = numero.toString().padStart(2, '0');
+  const topicoNormalizado = slugify(topico);
+  const chaveCompleta = `${topicoNormalizado}_${numeroStr}`;
   
-  if (interpretationCache.has(cacheKey)) {
-    return interpretationCache.get(cacheKey)!;
+  // Verificar cache primeiro
+  if (interpretationCache.has(chaveCompleta)) {
+    return interpretationCache.get(chaveCompleta)!;
   }
 
-  console.log(`🔍 Buscando interpretação direta para: ${searchKey}`);
-  
-  try {
-    // Buscar diretamente pela chave topico_numero
-    const { data, error } = await supabase
-      .from('conteudos_numerologia')
-      .select('conteudo')
-      .eq('topico', searchKey)
-      .maybeSingle();
+  // Lista de variações para tentar
+  const variacoes = [
+    `${topico}_${numeroStr}`,
+    `${topicoNormalizado}_${numeroStr}`,
+    `${topico.replace(/_/g, '-')}_${numeroStr}`,
+    `${topico.replace(/-/g, '_')}_${numeroStr}`
+  ];
 
-    if (error) {
-      console.error(`Erro ao buscar ${searchKey}:`, error);
-    }
+  // Adicionar aliases se existirem
+  const aliases = topicAliases[topico] || topicAliases[topicoNormalizado] || [];
+  for (const alias of aliases) {
+    variacoes.push(`${alias}_${numeroStr}`);
+    variacoes.push(`${slugify(alias)}_${numeroStr}`);
+  }
 
-    if (data?.conteudo) {
-      // Extrair o texto do conteúdo JSON
-      const interpretacao = extractText(data.conteudo);
-      if (interpretacao) {
-        interpretationCache.set(cacheKey, interpretacao);
-        console.log(`✅ Interpretação encontrada para: ${searchKey}`);
-        return interpretacao;
-      }
-    }
-
-    // Fallback: tentar aliases se não encontrou diretamente
-    const aliases = topicAliases[topico] || [];
-    for (const alias of aliases) {
-      const aliasKey = `${alias}_${String(numero).padStart(2, '0')}`;
-      const { data: aliasData } = await supabase
+  // Buscar por cada variação
+  let interpretacao: string | null = null;
+  for (const variacao of variacoes) {
+    try {
+      const { data, error } = await supabase
         .from('conteudos_numerologia')
         .select('conteudo')
-        .eq('topico', aliasKey)
+        .eq('topico', variacao)
         .maybeSingle();
 
-      if (aliasData?.conteudo) {
-        const interpretacao = extractText(aliasData.conteudo);
-        if (interpretacao) {
-          interpretationCache.set(cacheKey, interpretacao);
-          console.log(`✅ Interpretação encontrada via alias: ${aliasKey}`);
-          return interpretacao;
+      if (!error && data?.conteudo) {
+        interpretacao = extractText(data.conteudo);
+        if (interpretacao && interpretacao.trim()) {
+          console.log(`Encontrou interpretação com chave: ${variacao}`);
+          break;
         }
       }
+    } catch (error) {
+      console.warn(`Erro ao buscar ${variacao}:`, error);
     }
+  }
+  
+  // Fallback: busca flexível no banco
+  if (!interpretacao) {
+    try {
+      const { data, error } = await supabase
+        .from('conteudos_numerologia')
+        .select('topico, conteudo')
+        .ilike('topico', `%${topicoNormalizado}%${numeroStr}%`)
+        .limit(5);
 
-    // Fallback final para interpretação local
+      if (!error && data && data.length > 0) {
+        // Procurar a melhor correspondência
+        for (const item of data) {
+          const itemSlug = slugify(item.topico);
+          if (itemSlug.includes(topicoNormalizado) && itemSlug.includes(numeroStr)) {
+            interpretacao = extractText(item.conteudo);
+            console.log(`Encontrou via busca flexível: ${item.topico}`);
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Erro na busca flexível:', error);
+    }
+  }
+  
+  if (!interpretacao) {
+    // Fallback para busca local se não encontrar no banco
     const localInterpretacao = getLocalInterpretacao(topico, Number(numero));
     if (localInterpretacao) {
-      interpretationCache.set(cacheKey, localInterpretacao);
-      return localInterpretacao;
+      interpretacao = localInterpretacao;
     }
-
-    console.log(`❌ Nenhuma interpretação encontrada para: ${searchKey}`);
-    return null;
-
-  } catch (error) {
-    console.error(`Erro ao buscar interpretação para ${searchKey}:`, error);
-    return null;
   }
+
+  if (!interpretacao) {
+    console.warn(`Interpretação não encontrada para: ${topico} ${numero}. Chaves tentadas:`, variacoes);
+  }
+  
+  // Armazenar no cache
+  if (interpretacao) {
+    interpretationCache.set(chaveCompleta, interpretacao);
+  }
+  
+  return interpretacao || null;
 };
 
 function parseContent(raw: string, numeroStr: string): string | null {
@@ -281,11 +315,26 @@ const topicAliases: Record<string, string[]> = {
   'periodo_1': ['primeiro_periodo', 'ciclo_1', 'ciclo_juventude'],
   'periodo_2': ['segundo_periodo', 'ciclo_2', 'ciclo_maturidade'],
   'periodo_3': ['terceiro_periodo', 'ciclo_3', 'ciclo_sabedoria'],
-  'desafio_1': ['primeiro_desafio', 'desafio_juventude'],
-  'desafio_2': ['segundo_desafio', 'desafio_principal'],
-  'desafio_3': ['terceiro_desafio', 'desafio_maturidade'],
-  'desafio_4': ['quarto_desafio', 'desafio_sabedoria'],
   'anjo_guarda': ['anjo_da_guarda', 'guardian_angel'],
-  'cores_pessoais': ['cores_numerologicas', 'personal_colors'],
-  'pedras_pessoais': ['pedras_numerologicas', 'cristais_pessoais', 'personal_stones']
+  
+  // Ciclos pessoais específicos
+  'ano_pessoal': ['ano-pessoal', 'ano pessoal'],
+  'mes_pessoal': ['mes-pessoal', 'mês pessoal', 'mês-pessoal'],
+  'dia_pessoal': ['dia-pessoal', 'dia pessoal'],
+  
+  // Desafios específicos
+  'desafio_1': ['primeiro_desafio', '1º_desafio', 'desafio-1', 'desafio_juventude'],
+  'desafio_2': ['segundo_desafio', '2º_desafio', 'desafio-2', 'desafio_principal'],
+  'desafio_3': ['desafio_principal', 'principal', 'desafio-3', 'terceiro_desafio', 'desafio_maturidade'],
+  'desafio_4': ['quarto_desafio', '4º_desafio', 'desafio-4', 'desafio_sabedoria'],
+  
+  // Momentos decisivos
+  'momento_decisivo_1': ['primeiro_momento', '1º_momento', 'realizacao_1', 'momento-decisivo-1'],
+  'momento_decisivo_2': ['segundo_momento', '2º_momento', 'realizacao_2', 'momento-decisivo-2'],
+  'momento_decisivo_3': ['terceiro_momento', '3º_momento', 'realizacao_3', 'momento-decisivo-3'],
+  'momento_decisivo_4': ['quarto_momento', '4º_momento', 'realizacao_4', 'momento-decisivo-4'],
+  
+  // Elementos especiais
+  'cores_favoraveis': ['cores_pessoais', 'cores_numerologicas', 'personal_colors', 'cores-favoraveis', 'cores favoráveis'],
+  'pedras': ['pedras_pessoais', 'pedras_numerologicas', 'cristais_pessoais', 'personal_stones', 'pedras-pessoais']
 };

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { extractText } from '@/services/content';
 
 interface AngelInfo {
   nome: string;
@@ -114,7 +115,8 @@ export async function calcularAnjoGuarda(birthDate: Date): Promise<AngelInfo | n
     }
 
     const angelData = ANGEL_PERIODS.find(a => a.number === angelNumber);
-    const content = typeof data.conteudo === 'string' ? data.conteudo : JSON.stringify(data.conteudo);
+    
+    const content = extractText(data.conteudo);
 
     return {
       nome: angelData?.name || `Anjo ${angelNumber}`,

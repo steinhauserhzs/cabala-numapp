@@ -155,7 +155,7 @@ export function OnePageNumerologyReport({
       title: "Ano Pessoal",
       value: mapa.anoPersonal,
       description: "Energia do ano atual",
-      categoria: "tempos_pessoais",
+      categoria: "ano_pessoal",
       icon: Calendar,
       color: "text-orange-500"
     },
@@ -164,7 +164,7 @@ export function OnePageNumerologyReport({
       title: "Mês Pessoal", 
       value: mapa.mesPersonal,
       description: "Energia do mês atual",
-      categoria: "tempos_pessoais",
+      categoria: "mes_pessoal",
       icon: Clock,
       color: "text-teal-500"
     },
@@ -173,7 +173,7 @@ export function OnePageNumerologyReport({
       title: "Dia Pessoal",
       value: mapa.diaPersonal,
       description: "Energia do dia atual", 
-      categoria: "tempos_pessoais",
+      categoria: "dia_pessoal",
       icon: Sun,
       color: "text-amber-500"
     }
@@ -224,7 +224,7 @@ export function OnePageNumerologyReport({
       title: "1º Ciclo de Vida",
       value: mapa.ciclosVida?.primeiro || 0,
       description: "Infância e juventude",
-      categoria: "ciclos_vida",
+      categoria: "periodo_1",
       icon: TrendingUp,
       color: "text-green-600"
     },
@@ -233,7 +233,7 @@ export function OnePageNumerologyReport({
       title: "2º Ciclo de Vida",
       value: mapa.ciclosVida?.segundo || 0,
       description: "Maturidade e produtividade",
-      categoria: "ciclos_vida", 
+      categoria: "periodo_2", 
       icon: TrendingUp,
       color: "text-blue-600"
     },
@@ -242,7 +242,7 @@ export function OnePageNumerologyReport({
       title: "3º Ciclo de Vida",
       value: mapa.ciclosVida?.terceiro || 0,
       description: "Sabedoria e realização",
-      categoria: "ciclos_vida",
+      categoria: "periodo_3",
       icon: TrendingUp,
       color: "text-purple-600"
     }
@@ -254,7 +254,7 @@ export function OnePageNumerologyReport({
       title: "1º Desafio",
       value: mapa.desafios?.primeiro || 0,
       description: "Primeiro terço da vida",
-      categoria: `desafios_${(mapa.desafios?.primeiro || 0).toString().padStart(2, '0')}`,
+      categoria: "desafio_1",
       icon: AlertTriangle,
       color: "text-orange-600"
     },
@@ -263,7 +263,7 @@ export function OnePageNumerologyReport({
       title: "2º Desafio",
       value: mapa.desafios?.segundo || 0,
       description: "Segundo terço da vida",
-      categoria: `desafios_${(mapa.desafios?.segundo || 0).toString().padStart(2, '0')}`,
+      categoria: "desafio_2",
       icon: Mountain,
       color: "text-red-600"
     },
@@ -272,7 +272,7 @@ export function OnePageNumerologyReport({
       title: "Desafio Principal",
       value: mapa.desafios?.principal || 0,
       description: "Desafio central da vida",
-      categoria: `desafios_${(mapa.desafios?.principal || 0).toString().padStart(2, '0')}`,
+      categoria: "desafio_3",
       icon: Shield,
       color: "text-red-700"
     }
@@ -284,7 +284,7 @@ export function OnePageNumerologyReport({
       title: "1º Momento Decisivo",
       value: mapa.momentosDecisivos?.primeiro || 0,
       description: "Primeira realização importante",
-      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.primeiro || 0).toString().padStart(2, '0')}`,
+      categoria: "momento_decisivo_1",
       icon: Star,
       color: "text-yellow-600"
     },
@@ -293,7 +293,7 @@ export function OnePageNumerologyReport({
       title: "2º Momento Decisivo",
       value: mapa.momentosDecisivos?.segundo || 0,
       description: "Segunda realização importante",
-      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.segundo || 0).toString().padStart(2, '0')}`,
+      categoria: "momento_decisivo_2",
       icon: Star,
       color: "text-yellow-700"
     },
@@ -302,7 +302,7 @@ export function OnePageNumerologyReport({
       title: "3º Momento Decisivo", 
       value: mapa.momentosDecisivos?.terceiro || 0,
       description: "Terceira realização importante",
-      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.terceiro || 0).toString().padStart(2, '0')}`,
+      categoria: "momento_decisivo_3",
       icon: Star,
       color: "text-amber-600"
     },
@@ -311,7 +311,7 @@ export function OnePageNumerologyReport({
       title: "4º Momento Decisivo",
       value: mapa.momentosDecisivos?.quarto || 0,
       description: "Realização final",
-      categoria: `momentos-decisivos_${(mapa.momentosDecisivos?.quarto || 0).toString().padStart(2, '0')}`,
+      categoria: "momento_decisivo_4",
       icon: Crown,
       color: "text-amber-700"
     }
