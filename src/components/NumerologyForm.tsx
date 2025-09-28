@@ -26,7 +26,10 @@ const NumerologyForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && birthDate) {
-      onSubmit(name.trim(), new Date(birthDate));
+      // Fix timezone issue by parsing date parts manually
+      const [year, month, day] = birthDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      onSubmit(name.trim(), date);
     }
   };
 

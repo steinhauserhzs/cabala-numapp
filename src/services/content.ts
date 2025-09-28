@@ -12,12 +12,27 @@ function extractText(input: any): string {
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(extractText).filter(Boolean).join('\n\n');
   if (typeof input === 'object') {
+    // Special handling for angel content structure
+    if ((input as any).attributes && (input as any).attributes.nome) {
+      const attrs = (input as any).attributes;
+      const nome = attrs.nome || '';
+      const descricao = attrs.hierarquia_descricao || '';
+      const incenso = attrs.incenso || '';
+      
+      let result = nome;
+      if (descricao) result += `\n${descricao}`;
+      if (incenso) result += `\nIncenso: ${incenso}`;
+      return result;
+    }
+
     // Direct text fields - check all possible text field names
     if (typeof (input as any).text === 'string') return (input as any).text;
     if (typeof (input as any).content === 'string') return (input as any).content;
     if (typeof (input as any).conteudo === 'string') return (input as any).conteudo;
     if (typeof (input as any).texto_integral === 'string') return (input as any).texto_integral;
     if (typeof (input as any).descricao === 'string') return (input as any).descricao;
+    if (typeof (input as any).titulo === 'string') return (input as any).titulo;
+    if (typeof (input as any).nome === 'string') return (input as any).nome;
 
     // Nested content object
     if ((input as any).conteudo && typeof (input as any).conteudo === 'object') {
@@ -36,23 +51,33 @@ function extractText(input: any): string {
         if (typeof item === 'object') {
           const titulo = item.titulo || `Número ${k}`;
           const desc = item.descricao || item.texto_integral || extractText(item);
-          return `${titulo}\n${desc}`;
+          return `${titulo}: ${desc}`;
         }
         return `${k}: ${extractText(item)}`;
       });
       return parts.join('\n\n');
     }
     
+    // Handle structured content with title/description pattern
+    if ((input as any).title && ((input as any).description || (input as any).content)) {
+      const title = (input as any).title;
+      const content = (input as any).description || (input as any).content;
+      return `${title}\n${extractText(content)}`;
+    }
+    
     // Non-numeric object - try to extract meaningful content
     const meaningfulKeys = Object.keys(input as any).filter(k => 
-      !['id', 'topico', 'created_at', 'updated_at'].includes(k)
+      !['id', 'topico', 'created_at', 'updated_at', 'number', 'source', 'topic'].includes(k)
     );
     if (meaningfulKeys.length > 0) {
-      return meaningfulKeys.map(k => extractText((input as any)[k])).filter(Boolean).join('\n\n');
+      const parts = meaningfulKeys.map(k => {
+        const value = extractText((input as any)[k]);
+        return value && value.trim() ? value : null;
+      }).filter(Boolean);
+      return parts.join('\n\n');
     }
   }
-  // Fallback
-  try { return JSON.stringify(input); } catch { return String(input); }
+  return '';
 }
 
 export async function fetchConteudo(topico: string): Promise<string> {

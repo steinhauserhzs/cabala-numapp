@@ -51,59 +51,104 @@ export default function BibliotecaConhecimento() {
     }
   }, [searchQuery]);
 
+  // Function to categorize topics automatically
+  const categorizeTopic = (topico: string): string => {
+    const topicLower = topico.toLowerCase();
+    
+    // Números pessoais e interpretações específicas
+    if (topicLower.includes('motivacao') || topicLower.startsWith('motivacao_')) return 'Números Pessoais';
+    if (topicLower.includes('expressao') || topicLower.startsWith('expressao_')) return 'Números Pessoais';
+    if (topicLower.includes('impressao') || topicLower.startsWith('impressao_')) return 'Números Pessoais';
+    if (topicLower.includes('destino') || topicLower.startsWith('destino_')) return 'Números Pessoais';
+    if (topicLower.includes('missao') || topicLower.includes('psiquico') || topicLower.includes('resposta_subconsciente')) return 'Números Pessoais';
+    
+    // Anjos
+    if (topicLower.includes('anjo') || topicLower.startsWith('anjo_')) return 'Anjos da Guarda';
+    
+    // Aspectos cármicos
+    if (topicLower.includes('carmicas') || topicLower.includes('dividas') || topicLower.includes('tendencias_ocultas')) return 'Aspectos Cármicos';
+    
+    // Elementos místicos
+    if (topicLower.includes('cores') || topicLower.includes('pedras') || topicLower.includes('incensos') || topicLower.includes('metais') || topicLower.includes('perfumes')) return 'Elementos Místicos';
+    
+    // Ciclos temporais
+    if (topicLower.includes('ano_pessoal') || topicLower.includes('mes_pessoal') || topicLower.includes('dia_pessoal') || topicLower.includes('ciclo')) return 'Ciclos Temporais';
+    
+    // Desafios
+    if (topicLower.includes('desafio')) return 'Desafios e Obstáculos';
+    
+    // Arcanos
+    if (topicLower.includes('arcano')) return 'Arcanos e Símbolos';
+    
+    // Áreas de atuação
+    if (topicLower.includes('areas_de_atuacao')) return 'Áreas de Atuação';
+    
+    // Análises especiais
+    if (topicLower.includes('harmonia') || topicLower.includes('correcao') || topicLower.includes('analise_')) return 'Análises Especiais';
+    
+    return 'Sem categoria';
+  };
+
   const categories: ContentCategory[] = [
     {
       name: 'Números Pessoais',
-      topics: ['motivacao', 'expressao', 'impressao', 'destino', 'missao', 'psiquico', 'numero_psiquico', 'resposta_subconsciente'],
-      description: 'Números fundamentais da personalidade',
+      topics: [], // Will be filled dynamically
+      description: 'Números fundamentais da personalidade e suas interpretações',
       icon: <Grid3X3 className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
     },
     {
+      name: 'Anjos da Guarda',
+      topics: [],
+      description: 'Anjos protetores e suas características',
+      icon: <BookOpen className="h-5 w-5" />,
+      color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
+    },
+    {
       name: 'Aspectos Cármicos',
-      topics: ['licoes_carmicas', 'dividas_carmicas', 'tendencias_ocultas'],
+      topics: [],
       description: 'Lições e padrões espirituais',
       icon: <RefreshCw className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20'
     },
     {
       name: 'Elementos Místicos',
-      topics: ['anjo', 'seu_anjo', 'anjo_guarda', 'cores_favoraveis', 'pedras_favoraveis', 'incensos', 'metais', 'perfumes'],
-      description: 'Anjos, cores, pedras e elementos de apoio',
+      topics: [],
+      description: 'Cores, pedras e elementos de apoio espiritual',
       icon: <BookOpen className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
     },
     {
       name: 'Ciclos Temporais',
-      topics: ['ano_pessoal', 'mes_pessoal', 'dia_pessoal', 'ciclo_vida', 'ciclos_de_vida', 'momentos_decisivos'],
+      topics: [],
       description: 'Períodos e fases da vida',
       icon: <RefreshCw className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
     },
     {
       name: 'Desafios e Obstáculos',
-      topics: ['desafio_principal', 'primeiro_desafio', 'segundo_desafio', 'terceiro_desafio', 'quarto_desafio'],
+      topics: [],
       description: 'Obstáculos e pontos de transformação',
       icon: <List className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
     },
     {
       name: 'Arcanos e Símbolos',
-      topics: ['arcano'],
+      topics: [],
       description: 'Significados dos arcanos e símbolos místicos',
       icon: <BookOpen className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20'
     },
     {
       name: 'Áreas de Atuação',
-      topics: ['areas_de_atuacao'],
+      topics: [],
       description: 'Campos profissionais e vocacionais',
       icon: <Eye className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20'
     },
     {
       name: 'Análises Especiais',
-      topics: ['harmonia_conjugal', 'correcao_assinatura', 'analise_endereco', 'analise_placa', 'analise_telefone'],
+      topics: [],
       description: 'Análises específicas para diferentes aspectos da vida',
       icon: <Eye className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20'
@@ -112,14 +157,10 @@ export default function BibliotecaConhecimento() {
 
   useEffect(() => {
     if (allContent) {
-      const categorizedTopics = new Set<string>();
-      categories.forEach(category => {
-        category.topics.forEach(topic => categorizedTopics.add(topic));
-      });
-
+      // Get uncategorized topics using the new categorization function
       const uncategorized = allContent
+        .filter(content => categorizeTopic(content.topico) === 'Sem categoria')
         .map(content => content.topico)
-        .filter(topic => !categorizedTopics.has(topic))
         .filter((topic, index, self) => self.indexOf(topic) === index);
 
       setUncategorizedTopics(uncategorized);
@@ -210,8 +251,9 @@ export default function BibliotecaConhecimento() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category) => {
+            // Filter content dynamically by category
             const categoryContent = allContent?.filter(content => 
-              category.topics.includes(content.topico)
+              categorizeTopic(content.topico) === category.name
             ) || [];
 
             if (categoryContent.length === 0) return null;
@@ -223,10 +265,13 @@ export default function BibliotecaConhecimento() {
                   <div>
                     <h3 className="font-semibold text-foreground">{category.name}</h3>
                     <p className="text-sm text-muted-foreground">{category.description}</p>
+                    <Badge variant="secondary" className="mt-1 text-xs">
+                      {categoryContent.length} tópico(s)
+                    </Badge>
                   </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1 max-h-64 overflow-y-auto">
                   {categoryContent.map((content) => (
                     <TopicCard
                       key={`${content.topico}-${content.id}`}
