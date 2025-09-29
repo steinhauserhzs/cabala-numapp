@@ -5,7 +5,7 @@ import { TopicCard } from '@/components/TopicCard';
 import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel';
 import { ContentCreationWizard } from '@/components/ContentCreationWizard';
 import { ContentEnrichmentWizard } from '@/components/ContentEnrichmentWizard';
-import { SimplifiedContentEditor } from '@/components/SimplifiedContentEditor';
+import { SimpleTextEditor } from '@/components/SimpleTextEditor';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import type { NumerologyContent } from '@/hooks/useNumerologyContent';
 
 interface ContentCategory {
+  id: string;
   name: string;
   topics: string[];
   description: string;
@@ -54,7 +55,6 @@ export default function BibliotecaConhecimento() {
 
   // Function to categorize topics automatically
   const categorizeTopic = (topico: string): string => {
-    // Normalizar string para busca (remover acentos, converter para minúsculas, etc.)
     const normalizar = (str: string) => str
       .toLowerCase()
       .normalize('NFD')
@@ -63,51 +63,63 @@ export default function BibliotecaConhecimento() {
     
     const topicoNorm = normalizar(topico);
     
-    // Números Principais
+    // Números Pessoais
     if (['motivacao', 'destino', 'expressao', 'impressao', 'missao', 'psiquico'].some(term => topicoNorm.includes(term))) {
-      return 'Números Principais';
+      return 'numeros-pessoais';
     }
     
     // Anjos da Guarda
-    if (topicoNorm.includes('anjo')) return 'Anjos da Guarda';
-    
-    // Cores e Pedras  
-    if (['cor', 'pedra', 'favorav'].some(term => topicoNorm.includes(term))) {
-      return 'Cores e Pedras';
-    }
-    
-    // Ciclos e Tempos
-    if (['ciclo', 'ano', 'mes', 'dia', 'pessoal', 'periodo'].some(term => topicoNorm.includes(term))) {
-      return 'Ciclos e Tempos';
-    }
+    if (topicoNorm.includes('anjo')) return 'anjos-guarda';
     
     // Aspectos Cármicos
-    if (['carmic', 'licao', 'divida', 'tendencia', 'oculta', 'subconsciente'].some(term => topicoNorm.includes(term))) {
-      return 'Aspectos Cármicos';
+    if (['carmic', 'licao', 'divida', 'tendencia', 'oculta', 'subconsciente', 'resposta'].some(term => topicoNorm.includes(term))) {
+      return 'aspectos-carmicos';
     }
     
-    // Desafios e Momentos
+    // Elementos Místicos (cores e pedras)
+    if (['cor', 'pedra', 'favorav'].some(term => topicoNorm.includes(term))) {
+      return 'elementos-misticos';
+    }
+    
+    // Ciclos Temporais
+    if (['ciclo', 'ano', 'mes', 'dia', 'pessoal', 'periodo'].some(term => topicoNorm.includes(term))) {
+      return 'ciclos-temporais';
+    }
+    
+    // Desafios e Obstáculos
     if (['desafio', 'momento', 'decisivo', 'realizacao'].some(term => topicoNorm.includes(term))) {
-      return 'Desafios e Momentos';
+      return 'desafios-obstaculos';
+    }
+    
+    // Arcanos e Símbolos
+    if (['arcano', 'carta', 'simbolo', 'taro'].some(term => topicoNorm.includes(term))) {
+      return 'arcanos-simbolos';
+    }
+    
+    // Áreas de Atuação
+    if (['area', 'atuacao', 'profiss', 'carreira', 'vocac'].some(term => topicoNorm.includes(term))) {
+      return 'areas-atuacao';
     }
     
     // Análises Especiais
     if (['harmonia', 'conjugal', 'correcao', 'assinatura', 'endereco', 'placa', 'telefone', 'empresarial', 'infantil'].some(term => topicoNorm.includes(term))) {
-      return 'Análises Especiais';
+      return 'analises-especiais';
     }
     
-    return 'Sem categoria';
+    return 'sem-categoria';
   };
 
   const categories: ContentCategory[] = [
     {
+      id: 'numeros-pessoais',
       name: 'Números Pessoais',
-      topics: [], // Will be filled dynamically
+      topics: [],
       description: 'Números fundamentais da personalidade e suas interpretações',
       icon: <Grid3X3 className="h-5 w-5" />,
       color: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20'
     },
     {
+      id: 'anjos-guarda',
       name: 'Anjos da Guarda',
       topics: [],
       description: 'Anjos protetores e suas características',
@@ -115,6 +127,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
     },
     {
+      id: 'aspectos-carmicos',
       name: 'Aspectos Cármicos',
       topics: [],
       description: 'Lições e padrões espirituais',
@@ -122,6 +135,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20'
     },
     {
+      id: 'elementos-misticos',
       name: 'Elementos Místicos',
       topics: [],
       description: 'Cores, pedras e elementos de apoio espiritual',
@@ -129,6 +143,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20'
     },
     {
+      id: 'ciclos-temporais',
       name: 'Ciclos Temporais',
       topics: [],
       description: 'Períodos e fases da vida',
@@ -136,6 +151,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20'
     },
     {
+      id: 'desafios-obstaculos',
       name: 'Desafios e Obstáculos',
       topics: [],
       description: 'Obstáculos e pontos de transformação',
@@ -143,6 +159,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20'
     },
     {
+      id: 'arcanos-simbolos',
       name: 'Arcanos e Símbolos',
       topics: [],
       description: 'Significados dos arcanos e símbolos místicos',
@@ -150,6 +167,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20'
     },
     {
+      id: 'areas-atuacao',
       name: 'Áreas de Atuação',
       topics: [],
       description: 'Campos profissionais e vocacionais',
@@ -157,6 +175,7 @@ export default function BibliotecaConhecimento() {
       color: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20'
     },
     {
+      id: 'analises-especiais',
       name: 'Análises Especiais',
       topics: [],
       description: 'Análises específicas para diferentes aspectos da vida',
@@ -169,7 +188,7 @@ export default function BibliotecaConhecimento() {
     if (allContent) {
       // Get uncategorized topics using the new categorization function
       const uncategorized = allContent
-        .filter(content => categorizeTopic(content.topico) === 'Sem categoria')
+        .filter(content => categorizeTopic(content.topico) === 'sem-categoria')
         .map(content => content.topico)
         .filter((topic, index, self) => self.indexOf(topic) === index);
 
@@ -263,13 +282,13 @@ export default function BibliotecaConhecimento() {
           {categories.map((category) => {
             // Filter content dynamically by category
             const categoryContent = allContent?.filter(content => 
-              categorizeTopic(content.topico) === category.name
+              categorizeTopic(content.topico) === category.id
             ) || [];
 
             if (categoryContent.length === 0) return null;
 
             return (
-              <div key={category.name} className={`rounded-lg p-6 ${category.color} border transition-all duration-200 hover:shadow-md`}>
+              <div key={category.id} className={`rounded-lg p-6 ${category.color} border transition-all duration-200 hover:shadow-md`}>
                 <div className="flex items-center gap-3 mb-4">
                   {category.icon}
                   <div>
@@ -345,8 +364,8 @@ export default function BibliotecaConhecimento() {
                   <span className="font-medium">ID:</span> {selectedContent.id}
                 </div>
               </div>
-               <SimplifiedContentEditor 
-                 currentContent={selectedContent.conteudo}
+               <SimpleTextEditor 
+                 currentContent={selectedContent}
                  onSave={() => {
                    refetch();
                    setSelectedContent(null);

@@ -220,56 +220,100 @@ export interface MapaNumerologico {
   anjoGuarda: string;
 }
 
-// Main function to generate complete numerological map using new deterministic engine
+// Main function to generate complete numerological map using PERFIL_CONECTA
 export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
+  // Import the profile-based core functions
+  const { 
+    calcExpressao, 
+    calcMotivacao, 
+    calcImpressao, 
+    calcDestino, 
+    calcMissao, 
+    calcPsiquico,
+    calcRespostaSubconsciente,
+    calcLicoesCarmicas,
+    calcTendenciasOcultas,
+    setActiveProfile
+  } = require('./numerology-core');
+  
+  const { PERFIL_CONECTA } = require('./numerology-profile');
+  
+  // Set the correct profile for calculations
+  setActiveProfile(PERFIL_CONECTA);
+  
   const day = dataNascimento.getDate();
   const month = dataNascimento.getMonth() + 1;
   const year = dataNascimento.getFullYear();
-  const dateStr = `${day.toString().padStart(2,'0')}/${month.toString().padStart(2,'0')}/${year}`;
   
-  // Setup options with base lookup tables
-  const options: Options = {
-    angels: ANGELS_BASE,
-    harmonics: HARMONICS_BASE,
-    colors: COLORS_BASE,
-    conjugal: CONJUGAL_BASE,
-    currentDate: new Date()
-  };
+  // Calculate core numbers using profile-based engine
+  const motivacao = calcMotivacao(nome);
+  const expressao = calcExpressao(nome);
+  const impressao = calcImpressao(nome);
+  const destino = calcDestino(day, month, year);
+  const missao = calcMissao(nome, day, month, year); // Expressão + Destino
+  const numeroPsiquico = calcPsiquico(day);
   
-  const result = computeFullMap(nome, dateStr, options);
+  // Karmic calculations
+  const respostaSubconsciente = calcRespostaSubconsciente(nome);
+  const licoesCarmicas = calcLicoesCarmicas(nome);
+  const tendenciasOcultas = calcTendenciasOcultas(nome);
+  const dividasCarmicas: number[] = []; // Legacy - kept empty
   
-  // Map to legacy interface
+  // Life cycles and challenges using legacy functions
+  const desafio1 = calcDesafio1(dataNascimento);
+  const desafio2 = calcDesafio2(dataNascimento);
+  const desafioPrincipal = calcDesafioPrincipal(desafio1, desafio2);
+  
+  const momento1 = calcMomento1(dataNascimento);
+  const momento2 = calcMomento2(dataNascimento);
+  const momento3 = calcMomento3(dataNascimento);
+  const momento4 = calcMomento4(dataNascimento);
+  
+  // Life cycles (month, day, year reduced)
+  const ciclo1 = reduceKeepMasters(month);
+  const ciclo2 = reduceKeepMasters(day);
+  const ciclo3 = reduceKeepMasters(year);
+  
+  // Personal year/month/day
+  const currentDate = new Date();
+  const anoPersonal = calcAnoPersonal(dataNascimento, currentDate.getFullYear());
+  const mesPersonal = calcMesPersonal(anoPersonal, currentDate.getMonth() + 1);
+  const diaPersonal = calcDiaPersonal(mesPersonal, currentDate.getDate());
+  
+  // Guardian Angel
+  const anjoGuarda = calcAnjoGuarda(dataNascimento);
+  
   return {
-    motivacao: result.numeros.Motivacao.numero,
-    impressao: result.numeros.Impressao.numero,
-    expressao: result.numeros.Expressao.numero,
-    destino: result.numeros.Destino.numero,
-    missao: result.numeros.Missao.numero,
-    numeroPsiquico: result.numeros.NumeroPsiquico.numero,
-    respostaSubconsciente: result.carmicos.resposta_subconsciente,
-    licoesCarmicas: result.carmicos.licoes,
-    tendenciasOcultas: result.carmicos.tendencias_ocultas,
-    dividasCarmicas: result.carmicos.dividas,
+    motivacao,
+    impressao,
+    expressao,
+    destino,
+    missao,
+    numeroPsiquico,
+    respostaSubconsciente,
+    licoesCarmicas,
+    tendenciasOcultas,
+    dividasCarmicas,
     desafios: {
-      primeiro: result.ciclos.desafios[0],
-      segundo: result.ciclos.desafios[1],
-      principal: result.ciclos.principal,
+      primeiro: desafio1,
+      segundo: desafio2,
+      principal: desafioPrincipal,
     },
     momentosDecisivos: {
-      primeiro: result.ciclos.momentos_decisivos[0],
-      segundo: result.ciclos.momentos_decisivos[1],
-      terceiro: result.ciclos.momentos_decisivos[2],
-      quarto: result.ciclos.momentos_decisivos[3],
+      primeiro: momento1,
+      segundo: momento2,
+      terceiro: momento3,
+      quarto: momento4,
     },
     ciclosVida: {
-      primeiro: result.ciclos.vida[0],
-      segundo: result.ciclos.vida[1],
-      terceiro: result.ciclos.vida[2],
+      primeiro: ciclo1,
+      segundo: ciclo2,
+      terceiro: ciclo3,
     },
-    anoPersonal: result.pessoais.ano,
-    mesPersonal: result.pessoais.mes,
-    diaPersonal: result.pessoais.dia,
-    anjoGuarda: result.numeros.Anjo.nome || ""
+    anoPersonal,
+    mesPersonal,
+    diaPersonal,
+    anjoGuarda
   };
 }
 
