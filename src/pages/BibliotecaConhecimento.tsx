@@ -6,10 +6,11 @@ import { UncategorizedTopicsPanel } from '@/components/UncategorizedTopicsPanel'
 import { ContentCreationWizard } from '@/components/ContentCreationWizard';
 import { ContentEnrichmentWizard } from '@/components/ContentEnrichmentWizard';
 import { SimpleTextEditor } from '@/components/SimpleTextEditor';
+import { ContentRestorationWizard } from '@/components/ContentRestorationWizard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Grid3X3, BookOpen, RefreshCw, List, Eye } from 'lucide-react';
+import { Plus, Search, Grid3X3, BookOpen, RefreshCw, List, Eye, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { NumerologyContent } from '@/hooks/useNumerologyContent';
@@ -30,6 +31,7 @@ export default function BibliotecaConhecimento() {
   const [uncategorizedTopics, setUncategorizedTopics] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [showRestorationWizard, setShowRestorationWizard] = useState(false);
 
   const { data: allContent, isLoading, refetch } = useNumerologyContent();
   const { createContent } = useContentCreation();
@@ -221,6 +223,14 @@ export default function BibliotecaConhecimento() {
               <Plus className="h-4 w-4" />
               Novo Conteúdo
             </Button>
+            <Button 
+              onClick={() => setShowRestorationWizard(true)} 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Restaurar PDF
+            </Button>
             <ContentEnrichmentWizard />
           </div>
         </div>
@@ -342,6 +352,16 @@ export default function BibliotecaConhecimento() {
           categories={categories}
         />
       )}
+
+      {/* Content Restoration Wizard */}
+      <ContentRestorationWizard
+        isOpen={showRestorationWizard}
+        onClose={() => setShowRestorationWizard(false)}
+        onComplete={() => {
+          refetch();
+          setShowRestorationWizard(false);
+        }}
+      />
 
       {/* Content Details Dialog */}
       {selectedContent && (
