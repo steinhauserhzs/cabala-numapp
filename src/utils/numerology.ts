@@ -1,47 +1,51 @@
-// Numerology calculation utilities - NEW DETERMINISTIC CABALISTIC ENGINE
+// Numerology calculation utilities - PROFILE-BASED ENGINE
 import { 
-  computeFullMap,
   normalizeNameKeepingCedilla,
-  letterValue as cabalisticLetterValue,
   reduceKeepMasters,
-  type Options,
-  type HarmonicsTable,
-  type ConjugalTable,
-  type ColorsTable,
-  type AngelsTable
 } from './numerology-cabalistic';
 import { ANGELS_BASE, HARMONICS_BASE, COLORS_BASE, CONJUGAL_BASE } from '../data/angels-base';
 
-// New deterministic engine - single source of truth
-export const clean = normalizeNameKeepingCedilla;
-export const letterValue = cabalisticLetterValue;
+// Import core profile-based functions
+import {
+  calcExpressao as coreCalcExpressao,
+  calcMotivacao as coreCalcMotivacao,
+  calcImpressao as coreCalcImpressao,
+  calcDestino as coreCalcDestino,
+  calcMissao as coreCalcMissao,
+  calcPsiquico as coreCalcPsiquico,
+  calcRespostaSubconsciente as coreCalcRespostaSubconsciente,
+  calcLicoesCarmicas as coreCalcLicoesCarmicas,
+  calcTendenciasOcultas as coreCalcTendenciasOcultas,
+  stripButKeepCedilla,
+  enableDebugMode as coreEnableDebugMode,
+  getAuditLogs as coreGetAuditLogs,
+  clearAuditLogs as coreClearAuditLogs,
+  type AuditLog
+} from './numerology-core';
+
+// Re-export profile management
+export { 
+  getActiveProfile, 
+  setActiveProfile, 
+  getAvailableProfiles 
+} from './profile-singleton';
+
+// Re-export for convenience
+export { PERFIL_CONECTA, PERFIL_OFICIAL_JF, type NumerologyProfile } from './numerology-profile';
+
+// Use cedilla-preserving clean from core
+export const clean = stripButKeepCedilla;
+export const letterValue = (ch: string) => {
+  const profile = require('./profile-singleton').getActiveProfile();
+  return profile.map[ch.toUpperCase()] || 0;
+};
 export { reduceKeepMasters };
 
-// Debug and audit functions (stubs for compatibility)
-export const enableDebugMode = (enable: boolean) => {
-  console.log(`Debug mode ${enable ? 'enabled' : 'disabled'} - using new deterministic engine`);
-};
-
-export const getAuditLogs = () => {
-  return []; // New engine doesn't use audit logs
-};
-
-export const clearAuditLogs = () => {
-  // No-op for new engine
-};
-
-// Profile management stubs (new engine doesn't use profiles)
-export const setActiveProfile = (profile: any) => {
-  console.log('Profile setting ignored - using deterministic cabalistic engine');
-};
-
-export const getAvailableProfiles = () => {
-  return ['CABALISTIC_DETERMINISTIC'];
-};
-
-export const getActiveProfile = () => {
-  return { name: 'CABALISTIC_DETERMINISTIC' };
-};
+// Debug and audit functions
+export const enableDebugMode = coreEnableDebugMode;
+export const getAuditLogs = coreGetAuditLogs;
+export const clearAuditLogs = coreClearAuditLogs;
+export type { AuditLog };
 
 // Utility function for legacy compatibility
 export const reduceToDigitAllowZero = (n: number): number => {
@@ -63,58 +67,46 @@ export const mapNameToValues = (nome: string): number[] => {
     .map(ch => letterValue(ch));
 };
 
-// Core numerology calculations using new deterministic engine
+// Core numerology calculations using profile-based engine
 export const calcMotivacao = (nome: string): number => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.numeros.Motivacao.numero;
+  return coreCalcMotivacao(nome);
 };
 
 export const calcImpressao = (nome: string): number => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.numeros.Impressao.numero;
+  return coreCalcImpressao(nome);
 };
 
 export const calcExpressao = (nome: string): number => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.numeros.Expressao.numero;
+  return coreCalcExpressao(nome);
 };
 
 export const calcDestino = (d: number, m: number, y: number): number => {
-  const dateStr = `${d.toString().padStart(2,'0')}/${m.toString().padStart(2,'0')}/${y}`;
-  const result = computeFullMap("TESTE", dateStr);
-  return result.numeros.Destino.numero;
+  return coreCalcDestino(d, m, y);
 };
 
 export const calcMissao = (nome: string, d: number, m: number, y: number): number => {
-  const dateStr = `${d.toString().padStart(2,'0')}/${m.toString().padStart(2,'0')}/${y}`;
-  const result = computeFullMap(nome, dateStr);
-  return result.numeros.Missao.numero;
+  return coreCalcMissao(nome, d, m, y);
 };
 
 export const calcNumeroPsiquico = (dob: Date): number => {
-  const dateStr = `${dob.getDate().toString().padStart(2,'0')}/${(dob.getMonth()+1).toString().padStart(2,'0')}/${dob.getFullYear()}`;
-  const result = computeFullMap("TESTE", dateStr);
-  return result.numeros.NumeroPsiquico.numero;
+  return coreCalcPsiquico(dob.getDate());
 };
 
 export const calcRespostaSubconsciente = (nome: string): number => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.carmicos.resposta_subconsciente;
+  return coreCalcRespostaSubconsciente(nome);
 };
 
 export const calcLicoesCarmicas = (nome: string): number[] => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.carmicos.licoes;
+  return coreCalcLicoesCarmicas(nome);
 };
 
 export const calcTendenciasOcultas = (nome: string): number[] => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.carmicos.tendencias_ocultas;
+  return coreCalcTendenciasOcultas(nome);
 };
 
 export const detectarDividasCarmicas = (nome: string): number[] => {
-  const result = computeFullMap(nome, "01/01/2000");
-  return result.carmicos.dividas;
+  // Legacy function - karmic debts detection moved to specialized module
+  return [];
 };
 
 // Life cycle calculations
@@ -222,42 +214,23 @@ export interface MapaNumerologico {
 
 // Main function to generate complete numerological map using PERFIL_CONECTA
 export function gerarMapaNumerologico(nome: string, dataNascimento: Date): MapaNumerologico {
-  // Import the profile-based core functions
-  const { 
-    calcExpressao, 
-    calcMotivacao, 
-    calcImpressao, 
-    calcDestino, 
-    calcMissao, 
-    calcPsiquico,
-    calcRespostaSubconsciente,
-    calcLicoesCarmicas,
-    calcTendenciasOcultas,
-    setActiveProfile
-  } = require('./numerology-core');
-  
-  const { PERFIL_CONECTA } = require('./numerology-profile');
-  
-  // Set the correct profile for calculations
-  setActiveProfile(PERFIL_CONECTA);
-  
   const day = dataNascimento.getDate();
   const month = dataNascimento.getMonth() + 1;
   const year = dataNascimento.getFullYear();
   
-  // Calculate core numbers using profile-based engine
+  // Calculate core numbers using profile-based engine (already uses active profile)
   const motivacao = calcMotivacao(nome);
   const expressao = calcExpressao(nome);
   const impressao = calcImpressao(nome);
   const destino = calcDestino(day, month, year);
-  const missao = calcMissao(nome, day, month, year); // Expressão + Destino
-  const numeroPsiquico = calcPsiquico(day);
+  const missao = calcMissao(nome, day, month, year);
+  const numeroPsiquico = coreCalcPsiquico(day);
   
   // Karmic calculations
   const respostaSubconsciente = calcRespostaSubconsciente(nome);
   const licoesCarmicas = calcLicoesCarmicas(nome);
   const tendenciasOcultas = calcTendenciasOcultas(nome);
-  const dividasCarmicas: number[] = []; // Legacy - kept empty
+  const dividasCarmicas: number[] = [];
   
   // Life cycles and challenges using legacy functions
   const desafio1 = calcDesafio1(dataNascimento);
