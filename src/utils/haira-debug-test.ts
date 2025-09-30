@@ -1,28 +1,28 @@
 // Teste específico para debug da Hairã
-import { computeFullMap } from './numerology-cabalistic';
+import { gerarMapaNumerologico } from './numerology';
 
 export function testHairaDebug() {
   console.log("🧪 INICIANDO TESTE DE DEBUG PARA HAIRÃ");
   console.log("=======================================");
   
   const nome = "hairã zupanc steinhauser";
-  const data = "11/05/2000";
+  const dataNascimento = new Date(2000, 4, 11); // Maio = 4 (0-indexed)
   
   console.log(`Nome original: "${nome}"`);
-  console.log(`Data: ${data}`);
+  console.log(`Data: ${dataNascimento.toLocaleDateString('pt-BR')}`);
   console.log("");
   
-  // Executar cálculo completo
-  const resultado = computeFullMap(nome, data);
+  // Executar cálculo completo usando o engine unificado
+  const resultado = gerarMapaNumerologico(nome, dataNascimento);
   
   console.log("📊 RESULTADOS FINAIS:");
   
-  // Extrair valores numéricos corretamente
-  const motivacao = typeof resultado.numeros.Motivacao === 'number' ? resultado.numeros.Motivacao : resultado.numeros.Motivacao.numero;
-  const expressao = typeof resultado.numeros.Expressao === 'number' ? resultado.numeros.Expressao : resultado.numeros.Expressao.numero;
-  const impressao = typeof resultado.numeros.Impressao === 'number' ? resultado.numeros.Impressao : resultado.numeros.Impressao.numero;
-  const destino = typeof resultado.numeros.Destino === 'number' ? resultado.numeros.Destino : resultado.numeros.Destino.numero;
-  const missao = typeof resultado.numeros.Missao === 'number' ? resultado.numeros.Missao : resultado.numeros.Missao.numero;
+  // Extrair valores numéricos do mapa
+  const motivacao = resultado.motivacao;
+  const expressao = resultado.expressao;
+  const impressao = resultado.impressao;
+  const destino = resultado.destino;
+  const missao = resultado.missao;
   
   console.log(`   Motivação: ${motivacao} (esperado: 22)`);
   console.log(`   Expressão: ${expressao} (esperado: 11)`);

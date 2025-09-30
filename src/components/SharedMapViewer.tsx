@@ -1,8 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { OnePageNumerologyReport } from '@/components/OnePageNumerologyReport';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Share2, Copy, CheckCircle, Download } from 'lucide-react';
+import { Share2, Copy, CheckCircle, Download, ArrowLeft } from 'lucide-react';
 import { formatShareUrl, copyToClipboard } from '@/utils/sharing';
 import { useToast } from '@/hooks/use-toast';
 import type { MapaNumerologico } from '@/utils/numerology';
@@ -27,6 +28,7 @@ export const SharedMapViewer: React.FC<SharedMapViewerProps> = ({
   showShareControls = false,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
 
   const shareUrl = formatShareUrl(slug, visibility === 'shared_link' ? token : undefined);
@@ -62,6 +64,15 @@ export const SharedMapViewer: React.FC<SharedMapViewerProps> = ({
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/dashboard')}
+                    className="flex items-center space-x-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Button>
                   <Share2 className="h-5 w-5 text-primary" />
                   <div>
                     <h3 className="font-semibold text-foreground">
@@ -131,13 +142,27 @@ export const SharedMapViewer: React.FC<SharedMapViewerProps> = ({
     <div className="min-h-screen bg-background">
       {/* Public Header */}
       <div className="bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-6 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            Mapa Numerológico
-          </h1>
-          <p className="text-muted-foreground">
-            Análise personalizada gerada especialmente para você
-          </p>
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar ao Dashboard</span>
+            </Button>
+            <div className="text-center flex-1">
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Mapa Numerológico
+              </h1>
+              <p className="text-muted-foreground">
+                Análise personalizada gerada especialmente para você
+              </p>
+            </div>
+            <div className="w-[140px]"></div>
+          </div>
         </div>
       </div>
 
