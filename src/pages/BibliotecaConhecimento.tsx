@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNumerologyContent } from '@/hooks/useNumerologyContent';
 import { useContentCreation } from '@/hooks/useContentCreation';
 import { TopicCard } from '@/components/TopicCard';
@@ -10,7 +11,7 @@ import { ContentRestorationWizard } from '@/components/ContentRestorationWizard'
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Grid3X3, BookOpen, RefreshCw, List, Eye, FileText } from 'lucide-react';
+import { Plus, Search, Grid3X3, BookOpen, RefreshCw, List, Eye, FileText, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { NumerologyContent } from '@/hooks/useNumerologyContent';
@@ -25,6 +26,7 @@ interface ContentCategory {
 }
 
 export default function BibliotecaConhecimento() {
+  const navigate = useNavigate();
   const [showWizard, setShowWizard] = useState(false);
   const [selectedContent, setSelectedContent] = useState<NumerologyContent | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -209,6 +211,14 @@ export default function BibliotecaConhecimento() {
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="mb-4 -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Dashboard
+            </Button>
             <h1 className="text-3xl font-bold text-foreground mb-2">Biblioteca de Conhecimento</h1>
             <p className="text-muted-foreground">
               Gerencie todos os conteúdos numerológicos do sistema

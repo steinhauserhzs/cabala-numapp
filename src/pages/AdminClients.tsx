@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClients, useClientMaps, useCreateClient, Client } from '@/hooks/useClients';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,13 +21,15 @@ import {
   Calendar, 
   FileText,
   Copy,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AdminClients = () => {
+  const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({
     full_name: '',
@@ -96,7 +99,14 @@ const AdminClients = () => {
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header Actions */}
-        <div className="flex justify-end mb-8">
+        <div className="flex justify-between items-center mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/dashboard')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button>
