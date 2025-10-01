@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useUserMaps } from '@/hooks/useUserMaps';
 import { formatShareUrl, copyToClipboard } from '@/utils/sharing';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Share2, 
   Copy, 
@@ -20,6 +32,35 @@ import { ptBR } from 'date-fns/locale';
 export const UserMapsSection: React.FC = () => {
   const { data: maps, isLoading, error } = useUserMaps();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [mapToDelete, setMapToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (mapId: string) => {
+      const { error } = await supabase
+        .from('numerology_maps')
+        .delete()
+        .eq('id', mapId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-maps'] });
+      toast({
+        title: "Mapa deletado!",
+        description: "O mapa foi removido com sucesso.",
+      });
+      setMapToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao deletar",
+        description: error.message,
+        variant: "destructive",
+      });
+      setMapToDelete(null);
+    },
+  });
 
   const handleCopyLink = async (slug: string, token: string, visibility: string) => {
     const url = formatShareUrl(slug, visibility === 'shared_link' ? token : undefined);
@@ -173,6 +214,17 @@ export const UserMapsSection: React.FC = () => {
                       <Copy className="h-3 w-3" />
                       <span>Copiar</span>
                     </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMapToDelete({ id: map.id, name: map.name })}
+                      className="flex items-center space-x-1 w-full sm:w-auto text-destructive hover:text-destructive"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      <span>Deletar</span>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -180,6 +232,26 @@ export const UserMapsSection: React.FC = () => {
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={!!mapToDelete} onOpenChange={(open) => !open && setMapToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deletar mapa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar o mapa "{mapToDelete?.name}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => mapToDelete && deleteMutation.mutate(mapToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
