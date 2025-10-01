@@ -19,12 +19,9 @@ import {
   type AuditLog
 } from './numerology-core';
 
-// Re-export profile management
-export { 
-  getActiveProfile, 
-  setActiveProfile, 
-  getAvailableProfiles 
-} from './profile-singleton';
+// Import and re-export profile management
+import { getActiveProfile, setActiveProfile, getAvailableProfiles } from './profile-singleton';
+export { getActiveProfile, setActiveProfile, getAvailableProfiles } from './profile-singleton';
 
 // Re-export for convenience
 export { PERFIL_CONECTA, PERFIL_OFICIAL_JF, type NumerologyProfile } from './numerology-profile';
@@ -33,13 +30,13 @@ export { PERFIL_OFICIAL_FINAL } from './official-profile-final';
 // Use cedilla-preserving clean from core
 export const clean = stripButKeepCedilla;
 export const letterValue = (ch: string) => {
-  const profile = require('./profile-singleton').getActiveProfile();
+  const profile = getActiveProfile();
   return profile.map[ch.toUpperCase()] || 0;
 };
 
 // Profile-based reduceKeepMasters using active profile's masters
 export const reduceKeepMasters = (n: number): number => {
-  const profile = require('./profile-singleton').getActiveProfile();
+  const profile = getActiveProfile();
   const masters = profile.masters || new Set([11, 22]);
   
   if (masters.has(n)) return n;
