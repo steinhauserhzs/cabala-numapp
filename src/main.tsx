@@ -4,9 +4,9 @@ import "./index.css";
 
 // Initialize numerology profile at app startup
 import { setActiveProfile } from './utils/profile-singleton';
-import { PERFIL_CONECTA } from './utils/numerology-profile';
+import { PERFIL_OFICIAL_FINAL } from './utils/official-profile-final';
 
-setActiveProfile(PERFIL_CONECTA);
-console.log('[main] Initialized with PERFIL_CONECTA');
+setActiveProfile(PERFIL_OFICIAL_FINAL);
+console.log('[main] Initialized with PERFIL_OFICIAL_FINAL');
 
 createRoot(document.getElementById("root")!).render(<App />);

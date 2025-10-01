@@ -83,4 +83,5 @@ export const PERFIL_CONECTA: NumerologyProfile = {
   subconscClamp: [2, 8],
 };
 
-export default PERFIL_OFICIAL_JF;
+// Re-export PERFIL_OFICIAL_FINAL for convenience
+export { PERFIL_OFICIAL_FINAL } from './official-profile-final';

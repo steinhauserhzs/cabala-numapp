@@ -1,8 +1,4 @@
 // Numerology calculation utilities - PROFILE-BASED ENGINE
-import { 
-  normalizeNameKeepingCedilla,
-  reduceKeepMasters,
-} from './numerology-cabalistic';
 import { ANGELS_BASE, HARMONICS_BASE, COLORS_BASE, CONJUGAL_BASE } from '../data/angels-base';
 
 // Import core profile-based functions
@@ -32,6 +28,7 @@ export {
 
 // Re-export for convenience
 export { PERFIL_CONECTA, PERFIL_OFICIAL_JF, type NumerologyProfile } from './numerology-profile';
+export { PERFIL_OFICIAL_FINAL } from './official-profile-final';
 
 // Use cedilla-preserving clean from core
 export const clean = stripButKeepCedilla;
@@ -39,7 +36,20 @@ export const letterValue = (ch: string) => {
   const profile = require('./profile-singleton').getActiveProfile();
   return profile.map[ch.toUpperCase()] || 0;
 };
-export { reduceKeepMasters };
+
+// Profile-based reduceKeepMasters using active profile's masters
+export const reduceKeepMasters = (n: number): number => {
+  const profile = require('./profile-singleton').getActiveProfile();
+  const masters = profile.masters || new Set([11, 22]);
+  
+  if (masters.has(n)) return n;
+  
+  let result = n;
+  while (result > 9 && !masters.has(result)) {
+    result = result.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+  }
+  return result;
+};
 
 // Debug and audit functions
 export const enableDebugMode = coreEnableDebugMode;

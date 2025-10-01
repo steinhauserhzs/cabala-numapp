@@ -1,8 +1,9 @@
 // Singleton profile manager to prevent runtime mutations
 import { NumerologyProfile, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA } from './numerology-profile';
+import { PERFIL_OFICIAL_FINAL } from './official-profile-final';
 
 // Single source of truth for active profile
-let activeProfile: NumerologyProfile = PERFIL_OFICIAL_JF;
+let activeProfile: NumerologyProfile = PERFIL_OFICIAL_FINAL;
 
 // Prevent external mutations by returning a frozen copy
 export function getActiveProfile(): NumerologyProfile {
@@ -17,7 +18,7 @@ export function setActiveProfile(profile: NumerologyProfile): void {
 
 // Available profiles registry
 export function getAvailableProfiles(): NumerologyProfile[] {
-  return [PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA];
+  return [PERFIL_OFICIAL_FINAL, PERFIL_OFICIAL_JF, PERFIL_PITAGORICO, PERFIL_CONECTA];
 }
 
 // Bootstrap function for main.tsx
